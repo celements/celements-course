@@ -1,0 +1,83 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD//EN"
+        "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+<hibernate-mapping>
+
+<class entity-name="Classes.CourseTypeClass" table="df_coursetype">
+  <id name="id" type="integer" unsaved-value="undefined">
+    <column name="CTC_ID" not-null="true" />
+    <generator class="assigned" />
+  </id>
+  <property name="prefix" type="string">
+    <column name="CTC_PREFIX" length="32"/>
+  </property>
+  <property name="details" type="text">
+    <column name="CTC_DETAILS"/>
+  </property>
+</class>
+
+<class entity-name="Classes.CourseClass" table="df_course">
+  <id name="id" type="integer" unsaved-value="undefined">
+    <column name="CRS_ID" not-null="true" />
+    <generator class="assigned" />
+  </id>
+  <property name="number" type="string">
+    <column name="CRS_NUMBER" length="64"/>
+  </property>
+  <property name="type" type="string">
+    <column name="CRS_TYPE" length="128"/>
+  </property>
+  <property name="info" type="text">
+    <column name="CRS_INFO" />
+  </property>
+  <property name="seats" type="integer">
+    <column name="CRS_SEATS"/>
+  </property>  
+  <property name="teacher" type="text">
+    <column name="CRS_TEACHER"/>
+  </property>
+</class>
+
+<class entity-name="Classes.CourseParticipantClass" table="df_courseparticipant">
+  <id name="id" type="integer" unsaved-value="undefined">
+    <column name="CPC_ID" not-null="true" />
+    <generator class="assigned" />
+  </id>
+  <property name="title" type="string">
+    <column name="CPC_TITLE" length="8"/>
+  </property>
+  <property name="firstname" type="string">
+    <column name="CPC_FIRSTNAME" length="128"/>
+  </property>
+  <property name="lastname" type="string">
+    <column name="CPC_LASTNAME" length="128"/>
+  </property>
+  <property name="address" type="string">
+    <column name="CPC_ADDRESS" length="256" />
+  </property>
+  <property name="zip" type="string">
+    <column name="CPC_ZIP" length="16"/>
+  </property>
+  <property name="city" type="string">
+    <column name="CPC_CITY" length="64"/>
+  </property>
+  <property name="phone" type="string">
+    <column name="CPC_PHONE" length="128"/>
+  </property>
+  <property name="email" type="string">
+    <column name="CPC_EMAIL" length="64"/>
+  </property>    
+  <property name="dob" type="timestamp">
+    <column name="CPC_DOB" />
+  </property>
+  <property name="registrationNumber" type="string">
+    <column name="CPC_REG_NUMBER" length="64"/>
+  </property>
+  <property name="registrationExpiry" type="timestamp">
+    <column name="CPC_REG_EXPIRY"/>
+  </property>
+  <property name="status" type="string">
+    <column name="CPC_STATUS" length="16"/>
+  </property>
+</class>
+</hibernate-mapping>
