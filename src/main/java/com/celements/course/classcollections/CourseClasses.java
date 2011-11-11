@@ -85,9 +85,16 @@ public class CourseClasses extends CelementsClassCollection {
     BaseClass bclass = doc.getXClass();
     bclass.setDocumentReference(docRef);
     needsUpdate |= bclass.addTextField("number", "Number", 30);
-    needsUpdate |= bclass.addTextField("type", "Type", 30);
+    needsUpdate |= bclass.addDBListField("type", "Type", 3, false, "select distinct " +
+        "doc.fullName,doc.title from XWikiDocument as doc, BaseObject as obj, " +
+        "StringProperty as str where doc.translation=0 and doc.space='Kurstypen' and " +
+        "doc.fullName=obj.name and obj.id=str.id.id and obj.className='Celements2." +
+        "PageType' and str.id.name='page_type' and str.id.value='CourseType' order by " +
+        "doc.title");
     needsUpdate |= bclass.addTextAreaField("info", "Info", 80, 15);
-    needsUpdate |= bclass.addTextAreaField("teacher", "Teacher", 80, 15);
+    needsUpdate |= bclass.addDBListField("teacher", "Teacher", 3, true, "select " +
+        "distinct doc.fullName, doc.title from XWikiDocument as doc where doc.space=" +
+        "'Teachers' and doc.name <> 'WebPreferences'");
     needsUpdate |= bclass.addNumberField("seats", "Seats", 10, "integer");
     
     if(!"internal".equals(bclass.getCustomMapping())){
@@ -136,7 +143,8 @@ public class CourseClasses extends CelementsClassCollection {
     needsUpdate |= bclass.addTextField("registrationNumber", "Registration Number", 30);
     needsUpdate |= bclass.addDateField("registrationExpiry", "Registration Expiry", null,
         0);
-    needsUpdate |= bclass.addTextField("status", "Status", 30);
+    needsUpdate |= bclass.addStaticListField("status", "Status", 1, false, 
+        "unconfirmed|confirmed|cancelled", "select", ",|");
     
     if(!"internal".equals(bclass.getCustomMapping())){
       needsUpdate = true;
