@@ -32,9 +32,12 @@
   </property>
   <property name="seats" type="integer">
     <column name="CRS_SEATS"/>
-  </property>  
+  </property>
   <property name="teacher" type="text">
     <column name="CRS_TEACHER"/>
+  </property>
+  <property name="price" type="string">
+    <column name="CRS_PRICE" length="64"/>
   </property>
 </class>
 

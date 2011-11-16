@@ -115,6 +115,7 @@ public class CourseClasses extends CelementsClassCollection {
         "distinct doc.fullName, doc.title from XWikiDocument as doc where doc.space=" +
         "'Teachers' and doc.name <> 'WebPreferences'");
     needsUpdate |= bclass.addNumberField("seats", "Seats", 10, "integer");
+    needsUpdate |= bclass.addTextField("price", "Price", 30);
     
     if(!"internal".equals(bclass.getCustomMapping())){
       needsUpdate = true;
