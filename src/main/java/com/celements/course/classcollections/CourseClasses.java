@@ -111,6 +111,9 @@ public class CourseClasses extends CelementsClassCollection {
         "PageType' and str.id.name='page_type' and str.id.value='CourseType' order by " +
         "doc.title");
     needsUpdate |= bclass.addTextAreaField("info", "Info", 80, 15);
+    //Teacher is not mapped since a DBList can not be mapped to a String. If a mapping is
+    //    needed later, this field could be changed to a String, or maybe XWiki could be 
+    //    changed to be able to save it alternatively as a string
     needsUpdate |= bclass.addDBListField("teacher", "Teacher", 3, true, "select " +
         "distinct doc.fullName, doc.title from XWikiDocument as doc where doc.space=" +
         "'Teachers' and doc.name <> 'WebPreferences'");
