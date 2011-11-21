@@ -31,14 +31,14 @@
   <modelVersion>4.0.0</modelVersion>  
   <groupId>com.celements</groupId>
   <artifactId>celements-course</artifactId>
-  <version>1.1-SNAPSHOT</version>
+  <version>1.1</version>
   <description>Celements Course</description> 
   <dependencies>    
     <!-- Add here all your dependencies -->
     <dependency>
       <groupId>com.celements</groupId>
   	  <artifactId>celements-core</artifactId>
-  	  <version>1.8-SNAPSHOT</version>
+  	  <version>1.7</version>
       <scope>provided</scope>
     </dependency>
     <dependency>
