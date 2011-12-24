@@ -103,22 +103,22 @@ public class CourseClasses extends CelementsClassCollection {
     
     BaseClass bclass = doc.getXClass();
     bclass.setDocumentReference(docRef);
-    needsUpdate |= bclass.addTextField("number", "Number", 30);
     needsUpdate |= bclass.addDBListField("type", "Type", 3, false, "select distinct " +
         "doc.fullName,doc.title from XWikiDocument as doc, BaseObject as obj, " +
         "StringProperty as str where doc.translation=0 and doc.space='Kurstypen' and " +
         "doc.fullName=obj.name and obj.id=str.id.id and obj.className='Celements2." +
         "PageType' and str.id.name='page_type' and str.id.value='CourseType' order by " +
         "doc.title");
+    needsUpdate |= bclass.addTextField("number", "Number", 30);
+    needsUpdate |= bclass.addNumberField("seats", "Seats", 10, "integer");
     needsUpdate |= bclass.addTextAreaField("info", "Info", 80, 15);
     //Teacher is not mapped since a DBList can not be mapped to a String. If a mapping is
     //    needed later, this field could be changed to a String, or maybe XWiki could be 
     //    changed to be able to save it alternatively as a string
+    needsUpdate |= bclass.addTextField("price", "Price", 30);
     needsUpdate |= bclass.addDBListField("teacher", "Teacher", 3, true, "select " +
         "distinct doc.fullName, doc.title from XWikiDocument as doc where doc.space=" +
         "'Teachers' and doc.name <> 'WebPreferences'");
-    needsUpdate |= bclass.addNumberField("seats", "Seats", 10, "integer");
-    needsUpdate |= bclass.addTextField("price", "Price", 30);
     
     if(!"internal".equals(bclass.getCustomMapping())){
       needsUpdate = true;
