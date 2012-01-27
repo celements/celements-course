@@ -168,6 +168,7 @@ public class CourseClasses extends CelementsClassCollection {
         0);
     needsUpdate |= bclass.addStaticListField("status", "Status", 1, false, 
         "unconfirmed|confirmed|cancelled", "select", ",|");
+    needsUpdate |= bclass.addPasswordField("validkey", "Validation Key", 10);
     
     if(!"internal".equals(bclass.getCustomMapping())){
       needsUpdate = true;
