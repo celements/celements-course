@@ -38,19 +38,8 @@
     <dependency>
       <groupId>com.celements</groupId>
   	  <artifactId>celements-core</artifactId>
-  	  <version>1.8</version>
+  	  <version>1.11</version>
       <scope>provided</scope>
-    </dependency>
-    <dependency>
-      <groupId>com.celements</groupId>
-  	  <artifactId>celements-shared-tests</artifactId>
-  	  <version>1.3</version>
-  	  <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.easymock</groupId>
-      <artifactId>easymockclassextension</artifactId>
-    <scope>test</scope>
     </dependency>
   </dependencies>  
 </project>
