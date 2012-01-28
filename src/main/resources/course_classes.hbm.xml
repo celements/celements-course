@@ -80,7 +80,7 @@
     <column name="CPC_STATUS" length="16"/>
   </property>
   <property name="validkey" type="string" unique="false" optimistic-lock="true" lazy="false" generated="never">
-    <column name="XWU_VALIDATION_KEY" />
+    <column name="CPC_VALIDATION_KEY" />
   </property>
 </class>
 </hibernate-mapping>
