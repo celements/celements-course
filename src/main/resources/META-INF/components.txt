@@ -1,1 +1,2 @@
 com.celements.course.classcollections.CourseClasses
+com.celements.course.CourseScriptService
