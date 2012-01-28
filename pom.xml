@@ -26,7 +26,7 @@
   <parent>
       <groupId>com.celements</groupId>
       <artifactId>celements</artifactId>
-      <version>1.11</version>
+      <version>1.12</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>  
   <groupId>com.celements</groupId>
