@@ -31,7 +31,7 @@
   <modelVersion>4.0.0</modelVersion>  
   <groupId>com.celements</groupId>
   <artifactId>celements-course</artifactId>
-  <version>1.3-SNAPSHOT</version>
+  <version>1.3</version>
   <description>Celements Course</description> 
   <dependencies>    
     <!-- Add here all your dependencies -->
