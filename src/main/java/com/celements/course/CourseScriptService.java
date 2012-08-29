@@ -20,14 +20,14 @@ import com.xpn.xwiki.objects.classes.PasswordClass;
 @Component("celcourse")
 public class CourseScriptService implements ScriptService {
 
-  private static Log mLogger = LogFactory.getFactory().getInstance(
+  private static Log LOGGER = LogFactory.getFactory().getInstance(
       CourseScriptService.class);
 
   @Requirement
-  Execution execution;
+  EntityReferenceResolver<String> stringRefResolver;
 
   @Requirement
-  EntityReferenceResolver<String> stringRefResolver;
+  Execution execution;
 
   private XWikiContext getContext() {
     return (XWikiContext)execution.getContext().getProperty("xwikicontext");
@@ -61,7 +61,7 @@ public class CourseScriptService implements ScriptService {
       if (partiObj != null) {
         String hashedCode = passwordHashString(activationCode);
         String savedHash = partiObj.getStringValue("validkey");
-        mLogger.trace("validateParticipant: email [" + normalizeEmail(emailAdr)
+        LOGGER.trace("validateParticipant: email [" + normalizeEmail(emailAdr)
             + "], hashedCode [" + hashedCode + "], savedHash [" + savedHash + "].");
         if (hashedCode.equals(savedHash)) {
           if ("unconfirmed".equals(partiObj.getStringValue("status"))) {
@@ -70,21 +70,21 @@ public class CourseScriptService implements ScriptService {
                 + " link.", getContext());
             return true;
           } else {
-            mLogger.debug("validateParticipant failed because initial status is not"
+            LOGGER.debug("validateParticipant failed because initial status is not"
                 + "'unconfirmed' but [" + partiObj.getStringValue("status") + "].");
           }
         } else {
-          mLogger.debug("validateParticipant failed because activationCode does not match"
+          LOGGER.debug("validateParticipant failed because activationCode does not match"
               + " object key. email [" + normalizeEmail(emailAdr) + "], hashedCode ["
           		+ hashedCode + "], savedHash [" + savedHash + "]");
         }
       } else {
-        mLogger.debug("validateParticipant failed because no partizipant object for"
+        LOGGER.debug("validateParticipant failed because no partizipant object for"
             + " email [" + normalizeEmail(emailAdr) + "], on course [" + courseFN
             + "] found.");
       }
     } catch (XWikiException exp) {
-      mLogger.error("Failed to validateParticipant for [" + courseFN + "], [" + emailAdr
+      LOGGER.error("Failed to validateParticipant for [" + courseFN + "], [" + emailAdr
           + "], [" + activationCode + "].", exp);
     }
     return false;

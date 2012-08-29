@@ -3,7 +3,7 @@
         "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
 <hibernate-mapping>
 
-<class entity-name="Classes.CourseTypeClass" table="df_coursetype">
+<class entity-name="Classes.CourseTypeClass" table="celcourse_type">
   <id name="id" type="integer" unsaved-value="undefined">
     <column name="CTC_ID" not-null="true" />
     <generator class="assigned" />
@@ -11,12 +11,15 @@
   <property name="prefix" type="string">
     <column name="CTC_PREFIX" length="32"/>
   </property>
+  <property name="type_img_path" type="string">
+    <column name="CTC_TYPE_IMG" length="255"/>
+  </property>
   <property name="details" type="text">
     <column name="CTC_DETAILS"/>
   </property>
 </class>
 
-<class entity-name="Classes.CourseClass" table="df_course">
+<class entity-name="Classes.CourseClass" table="celcourse_course">
   <id name="id" type="integer" unsaved-value="undefined">
     <column name="CRS_ID" not-null="true" />
     <generator class="assigned" />
@@ -38,7 +41,7 @@
   </property>
 </class>
 
-<class entity-name="Classes.CourseParticipantClass" table="df_courseparticipant">
+<class entity-name="Classes.CourseParticipantClass" table="celcourse_participant">
   <id name="id" type="integer" unsaved-value="undefined">
     <column name="CPC_ID" not-null="true" />
     <generator class="assigned" />
@@ -69,12 +72,6 @@
   </property>    
   <property name="dob" type="timestamp">
     <column name="CPC_DOB" />
-  </property>
-  <property name="registrationNumber" type="string">
-    <column name="CPC_REG_NUMBER" length="64"/>
-  </property>
-  <property name="registrationExpiry" type="timestamp">
-    <column name="CPC_REG_EXPIRY"/>
   </property>
   <property name="status" type="string">
     <column name="CPC_STATUS" length="16"/>

@@ -22,6 +22,8 @@ package com.celements.course.classcollections;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.xwiki.component.annotation.Component;
+import org.xwiki.component.annotation.Requirement;
+import org.xwiki.context.Execution;
 import org.xwiki.model.reference.DocumentReference;
 
 import com.celements.common.classes.CelementsClassCollection;
@@ -33,33 +35,41 @@ import com.xpn.xwiki.objects.classes.BaseClass;
 
 @Component("CelCourseClasses")
 public class CourseClasses extends CelementsClassCollection {
-  private static Log mLogger = LogFactory.getFactory().getInstance(CourseClasses.class);
+
+  private static Log LOGGER = LogFactory.getFactory().getInstance(CourseClasses.class);
+
+  @Requirement
+  Execution execution;
+
+  private XWikiContext getContext() {
+    return (XWikiContext)execution.getContext().getProperty("xwikicontext");
+  }
 
   @Override
   protected Log getLogger() {
-    return mLogger;
+    return LOGGER;
   }
 
   @Override
   protected void initClasses(XWikiContext context) throws XWikiException {
-    getCourseTypeClass(context);
-    getCourseClass(context);
-    getCourseParticipantClass(context);
+    getCourseTypeClass();
+    getCourseClass();
+    getCourseParticipantClass();
   }
 
   public String getConfigName() {
-    return "course";
+    return "celCourse";
   }
   
-  protected BaseClass getCourseTypeClass(XWikiContext context) throws XWikiException {
-    DocumentReference docRef = new DocumentReference(context.getDatabase(), 
+  BaseClass getCourseTypeClass() throws XWikiException {
+    DocumentReference docRef = new DocumentReference(getContext().getDatabase(), 
         "Classes", "CourseTypeClass");
     XWikiDocument doc;
-    XWiki xwiki = context.getWiki();
+    XWiki xwiki = getContext().getWiki();
     boolean needsUpdate = false;
     
     try {
-      doc = xwiki.getDocument(docRef, context);
+      doc = xwiki.getDocument(docRef, getContext());
     } catch (Exception e) {
       doc = new XWikiDocument(docRef);
       needsUpdate = true;
@@ -68,6 +78,7 @@ public class CourseClasses extends CelementsClassCollection {
     BaseClass bclass = doc.getXClass();
     bclass.setDocumentReference(docRef);
     needsUpdate |= bclass.addTextField("prefix", "Prefix", 30);
+    needsUpdate |= bclass.addTextField("type_img_path", "Type Image Path", 30);
     needsUpdate |= bclass.addTextAreaField("details", "Details", 80, 15);
     
     if(!"internal".equals(bclass.getCustomMapping())){
@@ -82,20 +93,20 @@ public class CourseClasses extends CelementsClassCollection {
     }
     
     if (needsUpdate){
-      xwiki.saveDocument(doc, context);
+      xwiki.saveDocument(doc, getContext());
     }
     return bclass;
   }
   
-  protected BaseClass getCourseClass(XWikiContext context) throws XWikiException {
-    DocumentReference docRef = new DocumentReference(context.getDatabase(), 
+  protected BaseClass getCourseClass() throws XWikiException {
+    DocumentReference docRef = new DocumentReference(getContext().getDatabase(), 
         "Classes", "CourseClass");
     XWikiDocument doc;
-    XWiki xwiki = context.getWiki();
+    XWiki xwiki = getContext().getWiki();
     boolean needsUpdate = false;
     
     try {
-      doc = xwiki.getDocument(docRef, context);
+      doc = xwiki.getDocument(docRef, getContext());
     } catch (Exception e) {
       doc = new XWikiDocument(docRef);
       needsUpdate = true;
@@ -105,7 +116,7 @@ public class CourseClasses extends CelementsClassCollection {
     bclass.setDocumentReference(docRef);
     needsUpdate |= bclass.addDBListField("type", "Type", 3, false, "select distinct " +
         "doc.fullName,doc.title from XWikiDocument as doc, BaseObject as obj, " +
-        "StringProperty as str where doc.translation=0 and doc.space='Kurstypen' and " +
+        "StringProperty as str where doc.translation=0 and doc.space='CourseType' and " +
         "doc.fullName=obj.name and obj.id=str.id.id and obj.className='Celements2." +
         "PageType' and str.id.name='page_type' and str.id.value='CourseType' order by " +
         "doc.title");
@@ -132,20 +143,20 @@ public class CourseClasses extends CelementsClassCollection {
     }
     
     if (needsUpdate){
-      xwiki.saveDocument(doc, context);
+      xwiki.saveDocument(doc, getContext());
     }
     return bclass;
   }
   
-  protected BaseClass getCourseParticipantClass(XWikiContext context) throws XWikiException {
-    DocumentReference docRef = new DocumentReference(context.getDatabase(), 
+  protected BaseClass getCourseParticipantClass() throws XWikiException {
+    DocumentReference docRef = new DocumentReference(getContext().getDatabase(), 
         "Classes", "CourseParticipantClass");
     XWikiDocument doc;
-    XWiki xwiki = context.getWiki();
+    XWiki xwiki = getContext().getWiki();
     boolean needsUpdate = false;
     
     try {
-      doc = xwiki.getDocument(docRef, context);
+      doc = xwiki.getDocument(docRef, getContext());
     } catch (Exception e) {
       doc = new XWikiDocument(docRef);
       needsUpdate = true;
@@ -163,9 +174,6 @@ public class CourseClasses extends CelementsClassCollection {
     needsUpdate |= bclass.addTextField("phone", "Phone", 30);
     needsUpdate |= bclass.addTextField("email", "Email", 30);
     needsUpdate |= bclass.addDateField("dob", "Day of Birth", null, 0);
-    needsUpdate |= bclass.addTextField("registrationNumber", "Registration Number", 30);
-    needsUpdate |= bclass.addDateField("registrationExpiry", "Registration Expiry", null,
-        0);
     needsUpdate |= bclass.addStaticListField("status", "Status", 1, false, 
         "unconfirmed|confirmed|cancelled", "select", ",|");
     needsUpdate |= bclass.addPasswordField("validkey", "Validation Key", 10);
@@ -182,7 +190,7 @@ public class CourseClasses extends CelementsClassCollection {
     }
     
     if (needsUpdate){
-      xwiki.saveDocument(doc, context);
+      xwiki.saveDocument(doc, getContext());
     }
     return bclass;
   }
