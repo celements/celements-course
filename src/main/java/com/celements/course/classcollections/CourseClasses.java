@@ -92,13 +92,13 @@ public class CourseClasses extends AbstractClassCollection {
     return bclass;
   }
 
-  public DocumentReference getCourseClassRef() {
-    return new DocumentReference(getContext().getDatabase(), COURSE_CLASSES_SPACE,
+  public DocumentReference getCourseClassRef(String wikiName) {
+    return new DocumentReference(wikiName, COURSE_CLASSES_SPACE,
         COURSE_CLASS_DOC);
   }
   
   BaseClass getCourseClass() throws XWikiException {
-    DocumentReference classRef = getCourseClassRef();
+    DocumentReference classRef = getCourseClassRef(getContext().getDatabase());
     XWikiDocument doc;
     XWiki xwiki = getContext().getWiki();
     boolean needsUpdate = false;
