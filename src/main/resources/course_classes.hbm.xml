@@ -39,6 +39,12 @@
   <property name="price" type="string">
     <column name="CRS_PRICE" length="64"/>
   </property>
+  <property name="startTimeStamp" type="timestamp">
+    <column name="CRS_COURSE_START"/>
+  </property>
+  <property name="endTimeStamp" type="timestamp">
+    <column name="CRS_COURSE_END"/>
+  </property>
 </class>
 
 <class entity-name="CourseClasses.CourseParticipantClass" table="celcourse_participant">

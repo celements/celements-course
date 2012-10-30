@@ -128,7 +128,10 @@ public class CourseClasses extends AbstractClassCollection {
     needsUpdate |= bclass.addDBListField("teacher", "Teacher", 3, true, "select " +
         "distinct doc.fullName, doc.title from XWikiDocument as doc where doc.space=" +
         "'Teachers' and doc.name <> 'WebPreferences'");
-    
+    needsUpdate |= bclass.addDateField("startTimeStamp", "Start Timestamp", "dd.MM.yyyy",
+        0);
+    needsUpdate |= bclass.addDateField("endTimeStamp", "End Timestamp", "dd.MM.yyyy", 0);
+
     if(!"internal".equals(bclass.getCustomMapping())){
       needsUpdate = true;
       bclass.setCustomMapping("internal");
