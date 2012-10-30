@@ -22,61 +22,63 @@ package com.celements.course.classcollections;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.xwiki.component.annotation.Component;
-import org.xwiki.component.annotation.Requirement;
-import org.xwiki.context.Execution;
 import org.xwiki.model.reference.DocumentReference;
 
-import com.celements.common.classes.CelementsClassCollection;
+import com.celements.common.classes.AbstractClassCollection;
 import com.xpn.xwiki.XWiki;
-import com.xpn.xwiki.XWikiContext;
 import com.xpn.xwiki.XWikiException;
 import com.xpn.xwiki.doc.XWikiDocument;
 import com.xpn.xwiki.objects.classes.BaseClass;
 
 @Component("CelCourseClasses")
-public class CourseClasses extends CelementsClassCollection {
+public class CourseClasses extends AbstractClassCollection {
+
+  public static final String COURSE_PARTICIPANT_CLASS_DOC = "CourseParticipantClass";
+
+  public static final String COURSE_CLASS_DOC = "CourseClass";
+
+  public static final String COURSE_TYPE_CLASS_DOC = "CourseTypeClass";
+
+  public static final String COURSE_CLASSES_SPACE = "CourseClasses";
 
   private static Log LOGGER = LogFactory.getFactory().getInstance(CourseClasses.class);
-
-  @Requirement
-  Execution execution;
-
-  private XWikiContext getContext() {
-    return (XWikiContext)execution.getContext().getProperty("xwikicontext");
-  }
 
   @Override
   protected Log getLogger() {
     return LOGGER;
   }
 
+  public String getConfigName() {
+    return "celCourse";
+  }
+  
   @Override
-  protected void initClasses(XWikiContext context) throws XWikiException {
+  protected void initClasses() throws XWikiException {
     getCourseTypeClass();
     getCourseClass();
     getCourseParticipantClass();
   }
 
-  public String getConfigName() {
-    return "celCourse";
+  public DocumentReference getCourseTypeClassRef() {
+    return new DocumentReference(getContext().getDatabase(), COURSE_CLASSES_SPACE,
+        COURSE_TYPE_CLASS_DOC);
   }
   
   BaseClass getCourseTypeClass() throws XWikiException {
-    DocumentReference docRef = new DocumentReference(getContext().getDatabase(), 
-        "Classes", "CourseTypeClass");
+    DocumentReference classRef = getCourseTypeClassRef();
     XWikiDocument doc;
     XWiki xwiki = getContext().getWiki();
     boolean needsUpdate = false;
     
     try {
-      doc = xwiki.getDocument(docRef, getContext());
+      doc = xwiki.getDocument(classRef, getContext());
     } catch (Exception e) {
-      doc = new XWikiDocument(docRef);
+      doc = new XWikiDocument(classRef);
       needsUpdate = true;
     }
     
     BaseClass bclass = doc.getXClass();
-    bclass.setDocumentReference(docRef);
+    bclass.setDocumentReference(classRef);
     needsUpdate |= bclass.addTextField("prefix", "Prefix", 30);
     needsUpdate |= bclass.addTextField("type_img_path", "Type Image Path", 30);
     needsUpdate |= bclass.addTextAreaField("details", "Details", 80, 15);
@@ -86,34 +88,30 @@ public class CourseClasses extends CelementsClassCollection {
       bclass.setCustomMapping("internal");
     }
     
-    String content = doc.getContent();
-    if ((content == null) || (content.equals(""))) {
-      needsUpdate = true;
-      doc.setContent(" ");
-    }
-    
-    if (needsUpdate){
-      xwiki.saveDocument(doc, getContext());
-    }
+    setContentAndSaveClassDocument(doc, needsUpdate);
     return bclass;
   }
+
+  public DocumentReference getCourseClassRef() {
+    return new DocumentReference(getContext().getDatabase(), COURSE_CLASSES_SPACE,
+        COURSE_CLASS_DOC);
+  }
   
-  protected BaseClass getCourseClass() throws XWikiException {
-    DocumentReference docRef = new DocumentReference(getContext().getDatabase(), 
-        "Classes", "CourseClass");
+  BaseClass getCourseClass() throws XWikiException {
+    DocumentReference classRef = getCourseClassRef();
     XWikiDocument doc;
     XWiki xwiki = getContext().getWiki();
     boolean needsUpdate = false;
     
     try {
-      doc = xwiki.getDocument(docRef, getContext());
+      doc = xwiki.getDocument(classRef, getContext());
     } catch (Exception e) {
-      doc = new XWikiDocument(docRef);
+      doc = new XWikiDocument(classRef);
       needsUpdate = true;
     }
     
     BaseClass bclass = doc.getXClass();
-    bclass.setDocumentReference(docRef);
+    bclass.setDocumentReference(classRef);
     needsUpdate |= bclass.addDBListField("type", "Type", 3, false, "select distinct " +
         "doc.fullName,doc.title from XWikiDocument as doc, BaseObject as obj, " +
         "StringProperty as str where doc.translation=0 and doc.space='CourseType' and " +
@@ -136,34 +134,30 @@ public class CourseClasses extends CelementsClassCollection {
       bclass.setCustomMapping("internal");
     }
     
-    String content = doc.getContent();
-    if ((content == null) || (content.equals(""))) {
-      needsUpdate = true;
-      doc.setContent(" ");
-    }
-    
-    if (needsUpdate){
-      xwiki.saveDocument(doc, getContext());
-    }
+    setContentAndSaveClassDocument(doc, needsUpdate);
     return bclass;
   }
-  
-  protected BaseClass getCourseParticipantClass() throws XWikiException {
-    DocumentReference docRef = new DocumentReference(getContext().getDatabase(), 
-        "Classes", "CourseParticipantClass");
+
+  public DocumentReference getCourseParticipantClassRef() {
+    return new DocumentReference(getContext().getDatabase(), COURSE_CLASSES_SPACE,
+        COURSE_PARTICIPANT_CLASS_DOC);
+  }
+
+  BaseClass getCourseParticipantClass() throws XWikiException {
+    DocumentReference classRef = getCourseParticipantClassRef();
     XWikiDocument doc;
     XWiki xwiki = getContext().getWiki();
     boolean needsUpdate = false;
     
     try {
-      doc = xwiki.getDocument(docRef, getContext());
+      doc = xwiki.getDocument(classRef, getContext());
     } catch (Exception e) {
-      doc = new XWikiDocument(docRef);
+      doc = new XWikiDocument(classRef);
       needsUpdate = true;
     }
     
     BaseClass bclass = doc.getXClass();
-    bclass.setDocumentReference(docRef);
+    bclass.setDocumentReference(classRef);
 
     needsUpdate |= bclass.addTextField("title", "Title", 30);
     needsUpdate |= bclass.addTextField("firstname", "Firstname", 30);
@@ -183,15 +177,8 @@ public class CourseClasses extends CelementsClassCollection {
       bclass.setCustomMapping("internal");
     }
     
-    String content = doc.getContent();
-    if ((content == null) || (content.equals(""))) {
-      needsUpdate = true;
-      doc.setContent(" ");
-    }
-    
-    if (needsUpdate){
-      xwiki.saveDocument(doc, getContext());
-    }
+    setContentAndSaveClassDocument(doc, needsUpdate);
     return bclass;
   }
+
 }
