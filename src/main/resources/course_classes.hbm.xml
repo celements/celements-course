@@ -3,7 +3,7 @@
         "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
 <hibernate-mapping>
 
-<class entity-name="Classes.CourseTypeClass" table="celcourse_type">
+<class entity-name="CourseClasses.CourseTypeClass" table="celcourse_type">
   <id name="id" type="integer" unsaved-value="undefined">
     <column name="CTC_ID" not-null="true" />
     <generator class="assigned" />
@@ -19,7 +19,7 @@
   </property>
 </class>
 
-<class entity-name="Classes.CourseClass" table="celcourse_course">
+<class entity-name="CourseClasses.CourseClass" table="celcourse_course">
   <id name="id" type="integer" unsaved-value="undefined">
     <column name="CRS_ID" not-null="true" />
     <generator class="assigned" />
@@ -41,7 +41,7 @@
   </property>
 </class>
 
-<class entity-name="Classes.CourseParticipantClass" table="celcourse_participant">
+<class entity-name="CourseClasses.CourseParticipantClass" table="celcourse_participant">
   <id name="id" type="integer" unsaved-value="undefined">
     <column name="CPC_ID" not-null="true" />
     <generator class="assigned" />
@@ -80,4 +80,5 @@
     <column name="CPC_VALIDATION_KEY" />
   </property>
 </class>
+
 </hibernate-mapping>
