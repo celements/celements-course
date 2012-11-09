@@ -113,7 +113,7 @@ public class CourseClasses extends AbstractClassCollection {
     
     BaseClass bclass = doc.getXClass();
     bclass.setDocumentReference(classRef);
-    needsUpdate |= bclass.addDBListField("type", "Type", 3, false, "select distinct"
+    needsUpdate |= bclass.addDBListField("type", "Type", 1, false, "select distinct"
         + " doc.fullName,ct.typeName from XWikiDocument as doc, BaseObject as obj,"
         + " " + COURSE_CLASSES_SPACE + "." + COURSE_TYPE_CLASS_DOC + " as ct"
         + " where doc.translation=0 and doc.space='CourseType' and "
