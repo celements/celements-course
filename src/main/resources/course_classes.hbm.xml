@@ -8,6 +8,12 @@
     <column name="CTC_ID" not-null="true" />
     <generator class="assigned" />
   </id>
+  <property name="typeName" type="string">
+    <column name="CTC_TYPE_NAME" length="255"/>
+  </property>
+  <property name="shortName" type="string">
+    <column name="CTC_SHORTNAME" length="64"/>
+  </property>
   <property name="prefix" type="string">
     <column name="CTC_PREFIX" length="32"/>
   </property>
