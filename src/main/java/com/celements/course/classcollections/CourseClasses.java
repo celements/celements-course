@@ -113,12 +113,13 @@ public class CourseClasses extends AbstractClassCollection {
     
     BaseClass bclass = doc.getXClass();
     bclass.setDocumentReference(classRef);
-    needsUpdate |= bclass.addDBListField("type", "Type", 3, false, "select distinct " +
-        "doc.fullName,doc.title from XWikiDocument as doc, BaseObject as obj, " +
-        "StringProperty as str where doc.translation=0 and doc.space='CourseType' and " +
-        "doc.fullName=obj.name and obj.id=str.id.id and obj.className='Celements2." +
-        "PageType' and str.id.name='page_type' and str.id.value='CourseType' order by " +
-        "doc.title");
+    needsUpdate |= bclass.addDBListField("type", "Type", 3, false, "select distinct"
+        + " doc.fullName,ct.typeName from XWikiDocument as doc, BaseObject as obj,"
+        + " " + COURSE_CLASSES_SPACE + "." + COURSE_TYPE_CLASS_DOC + " as ct"
+        + " where doc.translation=0 and doc.space='CourseType' and "
+        + " doc.fullName=obj.name and obj.id=ct.id and obj.className='"
+        + COURSE_CLASSES_SPACE + "." + COURSE_TYPE_CLASS_DOC + "'"
+        + " order by ct.typeName");
     needsUpdate |= bclass.addTextField("number", "Number", 30);
     needsUpdate |= bclass.addNumberField("seats", "Seats", 10, "integer");
     needsUpdate |= bclass.addTextAreaField("info", "Info", 80, 15);
