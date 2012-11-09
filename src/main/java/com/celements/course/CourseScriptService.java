@@ -30,6 +30,8 @@ import org.xwiki.model.reference.EntityReferenceResolver;
 import org.xwiki.model.reference.WikiReference;
 import org.xwiki.script.service.ScriptService;
 
+import com.celements.common.classes.IClassCollectionRole;
+import com.celements.course.classcollections.CourseClasses;
 import com.xpn.xwiki.XWikiContext;
 import com.xpn.xwiki.XWikiException;
 import com.xpn.xwiki.doc.XWikiDocument;
@@ -45,11 +47,43 @@ public class CourseScriptService implements ScriptService {
   @Requirement
   EntityReferenceResolver<String> stringRefResolver;
 
+  @Requirement("CelCourseClasses")
+  IClassCollectionRole courseClasses;
+
   @Requirement
   Execution execution;
 
   private XWikiContext getContext() {
     return (XWikiContext)execution.getContext().getProperty("xwikicontext");
+  }
+
+  private CourseClasses getCourseClasses() {
+    return (CourseClasses)courseClasses;
+  }
+
+  public DocumentReference getCourseClassRef() {
+    return getCourseClasses().getCourseClassRef(getContext().getDatabase());
+  }
+
+  public String getCourseClass() {
+    return CourseClasses.COURSE_CLASSES_SPACE + "." + CourseClasses.COURSE_CLASS_DOC;
+  }
+
+  public DocumentReference getCourseParticipantClassRef() {
+    return getCourseClasses().getCourseParticipantClassRef(getContext().getDatabase());
+  }
+
+  public String getCourseParticipantClass() {
+    return CourseClasses.COURSE_CLASSES_SPACE + "."
+         + CourseClasses.COURSE_PARTICIPANT_CLASS_DOC;
+  }
+
+  public DocumentReference getCourseTypeClassRef() {
+    return getCourseClasses().getCourseTypeClassRef(getContext().getDatabase());
+  }
+
+  public String getCourseTypeClass() {
+    return CourseClasses.COURSE_CLASSES_SPACE + "." + CourseClasses.COURSE_TYPE_CLASS_DOC;
   }
 
   DocumentReference getDocRefForFullName(String courseFN) {

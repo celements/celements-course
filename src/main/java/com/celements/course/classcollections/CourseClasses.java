@@ -59,13 +59,12 @@ public class CourseClasses extends AbstractClassCollection {
     getCourseParticipantClass();
   }
 
-  public DocumentReference getCourseTypeClassRef() {
-    return new DocumentReference(getContext().getDatabase(), COURSE_CLASSES_SPACE,
-        COURSE_TYPE_CLASS_DOC);
+  public DocumentReference getCourseTypeClassRef(String wikiName) {
+    return new DocumentReference(wikiName, COURSE_CLASSES_SPACE, COURSE_TYPE_CLASS_DOC);
   }
   
   BaseClass getCourseTypeClass() throws XWikiException {
-    DocumentReference classRef = getCourseTypeClassRef();
+    DocumentReference classRef = getCourseTypeClassRef(getContext().getDatabase());
     XWikiDocument doc;
     XWiki xwiki = getContext().getWiki();
     boolean needsUpdate = false;
@@ -141,13 +140,13 @@ public class CourseClasses extends AbstractClassCollection {
     return bclass;
   }
 
-  public DocumentReference getCourseParticipantClassRef() {
-    return new DocumentReference(getContext().getDatabase(), COURSE_CLASSES_SPACE,
+  public DocumentReference getCourseParticipantClassRef(String wikiName) {
+    return new DocumentReference(wikiName, COURSE_CLASSES_SPACE,
         COURSE_PARTICIPANT_CLASS_DOC);
   }
 
   BaseClass getCourseParticipantClass() throws XWikiException {
-    DocumentReference classRef = getCourseParticipantClassRef();
+    DocumentReference classRef = getCourseParticipantClassRef(getContext().getDatabase());
     XWikiDocument doc;
     XWiki xwiki = getContext().getWiki();
     boolean needsUpdate = false;
