@@ -38,7 +38,7 @@
     <dependency>
       <groupId>com.celements</groupId>
   	  <artifactId>celements-core</artifactId>
-  	  <version>1.39</version>
+  	  <version>1.41</version>
       <scope>provided</scope>
     </dependency>
   </dependencies>  
