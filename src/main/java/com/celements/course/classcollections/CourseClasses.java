@@ -130,9 +130,10 @@ public class CourseClasses extends AbstractClassCollection {
     needsUpdate |= bclass.addDBListField("teacher", "Teacher", 3, true, "select " +
         "distinct doc.fullName, doc.title from XWikiDocument as doc where doc.space=" +
         "'Teachers' and doc.name <> 'WebPreferences'");
-    needsUpdate |= bclass.addDateField("startTimeStamp", "Start Timestamp", "dd.MM.yyyy",
-        0);
-    needsUpdate |= bclass.addDateField("endTimeStamp", "End Timestamp", "dd.MM.yyyy", 0);
+    needsUpdate |= addDateField(bclass, "startTimeStamp", "Start Timestamp", "dd.MM.yyyy",
+        0, 0, getRegexDate(false, false), "cel_course_validation_startTimeStamp");
+    needsUpdate |= addDateField(bclass, "endTimeStamp", "End Timestamp", "dd.MM.yyyy", 0,
+        0, getRegexDate(false, false), "cel_course_validation_endTimeStamp");
 
     if(!"internal".equals(bclass.getCustomMapping())){
       needsUpdate = true;
@@ -184,6 +185,14 @@ public class CourseClasses extends AbstractClassCollection {
     
     setContentAndSaveClassDocument(doc, needsUpdate);
     return bclass;
+  }
+  
+  private String getRegexDate(boolean allowEmpty, boolean withTime) {
+    String regex = "(0[1-9]|[12][0-9]|3[01])\\.(0[1-9]|1[012])\\.([0-9]{4})";
+    if (withTime) {
+      regex += " ([01][0-9]|2[0-4])(\\:[0-5][0-9]){1,2}";
+    }
+    return "/" + (allowEmpty ? "(^$)|" : "") + "^(" + regex + ")$" + "/";
   }
 
 }
