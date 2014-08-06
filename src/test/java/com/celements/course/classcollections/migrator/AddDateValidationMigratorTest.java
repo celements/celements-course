@@ -52,18 +52,6 @@ public class AddDateValidationMigratorTest extends AbstractBridgedComponentTestC
     bClass.addDateField("endTimeStamp", "End Timestamp", "dd.MM.yyyy", 0);
     expect(docMock.getXClass()).andReturn(bClass).once();
     
-//    DateClass startDateElement = new DateClass();
-//    startDateElement.setValidationRegExp(
-//        "/^(0[1-9]|[12][0-9]|3[01])\\.(0[1-9]|1[012])\\.([0-9]{4})$/");
-//    startDateElement.setValidationMessage("cel_course_validation_startTimeStamp");
-////    expect(bClass.get("startTimeStamp")).andReturn(startDateElement).once();
-//    
-//    DateClass endDateElement   = new DateClass();
-//    endDateElement.setValidationRegExp(
-//        "/^(0[1-9]|[12][0-9]|3[01])\\.(0[1-9]|1[012])\\.([0-9]{4})$/");
-//    endDateElement.setValidationMessage("cel_course_validation_endTimeStamp");
-//    expect(bClass.get("endTimeStamp")).andReturn(endDateElement).once();
-    
     xwiki.saveDocument(docMock, context);
     expectLastCall();
     
@@ -75,8 +63,9 @@ public class AddDateValidationMigratorTest extends AbstractBridgedComponentTestC
         ) > 0);
     assertTrue(((DateClass) bClass.get("endTimeStamp")).getValidationRegExp().length(
         ) > 0);
-    
-    assertEquals("cel_course_validation_startTimeStamp", ((DateClass) bClass.get("startTimeStamp")).getValidationMessage());
-    assertEquals("cel_course_validation_endTimeStamp", ((DateClass) bClass.get("endTimeStamp")).getValidationMessage());
+    assertEquals("cel_course_validation_startTimeStamp", ((DateClass) bClass.get(
+        "startTimeStamp")).getValidationMessage());
+    assertEquals("cel_course_validation_endTimeStamp", ((DateClass) bClass.get(
+        "endTimeStamp")).getValidationMessage());
   }
 }
