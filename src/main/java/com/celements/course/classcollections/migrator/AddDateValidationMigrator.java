@@ -13,7 +13,6 @@ import com.celements.web.service.IWebUtilsService;
 import com.xpn.xwiki.XWikiContext;
 import com.xpn.xwiki.XWikiException;
 import com.xpn.xwiki.doc.XWikiDocument;
-import com.xpn.xwiki.objects.BaseObject;
 import com.xpn.xwiki.objects.classes.BaseClass;
 import com.xpn.xwiki.objects.classes.DateClass;
 import com.xpn.xwiki.store.migration.XWikiDBVersion;
@@ -40,8 +39,8 @@ public class AddDateValidationMigrator extends AbstractCelementsHibernateMigrato
 
   /**
    * getVersion is using days since 1.1.2010 until the day of committing this
-   * migration 27.5.2014 -> 1607
-   * http://www.convertunits.com/dates/from/Jan+1,+2010/to/Jul+21,+2014
+   * migration 06.08.2014 -> 1678
+   * http://www.convertunits.com/dates/from/Jan+1,+2010/to/Aug+6,+2014
    */
   public XWikiDBVersion getVersion() {
     return new XWikiDBVersion(1678);
