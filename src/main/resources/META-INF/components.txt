@@ -1,3 +1,4 @@
 com.celements.course.classcollections.CourseClasses
 com.celements.course.CourseScriptService
 com.celements.course.classcollections.migrator.AddDateValidationMigrator
+com.celements.course.service.CourseService
