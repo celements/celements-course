@@ -22,7 +22,7 @@ public class CourseService implements ICourseServiceRole {
   private IClassCollectionRole courseClasses;
 
   @Requirement
-  private IWebUtilsService webUtilsService;
+  IWebUtilsService webUtilsService;
 
   @Requirement
   private Execution execution;
@@ -53,18 +53,17 @@ public class CourseService implements ICourseServiceRole {
   public String getCourseTypeName(DocumentReference courseTypeDocRef
       ) throws XWikiException {
     String typeName = "";
-    WikiReference wikiRef = webUtilsService.getWikiRef(courseTypeDocRef);
     XWikiDocument typeDoc = getContext().getWiki().getDocument(courseTypeDocRef, 
         getContext());
     BaseObject typeObj = typeDoc.getXObject(getCourseClasses().getCourseTypeClassRef(
-        wikiRef.getName()));
+        webUtilsService.getWikiRef(courseTypeDocRef).getName()));
     if (typeObj != null) {
       typeName = typeObj.getStringValue("typeName");
     }
     return typeName;
   }
 
-  private CourseClasses getCourseClasses() {
+  CourseClasses getCourseClasses() {
     return (CourseClasses) courseClasses;
   }
 
