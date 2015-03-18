@@ -36,17 +36,18 @@ public class CourseServiceTest extends AbstractBridgedComponentTestCase {
   private CourseService courseService;
   private String db;
   private DocumentReference docRef;
+  private XWikiDocument doc;
 
   @Before
   public void setUp_CourseScriptServiceTest() throws Exception {
     courseService = (CourseService) getComponentManager().lookup(ICourseServiceRole.class);
     db = "db";
     docRef = new DocumentReference(db, "CourseSpace", "CourseX");
+    doc = new XWikiDocument(docRef);
   }
 
   @Test
-  public void testCetCourseTypeForCourse() throws Exception {
-    XWikiDocument doc = new XWikiDocument(docRef);
+  public void testGetCourseTypeForCourse() throws Exception {
     DocumentReference typeDocRef = new DocumentReference(db, "TypeSpace", "TypeX");
     
     expect(getWikiMock().getDocument(eq(docRef), same(getContext()))).andReturn(doc
@@ -63,9 +64,7 @@ public class CourseServiceTest extends AbstractBridgedComponentTestCase {
   }
 
   @Test
-  public void testCetCourseTypeForCourse_noType() throws Exception {
-    XWikiDocument doc = new XWikiDocument(docRef);
-    
+  public void testGetCourseTypeForCourse_noType() throws Exception {    
     expect(getWikiMock().getDocument(eq(docRef), same(getContext()))).andReturn(doc
         ).once();
     BaseObject obj = new BaseObject();
@@ -79,9 +78,7 @@ public class CourseServiceTest extends AbstractBridgedComponentTestCase {
   }
 
   @Test
-  public void testCetCourseTypeForCourse_noObj() throws Exception {
-    XWikiDocument doc = new XWikiDocument(docRef);
-    
+  public void testGetCourseTypeForCourse_noObj() throws Exception {
     expect(getWikiMock().getDocument(eq(docRef), same(getContext()))).andReturn(doc
         ).once();
     
@@ -92,7 +89,7 @@ public class CourseServiceTest extends AbstractBridgedComponentTestCase {
   }
 
   @Test
-  public void testCetCourseTypeForCourse_XWE() throws Exception {
+  public void testGetCourseTypeForCourse_XWE() throws Exception {
     Throwable cause = new XWikiException();
     
     expect(getWikiMock().getDocument(eq(docRef), same(getContext()))).andThrow(cause
@@ -110,7 +107,6 @@ public class CourseServiceTest extends AbstractBridgedComponentTestCase {
 
   @Test
   public void testGetCourseTypeName() throws Exception {
-    XWikiDocument doc = new XWikiDocument(docRef);
     String name = "asdf";
     
     expect(getWikiMock().getDocument(eq(docRef), same(getContext()))).andReturn(doc
@@ -128,8 +124,6 @@ public class CourseServiceTest extends AbstractBridgedComponentTestCase {
 
   @Test
   public void testGetCourseTypeName_noName() throws Exception {
-    XWikiDocument doc = new XWikiDocument(docRef);
-    
     expect(getWikiMock().getDocument(eq(docRef), same(getContext()))).andReturn(doc
         ).once();
     BaseObject typeObj = new BaseObject();
@@ -144,8 +138,6 @@ public class CourseServiceTest extends AbstractBridgedComponentTestCase {
 
   @Test
   public void testGetCourseTypeName_noObj() throws Exception {
-    XWikiDocument doc = new XWikiDocument(docRef);
-    
     expect(getWikiMock().getDocument(eq(docRef), same(getContext()))).andReturn(doc
         ).once();
     
