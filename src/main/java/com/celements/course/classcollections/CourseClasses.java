@@ -33,11 +33,17 @@ import com.xpn.xwiki.objects.classes.BaseClass;
 @Component("CelCourseClasses")
 public class CourseClasses extends AbstractClassCollection {
 
+  public static final String COURSE_FIELD_TYPE = "type";
+
+  public static final String COURSE_FIELD_LEVEL = "level";
+
   public static final String COURSE_PARTICIPANT_CLASS_DOC = "CourseParticipantClass";
 
   public static final String COURSE_CLASS_DOC = "CourseClass";
 
   public static final String COURSE_TYPE_CLASS_DOC = "CourseTypeClass";
+
+  public static final String COURSE_LEVEL_CLASS_DOC = "CourseLevelClass";
 
   public static final String COURSE_CLASSES_SPACE = "CourseClasses";
 
@@ -54,9 +60,44 @@ public class CourseClasses extends AbstractClassCollection {
   
   @Override
   protected void initClasses() throws XWikiException {
+    getCourseLevelClass();
     getCourseTypeClass();
     getCourseClass();
     getCourseParticipantClass();
+  }
+
+  public DocumentReference getCourseLevelClassRef(String wikiName) {
+    return new DocumentReference(wikiName, COURSE_CLASSES_SPACE, COURSE_LEVEL_CLASS_DOC);
+  }
+  
+  BaseClass getCourseLevelClass() throws XWikiException {
+    DocumentReference classRef = getCourseLevelClassRef(getContext().getDatabase());
+    XWikiDocument doc;
+    XWiki xwiki = getContext().getWiki();
+    boolean needsUpdate = false;
+    
+    try {
+      doc = xwiki.getDocument(classRef, getContext());
+    } catch (Exception e) {
+      doc = new XWikiDocument(classRef);
+      needsUpdate = true;
+    }
+    
+    BaseClass bclass = doc.getXClass();
+    bclass.setDocumentReference(classRef);
+    needsUpdate |= bclass.addTextField("levelName", "Course Type Name", 30);
+    needsUpdate |= bclass.addTextField("shortName", "Course Type Short Name", 30);
+    needsUpdate |= bclass.addTextField("level_img_path", "Type Image Path", 30);
+    needsUpdate |= bclass.addNumberField("levelPos", "order position", 5, "integer");
+    needsUpdate |= bclass.addTextAreaField("details", "Details", 80, 15);
+    
+    if(!"internal".equals(bclass.getCustomMapping())){
+      needsUpdate = true;
+      bclass.setCustomMapping("internal");
+    }
+    
+    setContentAndSaveClassDocument(doc, needsUpdate);
+    return bclass;
   }
 
   public DocumentReference getCourseTypeClassRef(String wikiName) {
@@ -113,14 +154,21 @@ public class CourseClasses extends AbstractClassCollection {
     
     BaseClass bclass = doc.getXClass();
     bclass.setDocumentReference(classRef);
-    needsUpdate |= bclass.addDBListField("type", "Type", 1, false, "select distinct"
-        + " doc.fullName,ct.typeName from XWikiDocument as doc, BaseObject as obj,"
-        + " " + COURSE_CLASSES_SPACE + "." + COURSE_TYPE_CLASS_DOC + " as ct"
-        + " where doc.translation=0 and doc.space='CourseType' and "
+    needsUpdate |= bclass.addDBListField(COURSE_FIELD_TYPE, "Type", 1, false,
+        "select distinct doc.fullName,ct.typeName from XWikiDocument as doc,"
+        + " BaseObject as obj, " + COURSE_CLASSES_SPACE + "." + COURSE_TYPE_CLASS_DOC
+        + " as ct where doc.translation=0 and doc.space='CourseType' and "
         + " doc.fullName=obj.name and obj.id=ct.id and obj.className='"
         + COURSE_CLASSES_SPACE + "." + COURSE_TYPE_CLASS_DOC + "'"
         + " order by ct.typeName");
     needsUpdate |= bclass.addTextField("number", "Number", 30);
+    needsUpdate |= bclass.addDBListField(COURSE_FIELD_LEVEL, "Level", 1, false,
+        "select distinct doc.fullName, cl.levelName from XWikiDocument as doc,"
+        + " BaseObject as obj, " + COURSE_CLASSES_SPACE + "." + COURSE_LEVEL_CLASS_DOC
+        + " as cl where doc.translation=0 and doc.space='CourseLevel' and "
+        + " doc.fullName=obj.name and obj.id=cl.id and obj.className='"
+        + COURSE_CLASSES_SPACE + "." + COURSE_LEVEL_CLASS_DOC + "'"
+        + " order by cl.levelPos asc");
     needsUpdate |= bclass.addNumberField("seats", "Seats", 10, "integer");
     needsUpdate |= bclass.addTextAreaField("info", "Info", 80, 15);
     //Teacher is not mapped since a DBList can not be mapped to a String. If a mapping is

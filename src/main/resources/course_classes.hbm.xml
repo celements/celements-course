@@ -3,6 +3,28 @@
         "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
 <hibernate-mapping>
 
+<class entity-name="CourseClasses.CourseLevelClass" table="celcourse_level">
+  <id name="id" type="integer" unsaved-value="undefined">
+    <column name="CLC_ID" not-null="true" />
+    <generator class="assigned" />
+  </id>
+  <property name="levelName" type="string">
+    <column name="CLC_LEVEL_NAME" length="255"/>
+  </property>
+  <property name="shortName" type="string">
+    <column name="CLC_SHORTNAME" length="64"/>
+  </property>
+  <property name="level_img_path" type="string">
+    <column name="CLC_LEVEL_IMG" length="255"/>
+  </property>
+  <property name="levelPos" type="integer">
+    <column name="CLC_POS"/>
+  </property>
+  <property name="details" type="text">
+    <column name="CLC_DETAILS"/>
+  </property>
+</class>
+
 <class entity-name="CourseClasses.CourseTypeClass" table="celcourse_type">
   <id name="id" type="integer" unsaved-value="undefined">
     <column name="CTC_ID" not-null="true" />
@@ -35,6 +57,9 @@
   </property>
   <property name="type" type="string">
     <column name="CRS_TYPE" length="128"/>
+  </property>
+  <property name="level" type="string">
+    <column name="CRS_LEVEL" length="128"/>
   </property>
   <property name="info" type="text">
     <column name="CRS_INFO" />
