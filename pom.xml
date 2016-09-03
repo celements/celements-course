@@ -26,7 +26,7 @@
   <parent>
       <groupId>com.celements</groupId>
       <artifactId>celements</artifactId>
-      <version>2.14</version>
+      <version>2.19</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>  
   <artifactId>celements-course</artifactId>
@@ -43,7 +43,7 @@
     <dependency>
       <groupId>com.celements</groupId>
   	  <artifactId>celements-core</artifactId>
-  	  <version>1.147</version>
+  	  <version>1.148-SNAPSHOT</version>
       <scope>provided</scope>
     </dependency>
   </dependencies>  
