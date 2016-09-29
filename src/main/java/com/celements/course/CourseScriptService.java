@@ -32,6 +32,7 @@ import org.xwiki.script.service.ScriptService;
 
 import com.celements.common.classes.IClassCollectionRole;
 import com.celements.course.classcollections.CourseClasses;
+import com.celements.course.service.ICourseServiceRole;
 import com.xpn.xwiki.XWikiContext;
 import com.xpn.xwiki.XWikiException;
 import com.xpn.xwiki.doc.XWikiDocument;
@@ -42,6 +43,9 @@ import com.xpn.xwiki.objects.classes.PasswordClass;
 public class CourseScriptService implements ScriptService {
 
   private static Log LOGGER = LogFactory.getFactory().getInstance(CourseScriptService.class);
+
+  @Requirement
+  ICourseServiceRole courseService;
 
   @Requirement
   EntityReferenceResolver<String> stringRefResolver;
@@ -146,9 +150,8 @@ public class CourseScriptService implements ScriptService {
    *
    * @return true if registration was successful
    */
-  // TODO title, dob (Day of Birth)
-  public boolean registerParticipantFromRequest() {
-
+  public boolean registerParticipantFromRequest(boolean sendValidationMail) {
+    return courseService.registerParticipantFromRequest(sendValidationMail);
   }
 
 }
