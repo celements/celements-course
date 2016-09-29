@@ -41,8 +41,7 @@ import com.xpn.xwiki.objects.classes.PasswordClass;
 @Component("celcourse")
 public class CourseScriptService implements ScriptService {
 
-  private static Log LOGGER = LogFactory.getFactory().getInstance(
-      CourseScriptService.class);
+  private static Log LOGGER = LogFactory.getFactory().getInstance(CourseScriptService.class);
 
   @Requirement
   EntityReferenceResolver<String> stringRefResolver;
@@ -54,11 +53,11 @@ public class CourseScriptService implements ScriptService {
   Execution execution;
 
   private XWikiContext getContext() {
-    return (XWikiContext)execution.getContext().getProperty("xwikicontext");
+    return (XWikiContext) execution.getContext().getProperty("xwikicontext");
   }
 
   private CourseClasses getCourseClasses() {
-    return (CourseClasses)courseClasses;
+    return (CourseClasses) courseClasses;
   }
 
   public DocumentReference getCourseClassRef() {
@@ -74,8 +73,7 @@ public class CourseScriptService implements ScriptService {
   }
 
   public String getCourseParticipantClass() {
-    return CourseClasses.COURSE_CLASSES_SPACE + "."
-         + CourseClasses.COURSE_PARTICIPANT_CLASS_DOC;
+    return CourseClasses.COURSE_CLASSES_SPACE + "." + CourseClasses.COURSE_PARTICIPANT_CLASS_DOC;
   }
 
   public DocumentReference getCourseTypeClassRef() {
@@ -87,8 +85,8 @@ public class CourseScriptService implements ScriptService {
   }
 
   DocumentReference getDocRefForFullName(String courseFN) {
-    DocumentReference courseDocRef = new DocumentReference(stringRefResolver.resolve(
-        courseFN, EntityType.DOCUMENT));
+    DocumentReference courseDocRef = new DocumentReference(stringRefResolver.resolve(courseFN,
+        EntityType.DOCUMENT));
     courseDocRef.setWikiReference(new WikiReference(getContext().getDatabase()));
     return courseDocRef;
   }
@@ -101,26 +99,25 @@ public class CourseScriptService implements ScriptService {
     return emailAdr.toLowerCase().trim();
   }
 
-  public boolean validateParticipant(String courseFN, String emailAdr,
-      String activationCode) {
-    DocumentReference partiClassRef = new DocumentReference(getContext().getDatabase(), 
-        "Classes", "CourseParticipantClass");
+  public boolean validateParticipant(String courseFN, String emailAdr, String activationCode) {
+    DocumentReference partiClassRef = new DocumentReference(getContext().getDatabase(), "Classes",
+        "CourseParticipantClass");
 
     try {
-      XWikiDocument courseDoc = getContext().getWiki().getDocument(getDocRefForFullName(
-          courseFN), getContext());
-      BaseObject partiObj = courseDoc.getXObject(partiClassRef, "email",
-          normalizeEmail(emailAdr), false);
+      XWikiDocument courseDoc = getContext().getWiki().getDocument(getDocRefForFullName(courseFN),
+          getContext());
+      BaseObject partiObj = courseDoc.getXObject(partiClassRef, "email", normalizeEmail(emailAdr),
+          false);
       if (partiObj != null) {
         String hashedCode = passwordHashString(activationCode);
         String savedHash = partiObj.getStringValue("validkey");
-        LOGGER.trace("validateParticipant: email [" + normalizeEmail(emailAdr)
-            + "], hashedCode [" + hashedCode + "], savedHash [" + savedHash + "].");
+        LOGGER.trace("validateParticipant: email [" + normalizeEmail(emailAdr) + "], hashedCode ["
+            + hashedCode + "], savedHash [" + savedHash + "].");
         if (hashedCode.equals(savedHash)) {
           if ("unconfirmed".equals(partiObj.getStringValue("status"))) {
             partiObj.setStringValue("status", "confirmed");
-            getContext().getWiki().saveDocument(courseDoc, "validate email addresse by"
-                + " link.", getContext());
+            getContext().getWiki().saveDocument(courseDoc, "validate email addresse by" + " link.",
+                getContext());
             return true;
           } else {
             LOGGER.debug("validateParticipant failed because initial status is not"
@@ -128,19 +125,30 @@ public class CourseScriptService implements ScriptService {
           }
         } else {
           LOGGER.debug("validateParticipant failed because activationCode does not match"
-              + " object key. email [" + normalizeEmail(emailAdr) + "], hashedCode ["
-          		+ hashedCode + "], savedHash [" + savedHash + "]");
+              + " object key. email [" + normalizeEmail(emailAdr) + "], hashedCode [" + hashedCode
+              + "], savedHash [" + savedHash + "]");
         }
       } else {
-        LOGGER.debug("validateParticipant failed because no partizipant object for"
-            + " email [" + normalizeEmail(emailAdr) + "], on course [" + courseFN
-            + "] found.");
+        LOGGER.debug("validateParticipant failed because no partizipant object for" + " email ["
+            + normalizeEmail(emailAdr) + "], on course [" + courseFN + "] found.");
       }
     } catch (XWikiException exp) {
-      LOGGER.error("Failed to validateParticipant for [" + courseFN + "], [" + emailAdr
-          + "], [" + activationCode + "].", exp);
+      LOGGER.error("Failed to validateParticipant for [" + courseFN + "], [" + emailAdr + "], ["
+          + activationCode + "].", exp);
     }
     return false;
+  }
+
+  /**
+   * Required fields: eventid, surname[], email[] <br />
+   * Optional fields: givenName[], addressEqualsMain[], street[], zip[], city[], phone[],
+   * comment
+   *
+   * @return true if registration was successful
+   */
+  // TODO title, dob (Day of Birth)
+  public boolean registerParticipantFromRequest() {
+
   }
 
 }
