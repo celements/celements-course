@@ -45,7 +45,7 @@ public class CourseScriptService implements ScriptService {
   private static Log LOGGER = LogFactory.getFactory().getInstance(CourseScriptService.class);
 
   @Requirement
-  ICourseServiceRole courseService;
+  private ICourseServiceRole courseService;
 
   @Requirement
   EntityReferenceResolver<String> stringRefResolver;

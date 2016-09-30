@@ -15,6 +15,7 @@ import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.model.reference.SpaceReference;
 import org.xwiki.model.reference.WikiReference;
 
+import com.celements.common.classes.IClassCollectionRole;
 import com.celements.course.classcollections.CourseClasses;
 import com.celements.course.registration.Person;
 import com.celements.course.registration.RegistrationData;
@@ -41,7 +42,7 @@ public class CourseService implements ICourseServiceRole {
   private static Logger LOGGER = LoggerFactory.getLogger(CourseService.class);
 
   @Requirement("CelCourseClasses")
-  private CourseClasses courseClasses;
+  private IClassCollectionRole courseClasses;
 
   @Requirement
   IWebUtilsService webUtilsService;
@@ -54,6 +55,7 @@ public class CourseService implements ICourseServiceRole {
 
   @Requirement
   ModelConfiguration modelConfig;
+
   @Requirement
   INextFreeDocRole nextFreeDoc;
 
@@ -104,7 +106,8 @@ public class CourseService implements ICourseServiceRole {
     data.setRegDocRef(nextFreeDoc.getNextUntitledPageDocRef(getSpaceForEventId(data.getEventid())));
     try {
       XWikiDocument regDoc = modelAccess.createDocument(data.getRegDocRef());
-      DocumentReference classRef = courseClasses.getCourseParticipantClassRef(
+      setRegDocRights(regDoc);
+      DocumentReference classRef = getCourseClasses().getCourseParticipantClassRef(
           modelContext.getWikiRef().getName());
       for (Person person : data.getPersons()) {
         if (!person.isEmpty() || (modelAccess.getXObjects(regDoc, classRef).size() == 0)) {
@@ -136,6 +139,12 @@ public class CourseService implements ICourseServiceRole {
       LOGGER.error("exception while creating new registration", excp);
     }
     return false;
+  }
+
+  void setRegDocRights(XWikiDocument regDoc) {
+    // if(regDoc.isNew() && modelAccess.exists(regDoc.)) {
+    // TODO
+    // }
   }
 
   void sendConfirmationMail(RegistrationData data) throws XWikiException {
@@ -175,7 +184,7 @@ public class CourseService implements ICourseServiceRole {
   }
 
   CourseClasses getCourseClasses() {
-    return courseClasses;
+    return (CourseClasses) courseClasses;
   }
 
 }
