@@ -83,19 +83,19 @@ public class RegistrationData {
     setEventid(req.get("eventid"));
     setComment(req.get("comment"));
     persons = new ArrayList<>();
-    for (int i = 0; i < req.getParameterValues("title").length; i++) {
+    for (int i = 0; getEndCondition(req.getParameterValues("title"), i); i++) {
       getSetPerson(persons, i).setTitle(req.getParameterValues("title")[i]);
     }
-    for (int i = 0; i < req.getParameterValues("givenName").length; i++) {
+    for (int i = 0; getEndCondition(req.getParameterValues("givenName"), i); i++) {
       getSetPerson(persons, i).setGivenName(req.getParameterValues("givenName")[i]);
     }
-    for (int i = 0; i < req.getParameterValues("title").length; i++) {
-      getSetPerson(persons, i).setSurname(req.getParameterValues("title")[i]);
+    for (int i = 0; getEndCondition(req.getParameterValues("surname"), i); i++) {
+      getSetPerson(persons, i).setSurname(req.getParameterValues("surname")[i]);
     }
-    for (int i = 0; i < req.getParameterValues("email").length; i++) {
+    for (int i = 0; getEndCondition(req.getParameterValues("email"), i); i++) {
       getSetPerson(persons, i).setEmail(req.getParameterValues("email")[i]);
     }
-    for (int i = 0; i < req.getParameterValues("addressEqualsMain").length; i++) {
+    for (int i = 0; getEndCondition(req.getParameterValues("addressEqualsMain"), i); i++) {
       int idx = i;
       if ((i > 0) && "1".equals(req.getParameterValues("addressEqualsMain"))) {
         idx = 0;
@@ -104,15 +104,19 @@ public class RegistrationData {
       getSetPerson(persons, i).setZip(req.getParameterValues("zip")[idx]);
       getSetPerson(persons, i).setCity(req.getParameterValues("city")[idx]);
     }
-    for (int i = 0; i < req.getParameterValues("phone").length; i++) {
+    for (int i = 0; getEndCondition(req.getParameterValues("phone"), i); i++) {
       getSetPerson(persons, i).setPhone(req.getParameterValues("phone")[i]);
     }
-    for (int i = 0; i < req.getParameterValues("dob").length; i++) {
+    for (int i = 0; getEndCondition(req.getParameterValues("dob"), i); i++) {
       getSetPerson(persons, i).setDateOfBirth(req.getParameterValues("dob")[i]);
     }
-    for (int i = 0; i < req.getParameterValues("status").length; i++) {
+    for (int i = 0; getEndCondition(req.getParameterValues("status"), i); i++) {
       getSetPerson(persons, i).setStatus(req.getParameterValues("status")[i]);
     }
+  }
+
+  boolean getEndCondition(String[] strs, int i) {
+    return (strs != null) && (i < strs.length);
   }
 
   Person getSetPerson(List<Person> personList, int i) {
