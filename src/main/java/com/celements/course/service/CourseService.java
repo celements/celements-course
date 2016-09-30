@@ -20,6 +20,7 @@ import com.celements.course.classcollections.CourseClasses;
 import com.celements.course.registration.Person;
 import com.celements.course.registration.RegistrationData;
 import com.celements.mailsender.IMailSenderRole;
+import com.celements.mandatory.IMandatoryDocumentRole;
 import com.celements.model.access.IModelAccessFacade;
 import com.celements.model.access.exception.DocumentAlreadyExistsException;
 import com.celements.model.access.exception.DocumentSaveException;
@@ -43,6 +44,9 @@ public class CourseService implements ICourseServiceRole {
 
   @Requirement("CelCourseClasses")
   private IClassCollectionRole courseClasses;
+
+  @Requirement("progon.mandatory.wikirights")
+  IMandatoryDocumentRole mandatoryWikiRights;
 
   @Requirement
   IWebUtilsService webUtilsService;
@@ -106,7 +110,7 @@ public class CourseService implements ICourseServiceRole {
     data.setRegDocRef(nextFreeDoc.getNextUntitledPageDocRef(getSpaceForEventId(data.getEventid())));
     try {
       XWikiDocument regDoc = modelAccess.createDocument(data.getRegDocRef());
-      setRegDocRights(regDoc);
+      setMandatoryRegSpaceDocs(regDoc);
       DocumentReference classRef = getCourseClasses().getCourseParticipantClassRef(
           modelContext.getWikiRef().getName());
       for (Person person : data.getPersons()) {
@@ -141,10 +145,36 @@ public class CourseService implements ICourseServiceRole {
     return false;
   }
 
-  void setRegDocRights(XWikiDocument regDoc) {
-    // if(regDoc.isNew() && modelAccess.exists(regDoc.)) {
-    // TODO
-    // }
+  void setMandatoryRegSpaceDocs(XWikiDocument regDoc) {
+    if (regDoc.isNew()) {
+      SpaceReference regSpace = regDoc.getDocumentReference().getLastSpaceReference();
+      DocumentReference webPrefRef = new DocumentReference("WebPreferences", regSpace);
+      if (!modelAccess.exists(webPrefRef)) {
+        DocumentReference globalRightsRef = new DocumentReference("XWikiGlobalRights",
+            new SpaceReference("XWiki", modelContext.getWikiRef()));
+        XWikiDocument webPrefDoc = modelAccess.getOrCreateDocument(webPrefRef);
+        BaseObject rightsObj = modelAccess.newXObject(webPrefDoc, globalRightsRef);
+        modelAccess.setProperty(rightsObj, "groups", "XWiki.XWikiAdminGroup");
+        modelAccess.setProperty(rightsObj, "levels", "view,edit,delete,undelete");
+        modelAccess.setProperty(rightsObj, "users", "");
+        modelAccess.setProperty(rightsObj, "allow", 1);
+        try {
+          modelAccess.saveDocument(webPrefDoc, "createdAndSetContent");
+        } catch (DocumentSaveException dse) {
+          LOGGER.error("Exception saving registration space WebPreferences document.", dse);
+        }
+      }
+      DocumentReference webHomeRef = new DocumentReference("WebHome", regSpace);
+      if (!modelAccess.exists(webHomeRef)) {
+        XWikiDocument webHomeDoc = modelAccess.getOrCreateDocument(webHomeRef);
+        webHomeDoc.setContent("#parse('celMacros/getRegistrationListing')");
+        try {
+          modelAccess.saveDocument(webHomeDoc, "createdAndSetContent");
+        } catch (DocumentSaveException dse) {
+          LOGGER.error("Exception saving registration space WebHome document.", dse);
+        }
+      }
+    }
   }
 
   void sendConfirmationMail(RegistrationData data) throws XWikiException {
