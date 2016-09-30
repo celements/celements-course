@@ -100,9 +100,15 @@ public class RegistrationData {
       if ((i > 0) && "1".equals(req.getParameterValues("addressEqualsMain"))) {
         idx = 0;
       }
-      getSetPerson(persons, i).setAddress(req.getParameterValues("street")[idx]);
-      getSetPerson(persons, i).setZip(req.getParameterValues("zip")[idx]);
-      getSetPerson(persons, i).setCity(req.getParameterValues("city")[idx]);
+      if (req.getParameterValues("street").length >= idx) {
+        getSetPerson(persons, i).setAddress(req.getParameterValues("street")[idx]);
+      }
+      if (req.getParameterValues("zip").length >= idx) {
+        getSetPerson(persons, i).setZip(req.getParameterValues("zip")[idx]);
+      }
+      if (req.getParameterValues("city").length >= idx) {
+        getSetPerson(persons, i).setCity(req.getParameterValues("city")[idx]);
+      }
     }
     for (int i = 0; getEndCondition(req.getParameterValues("phone"), i); i++) {
       getSetPerson(persons, i).setPhone(req.getParameterValues("phone")[i]);
