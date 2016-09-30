@@ -13,6 +13,7 @@ public interface ICourseServiceRole {
 
   public String getCourseTypeName(DocumentReference courseTypeDocRef) throws XWikiException;
 
-  public boolean registerParticipantFromRequest(boolean sendValidationMail);
+  public boolean registerParticipantFromRequest(boolean sendConfirmationMail);
 
+  public String normalizeEmail(String emailAdr);
 }

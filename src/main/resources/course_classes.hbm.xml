@@ -116,6 +116,9 @@
   <property name="status" type="string">
     <column name="CPC_STATUS" length="16"/>
   </property>
+  <property name="comment" type="text">
+    <column name="CPC_COMMENT"/>
+  </property>
   <property name="validkey" type="string" unique="false" optimistic-lock="true" lazy="false" generated="never">
     <column name="CPC_VALIDATION_KEY" />
   </property>

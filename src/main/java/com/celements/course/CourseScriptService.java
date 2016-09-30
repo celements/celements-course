@@ -100,7 +100,7 @@ public class CourseScriptService implements ScriptService {
   }
 
   public String normalizeEmail(String emailAdr) {
-    return emailAdr.toLowerCase().trim();
+    return courseService.normalizeEmail(emailAdr);
   }
 
   public boolean validateParticipant(String courseFN, String emailAdr, String activationCode) {
@@ -150,8 +150,8 @@ public class CourseScriptService implements ScriptService {
    *
    * @return true if registration was successful
    */
-  public boolean registerParticipantFromRequest(boolean sendValidationMail) {
-    return courseService.registerParticipantFromRequest(sendValidationMail);
+  public boolean registerParticipantFromRequest(boolean sendConfirmationMail) {
+    return courseService.registerParticipantFromRequest(sendConfirmationMail);
   }
 
 }

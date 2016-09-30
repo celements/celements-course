@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.List;
 
 import org.apache.commons.lang.RandomStringUtils;
+import org.xwiki.model.reference.DocumentReference;
 
 import com.google.common.base.Strings;
 import com.xpn.xwiki.web.XWikiRequest;
@@ -16,6 +17,7 @@ public class RegistrationData {
   private String comment;
   private String validationKey;
   private String mainEmail;
+  private DocumentReference regDocRef;
 
   public RegistrationData() {
   }
@@ -56,6 +58,14 @@ public class RegistrationData {
 
   public void setValidationKey(String validationKey) {
     this.validationKey = validationKey;
+  }
+
+  public DocumentReference getRegDocRef() {
+    return regDocRef;
+  }
+
+  public void setRegDocRef(DocumentReference regDocRef) {
+    this.regDocRef = regDocRef;
   }
 
   public void setEventid(String eventid) {

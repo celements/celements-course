@@ -222,6 +222,7 @@ public class CourseClasses extends AbstractClassCollection {
     needsUpdate |= bclass.addDateField("dob", "Day of Birth", null, 0);
     needsUpdate |= bclass.addStaticListField("status", "Status", 1, false,
         "unconfirmed|confirmed|payed|cancelled", "select", ",|");
+    needsUpdate |= bclass.addTextAreaField("comment", "Comment", 80, 15);
     needsUpdate |= bclass.addPasswordField("validkey", "Validation Key", 10);
     needsUpdate |= bclass.addDateField("timestamp", "Timestamp");
     needsUpdate |= bclass.addTextField("client", "Clien Info", 30);
