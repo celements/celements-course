@@ -116,6 +116,7 @@ public class CourseService implements ICourseServiceRole {
       for (Person person : data.getPersons()) {
         if (!person.isEmpty() || (modelAccess.getXObjects(regDoc, classRef).size() == 0)) {
           BaseObject obj = modelAccess.newXObject(regDoc, classRef);
+          obj.setStringValue("eventid", data.getEventid());
           obj.setStringValue("title", person.getTitle());
           obj.setStringValue("firstname", person.getGivenName());
           obj.setStringValue("lastname", person.getSurname());
