@@ -104,8 +104,8 @@ public class CourseScriptService implements ScriptService {
   }
 
   public boolean validateParticipant(String courseFN, String emailAdr, String activationCode) {
-    DocumentReference partiClassRef = new DocumentReference(getContext().getDatabase(), "Classes",
-        "CourseParticipantClass");
+    DocumentReference partiClassRef = new DocumentReference(getContext().getDatabase(),
+        CourseClasses.COURSE_CLASSES_SPACE, CourseClasses.COURSE_PARTICIPANT_CLASS_DOC);
 
     try {
       XWikiDocument courseDoc = getContext().getWiki().getDocument(getDocRefForFullName(courseFN),
