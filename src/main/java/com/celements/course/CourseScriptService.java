@@ -19,8 +19,8 @@
  */
 package com.celements.course;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.xwiki.component.annotation.Component;
 import org.xwiki.component.annotation.Requirement;
 import org.xwiki.context.Execution;
@@ -42,7 +42,7 @@ import com.xpn.xwiki.objects.classes.PasswordClass;
 @Component("celcourse")
 public class CourseScriptService implements ScriptService {
 
-  private static Log LOGGER = LogFactory.getFactory().getInstance(CourseScriptService.class);
+  private static Logger LOGGER = LoggerFactory.getLogger(CourseScriptService.class);
 
   @Requirement
   private ICourseServiceRole courseService;
@@ -104,6 +104,9 @@ public class CourseScriptService implements ScriptService {
   }
 
   public boolean validateParticipant(String courseFN, String emailAdr, String activationCode) {
+    LOGGER.debug(
+        "validateParticipant with registration doc [{}], email [{}] and activation code [{}]",
+        courseFN, emailAdr, activationCode);
     DocumentReference partiClassRef = new DocumentReference(getContext().getDatabase(),
         CourseClasses.COURSE_CLASSES_SPACE, CourseClasses.COURSE_PARTICIPANT_CLASS_DOC);
 
@@ -112,6 +115,8 @@ public class CourseScriptService implements ScriptService {
           getContext());
       BaseObject partiObj = courseDoc.getXObject(partiClassRef, "email", normalizeEmail(emailAdr),
           false);
+      LOGGER.debug("validateParticipant courseDoc [{}] found participant: [{}]", courseDoc,
+          partiObj != null);
       if (partiObj != null) {
         String hashedCode = passwordHashString(activationCode);
         String savedHash = partiObj.getStringValue("validkey");
