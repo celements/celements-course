@@ -20,7 +20,6 @@ import com.celements.course.classcollections.CourseClasses;
 import com.celements.course.registration.Person;
 import com.celements.course.registration.RegistrationData;
 import com.celements.mailsender.IMailSenderRole;
-import com.celements.mandatory.IMandatoryDocumentRole;
 import com.celements.model.access.IModelAccessFacade;
 import com.celements.model.access.exception.DocumentAlreadyExistsException;
 import com.celements.model.access.exception.DocumentSaveException;
@@ -44,9 +43,6 @@ public class CourseService implements ICourseServiceRole {
 
   @Requirement("CelCourseClasses")
   private IClassCollectionRole courseClasses;
-
-  @Requirement("progon.mandatory.wikirights")
-  IMandatoryDocumentRole mandatoryWikiRights;
 
   @Requirement
   IWebUtilsService webUtilsService;
