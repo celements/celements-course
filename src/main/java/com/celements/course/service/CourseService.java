@@ -125,7 +125,8 @@ public class CourseService implements ICourseServiceRole {
           obj.setStringValue("status", person.getStatus());
           if (obj.getNumber() == 0) {
             obj.setLargeStringValue("comment", data.getComment());
-            obj.setStringValue("validkey", data.getValidationKey());
+            // using set since there is no setPassword method
+            obj.set("validkey", data.getValidationKey(), getContext());
             obj.setDateValue("timestamp", new Date());
             obj.setStringValue("client", getClientInfo());
           }
