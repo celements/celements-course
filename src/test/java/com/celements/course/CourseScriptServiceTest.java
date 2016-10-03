@@ -31,6 +31,7 @@ import org.xwiki.model.reference.EntityReferenceResolver;
 import org.xwiki.script.service.ScriptService;
 
 import com.celements.common.test.AbstractComponentTest;
+import com.celements.course.classcollections.CourseClasses;
 import com.xpn.xwiki.XWiki;
 import com.xpn.xwiki.doc.XWikiDocument;
 import com.xpn.xwiki.objects.BaseObject;
@@ -123,8 +124,8 @@ public class CourseScriptServiceTest extends AbstractComponentTest {
         "Kurs2");
     XWikiDocument courseDoc = new XWikiDocument(courseDocRef);
     expect(xwiki.getDocument(eq(courseDocRef), same(getContext()))).andReturn(courseDoc);
-    DocumentReference partiClassRef = new DocumentReference(getContext().getDatabase(), "Classes",
-        "CourseParticipantClass");
+    DocumentReference partiClassRef = new DocumentReference(getContext().getDatabase(),
+        CourseClasses.COURSE_CLASSES_SPACE, CourseClasses.COURSE_PARTICIPANT_CLASS_DOC);
     BaseObject partiObj = new BaseObject();
     String emailAdr = "test@test.com";
     partiObj.setXClassReference(partiClassRef);
