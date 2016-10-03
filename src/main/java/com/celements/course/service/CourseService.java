@@ -164,7 +164,7 @@ public class CourseService implements ICourseServiceRole {
       DocumentReference webHomeRef = new DocumentReference("WebHome", regSpace);
       if (!modelAccess.exists(webHomeRef)) {
         XWikiDocument webHomeDoc = modelAccess.getOrCreateDocument(webHomeRef);
-        webHomeDoc.setContent("#parse('celMacros/getRegistrationListing')");
+        webHomeDoc.setContent("#parse('celMacros/getRegistrationListing.vm')");
         try {
           modelAccess.saveDocument(webHomeDoc, "createdAndSetContent");
         } catch (DocumentSaveException dse) {
