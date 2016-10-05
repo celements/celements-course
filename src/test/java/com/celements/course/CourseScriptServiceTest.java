@@ -64,18 +64,6 @@ public class CourseScriptServiceTest extends AbstractComponentTest {
   }
 
   @Test
-  public void testGetDocRefForFullName() {
-    DocumentReference courseDocRefNew = new DocumentReference("none", "mySpace", "MyDoc");
-    expect(stringRefResolverMock.resolve(eq("mySpace.MyDoc"), eq(EntityType.DOCUMENT))).andReturn(
-        courseDocRefNew);
-    DocumentReference courseDocRef = new DocumentReference(getContext().getDatabase(), "mySpace",
-        "MyDoc");
-    replayAll();
-    assertEquals(courseDocRef, courseScriptService.getDocRefForFullName("mySpace.MyDoc"));
-    verifyAll();
-  }
-
-  @Test
   public void testValidateParticipant_no_object() throws Exception {
     DocumentReference courseDocRefNew = new DocumentReference("none", "Kurse", "Kurs2");
     expect(stringRefResolverMock.resolve(eq("Kurse.Kurs2"), eq(EntityType.DOCUMENT))).andReturn(

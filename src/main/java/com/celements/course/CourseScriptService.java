@@ -24,15 +24,14 @@ import org.slf4j.LoggerFactory;
 import org.xwiki.component.annotation.Component;
 import org.xwiki.component.annotation.Requirement;
 import org.xwiki.context.Execution;
-import org.xwiki.model.EntityType;
 import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.model.reference.EntityReferenceResolver;
-import org.xwiki.model.reference.WikiReference;
 import org.xwiki.script.service.ScriptService;
 
 import com.celements.common.classes.IClassCollectionRole;
 import com.celements.course.classcollections.CourseClasses;
 import com.celements.course.service.ICourseServiceRole;
+import com.celements.model.util.ModelUtils;
 import com.xpn.xwiki.XWikiContext;
 import com.xpn.xwiki.XWikiException;
 import com.xpn.xwiki.doc.XWikiDocument;
@@ -52,6 +51,9 @@ public class CourseScriptService implements ScriptService {
 
   @Requirement("CelCourseClasses")
   IClassCollectionRole courseClasses;
+
+  @Requirement
+  ModelUtils modelUtils;
 
   @Requirement
   Execution execution;
@@ -88,13 +90,6 @@ public class CourseScriptService implements ScriptService {
     return CourseClasses.COURSE_CLASSES_SPACE + "." + CourseClasses.COURSE_TYPE_CLASS_DOC;
   }
 
-  DocumentReference getDocRefForFullName(String courseFN) {
-    DocumentReference courseDocRef = new DocumentReference(stringRefResolver.resolve(courseFN,
-        EntityType.DOCUMENT));
-    courseDocRef.setWikiReference(new WikiReference(getContext().getDatabase()));
-    return courseDocRef;
-  }
-
   public String passwordHashString(String str) {
     return new PasswordClass().getEquivalentPassword("hash:SHA-512:", str);
   }
@@ -111,8 +106,8 @@ public class CourseScriptService implements ScriptService {
         CourseClasses.COURSE_CLASSES_SPACE, CourseClasses.COURSE_PARTICIPANT_CLASS_DOC);
 
     try {
-      XWikiDocument courseDoc = getContext().getWiki().getDocument(getDocRefForFullName(courseFN),
-          getContext());
+      XWikiDocument courseDoc = getContext().getWiki().getDocument(new DocumentReference(
+          modelUtils.resolveRef(courseFN)), getContext());
       BaseObject partiObj = courseDoc.getXObject(partiClassRef, "email", normalizeEmail(emailAdr),
           false);
       LOGGER.debug("validateParticipant courseDoc [{}] found participant: [{}]", courseDoc,
