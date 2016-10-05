@@ -22,6 +22,7 @@ import com.celements.course.registration.RegistrationData;
 import com.celements.mailsender.IMailSenderRole;
 import com.celements.model.access.IModelAccessFacade;
 import com.celements.model.access.exception.DocumentAlreadyExistsException;
+import com.celements.model.access.exception.DocumentNotExistsException;
 import com.celements.model.access.exception.DocumentSaveException;
 import com.celements.model.context.ModelContext;
 import com.celements.nextfreedoc.INextFreeDocRole;
@@ -74,9 +75,13 @@ public class CourseService implements ICourseServiceRole {
       throws XWikiException {
     DocumentReference typeDocRef = null;
     WikiReference wikiRef = webUtilsService.getWikiRef(courseDocRef);
-    XWikiDocument courseDoc = getContext().getWiki().getDocument(courseDocRef, getContext());
-    BaseObject courseObj = courseDoc.getXObject(getCourseClasses().getCourseClassRef(
-        wikiRef.getName()));
+    BaseObject courseObj = null;
+    try {
+      courseObj = modelAccess.getXObject(courseDocRef, getCourseClasses().getCourseClassRef(
+          wikiRef.getName()));
+    } catch (DocumentNotExistsException dnee) {
+      LOGGER.error("getCourseTypeForCourse: Course document {} does not exist", courseDocRef, dnee);
+    }
     if (courseObj != null) {
       String typeFN = courseObj.getStringValue("type");
       if (StringUtils.isNotBlank(typeFN)) {
@@ -89,9 +94,13 @@ public class CourseService implements ICourseServiceRole {
   @Override
   public String getCourseTypeName(DocumentReference courseTypeDocRef) throws XWikiException {
     String typeName = "";
-    XWikiDocument typeDoc = getContext().getWiki().getDocument(courseTypeDocRef, getContext());
-    BaseObject typeObj = typeDoc.getXObject(getCourseClasses().getCourseTypeClassRef(
-        webUtilsService.getWikiRef(courseTypeDocRef).getName()));
+    BaseObject typeObj = null;
+    try {
+      typeObj = modelAccess.getXObject(courseTypeDocRef, getCourseClasses().getCourseTypeClassRef(
+          webUtilsService.getWikiRef(courseTypeDocRef).getName()));
+    } catch (DocumentNotExistsException dnee) {
+      LOGGER.error("getCourseTypeName: Course document {} does not exist", courseTypeDocRef, dnee);
+    }
     if (typeObj != null) {
       typeName = typeObj.getStringValue("typeName");
     }
@@ -187,7 +196,8 @@ public class CourseService implements ICourseServiceRole {
       LOGGER.error("could not convert mail html content to plain text", ctpte);
     }
     XWikiMessageTool msgTool = webUtilsService.getMessageTool(getContext().getLanguage());
-    // TODO get correct from / replyTo addresses
+    // TODO https://synjira.atlassian.net/browse/CELDEV-357 (Event Registration
+    // Confirmation Mail from / replyTo addresses)
     // TODO add generic dictionary key to general dictionary
     // (event_reg_verification_mail_subject)
     mailSender.sendMail("reg@bellis.cel.sneakapeek.ch", "reg@bellis.cel.sneakapeek.ch",
@@ -201,9 +211,11 @@ public class CourseService implements ICourseServiceRole {
   }
 
   String getClientInfo() {
-    String clientInfo = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
-    clientInfo += " @ " + getContext().getRequest().getHttpServletRequest().getHeader("user-agent");
-    return clientInfo;
+    StringBuilder clientInfo = new StringBuilder();
+    clientInfo.append(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date()));
+    clientInfo.append(" @ ");
+    clientInfo.append(getContext().getRequest().getHttpServletRequest().getHeader("user-agent"));
+    return clientInfo.toString();
   }
 
   SpaceReference getSpaceForEventId(String eventid) {
