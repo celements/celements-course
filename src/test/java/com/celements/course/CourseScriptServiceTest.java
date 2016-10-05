@@ -25,7 +25,6 @@ import static org.junit.Assert.*;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.xwiki.model.EntityType;
 import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.model.reference.EntityReferenceResolver;
 import org.xwiki.script.service.ScriptService;
@@ -65,12 +64,10 @@ public class CourseScriptServiceTest extends AbstractComponentTest {
 
   @Test
   public void testValidateParticipant_no_object() throws Exception {
-    DocumentReference courseDocRefNew = new DocumentReference("none", "Kurse", "Kurs2");
-    expect(stringRefResolverMock.resolve(eq("Kurse.Kurs2"), eq(EntityType.DOCUMENT))).andReturn(
-        courseDocRefNew);
     DocumentReference courseDocRef = new DocumentReference(getContext().getDatabase(), "Kurse",
         "Kurs2");
     XWikiDocument courseDoc = new XWikiDocument(courseDocRef);
+    expect(xwiki.exists(eq(courseDocRef), same(getContext()))).andReturn(true);
     expect(xwiki.getDocument(eq(courseDocRef), same(getContext()))).andReturn(courseDoc);
     expectLastCall().once();
     replayAll();
@@ -81,12 +78,10 @@ public class CourseScriptServiceTest extends AbstractComponentTest {
 
   @Test
   public void testValidateParticipant_wrong_initial_status() throws Exception {
-    DocumentReference courseDocRefNew = new DocumentReference("none", "Kurse", "Kurs2");
-    expect(stringRefResolverMock.resolve(eq("Kurse.Kurs2"), eq(EntityType.DOCUMENT))).andReturn(
-        courseDocRefNew);
     DocumentReference courseDocRef = new DocumentReference(getContext().getDatabase(), "Kurse",
         "Kurs2");
     XWikiDocument courseDoc = new XWikiDocument(courseDocRef);
+    expect(xwiki.exists(eq(courseDocRef), same(getContext()))).andReturn(true);
     expect(xwiki.getDocument(eq(courseDocRef), same(getContext()))).andReturn(courseDoc);
     DocumentReference partiClassRef = new DocumentReference(getContext().getDatabase(), "Classes",
         "CourseParticipantClass");
@@ -105,12 +100,10 @@ public class CourseScriptServiceTest extends AbstractComponentTest {
 
   @Test
   public void testValidateParticipant() throws Exception {
-    DocumentReference courseDocRefNew = new DocumentReference("none", "Kurse", "Kurs2");
-    expect(stringRefResolverMock.resolve(eq("Kurse.Kurs2"), eq(EntityType.DOCUMENT))).andReturn(
-        courseDocRefNew);
     DocumentReference courseDocRef = new DocumentReference(getContext().getDatabase(), "Kurse",
         "Kurs2");
     XWikiDocument courseDoc = new XWikiDocument(courseDocRef);
+    expect(xwiki.exists(eq(courseDocRef), same(getContext()))).andReturn(true);
     expect(xwiki.getDocument(eq(courseDocRef), same(getContext()))).andReturn(courseDoc);
     DocumentReference partiClassRef = new DocumentReference(getContext().getDatabase(),
         CourseClasses.COURSE_CLASSES_SPACE, CourseClasses.COURSE_PARTICIPANT_CLASS_DOC);
@@ -121,7 +114,8 @@ public class CourseScriptServiceTest extends AbstractComponentTest {
     partiObj.setStringValue("validkey", ACTIVATION_HASH);
     partiObj.setStringValue("status", "unconfirmed");
     courseDoc.setXObject(0, partiObj);
-    xwiki.saveDocument(same(courseDoc), eq("validate email addresse by link."), same(getContext()));
+    xwiki.saveDocument(same(courseDoc), eq("validate email addresse by link."), eq(false), same(
+        getContext()));
     expectLastCall().once();
     replayAll();
     assertTrue(courseScriptService.validateParticipant("Kurse.Kurs2", emailAdr, ACTIVATION_CODE));

@@ -30,6 +30,7 @@ import org.xwiki.model.reference.SpaceReference;
 import org.xwiki.model.reference.WikiReference;
 
 import com.celements.common.test.AbstractComponentTest;
+import com.celements.model.access.exception.DocumentLoadException;
 import com.xpn.xwiki.XWikiException;
 import com.xpn.xwiki.doc.XWikiDocument;
 import com.xpn.xwiki.objects.BaseObject;
@@ -60,6 +61,7 @@ public class CourseServiceTest extends AbstractComponentTest {
   public void testGetCourseTypeForCourse() throws Exception {
     DocumentReference typeDocRef = new DocumentReference(db, "TypeSpace", "TypeX");
 
+    expect(getWikiMock().exists(eq(docRef), same(getContext()))).andReturn(true).once();
     expect(getWikiMock().getDocument(eq(docRef), same(getContext()))).andReturn(doc).once();
     BaseObject obj = new BaseObject();
     obj.setXClassReference(courseService.getCourseClasses().getCourseClassRef(db));
@@ -74,6 +76,7 @@ public class CourseServiceTest extends AbstractComponentTest {
 
   @Test
   public void testGetCourseTypeForCourse_noType() throws Exception {
+    expect(getWikiMock().exists(eq(docRef), same(getContext()))).andReturn(true).once();
     expect(getWikiMock().getDocument(eq(docRef), same(getContext()))).andReturn(doc).once();
     BaseObject obj = new BaseObject();
     obj.setXClassReference(courseService.getCourseClasses().getCourseClassRef(db));
@@ -87,6 +90,7 @@ public class CourseServiceTest extends AbstractComponentTest {
 
   @Test
   public void testGetCourseTypeForCourse_noObj() throws Exception {
+    expect(getWikiMock().exists(eq(docRef), same(getContext()))).andReturn(true).once();
     expect(getWikiMock().getDocument(eq(docRef), same(getContext()))).andReturn(doc).once();
 
     replayDefault();
@@ -97,16 +101,16 @@ public class CourseServiceTest extends AbstractComponentTest {
 
   @Test
   public void testGetCourseTypeForCourse_XWE() throws Exception {
-    Throwable cause = new XWikiException();
-
-    expect(getWikiMock().getDocument(eq(docRef), same(getContext()))).andThrow(cause).once();
+    expect(getWikiMock().exists(eq(docRef), same(getContext()))).andReturn(true).once();
+    expect(getWikiMock().getDocument(eq(docRef), same(getContext()))).andThrow(
+        new XWikiException()).once();
 
     replayDefault();
     try {
       courseService.getCourseTypeForCourse(docRef);
       fail("expecting XWE");
-    } catch (XWikiException exc) {
-      assertSame(cause, exc);
+    } catch (DocumentLoadException exc) {
+      // expected outcome
     }
     verifyDefault();
   }
@@ -115,6 +119,7 @@ public class CourseServiceTest extends AbstractComponentTest {
   public void testGetCourseTypeName() throws Exception {
     String name = "asdf";
 
+    expect(getWikiMock().exists(eq(docRef), same(getContext()))).andReturn(true).once();
     expect(getWikiMock().getDocument(eq(docRef), same(getContext()))).andReturn(doc).once();
     BaseObject typeObj = new BaseObject();
     typeObj.setXClassReference(courseService.getCourseClasses().getCourseTypeClassRef(db));
@@ -129,6 +134,7 @@ public class CourseServiceTest extends AbstractComponentTest {
 
   @Test
   public void testGetCourseTypeName_noName() throws Exception {
+    expect(getWikiMock().exists(eq(docRef), same(getContext()))).andReturn(true).once();
     expect(getWikiMock().getDocument(eq(docRef), same(getContext()))).andReturn(doc).once();
     BaseObject typeObj = new BaseObject();
     typeObj.setXClassReference(courseService.getCourseClasses().getCourseTypeClassRef(db));
@@ -142,6 +148,7 @@ public class CourseServiceTest extends AbstractComponentTest {
 
   @Test
   public void testGetCourseTypeName_noObj() throws Exception {
+    expect(getWikiMock().exists(eq(docRef), same(getContext()))).andReturn(true).once();
     expect(getWikiMock().getDocument(eq(docRef), same(getContext()))).andReturn(doc).once();
 
     replayDefault();
@@ -152,16 +159,15 @@ public class CourseServiceTest extends AbstractComponentTest {
 
   @Test
   public void testGetCourseTypeName_XWE() throws Exception {
-    Throwable cause = new XWikiException();
-
-    expect(getWikiMock().getDocument(eq(docRef), same(getContext()))).andThrow(cause).once();
+    expect(getWikiMock().exists(eq(docRef), same(getContext()))).andReturn(true).once();
+    expect(getWikiMock().getDocument(eq(docRef), same(getContext()))).andThrow(
+        new XWikiException()).once();
 
     replayDefault();
     try {
       courseService.getCourseTypeName(docRef);
       fail("expecting XWE");
-    } catch (XWikiException exc) {
-      assertSame(cause, exc);
+    } catch (DocumentLoadException exc) {
     }
     verifyDefault();
   }
