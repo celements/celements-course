@@ -49,9 +49,8 @@ public class CourseScriptServiceTest extends AbstractComponentTest {
 
   @SuppressWarnings("unchecked")
   @Before
-  public void setUp_CourseScriptServiceTest() throws Exception {
-    xwiki = createMock(XWiki.class);
-    getContext().setWiki(xwiki);
+  public void prepareTestCourseScriptServiceTest() throws Exception {
+    xwiki = getWikiMock();
     stringRefResolverMock = registerComponentMock(EntityReferenceResolver.class);
     courseScriptService = (CourseScriptService) Utils.getComponent(ScriptService.class,
         "celcourse");
