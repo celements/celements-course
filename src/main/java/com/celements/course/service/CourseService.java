@@ -219,8 +219,7 @@ public class CourseService implements ICourseServiceRole {
   }
 
   SpaceReference getSpaceForEventId(String eventid) {
-    return new SpaceReference(eventid.replaceAll("\\.", "_").replaceAll(":", "_"),
-        modelContext.getWikiRef());
+    return new SpaceReference(eventid.replaceAll("[\\.:]", "_"), modelContext.getWikiRef());
   }
 
   CourseClasses getCourseClasses() {

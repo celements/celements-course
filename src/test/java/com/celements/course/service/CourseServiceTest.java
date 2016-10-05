@@ -26,6 +26,8 @@ import static org.junit.Assert.*;
 import org.junit.Before;
 import org.junit.Test;
 import org.xwiki.model.reference.DocumentReference;
+import org.xwiki.model.reference.SpaceReference;
+import org.xwiki.model.reference.WikiReference;
 
 import com.celements.common.test.AbstractComponentTest;
 import com.xpn.xwiki.XWikiException;
@@ -164,4 +166,34 @@ public class CourseServiceTest extends AbstractComponentTest {
     verifyDefault();
   }
 
+  @Test
+  public void testGetSpaceForEventId_doNothing() {
+    String str = "TestString_WithoutAny-Separators";
+    SpaceReference repl = new SpaceReference(str, new WikiReference(getContext().getDatabase()));
+    assertEquals(repl, courseService.getSpaceForEventId(str));
+  }
+
+  @Test
+  public void testGetSpaceForEventId_replaceSpaceDocSeparator() {
+    String str = "TestString_With.Separator";
+    SpaceReference repl = new SpaceReference("TestString_With_Separator", new WikiReference(
+        getContext().getDatabase()));
+    assertEquals(repl, courseService.getSpaceForEventId(str));
+  }
+
+  @Test
+  public void testGetSpaceForEventId_replaceWikiSpaceSeparator() {
+    String str = "TestString:With-Separators";
+    SpaceReference repl = new SpaceReference("TestString_With-Separators", new WikiReference(
+        getContext().getDatabase()));
+    assertEquals(repl, courseService.getSpaceForEventId(str));
+  }
+
+  @Test
+  public void testGetSpaceForEventId_replaceWikiSpaceAndDocSeparator() {
+    String str = "TestString:With.Separators";
+    SpaceReference repl = new SpaceReference("TestString_With_Separators", new WikiReference(
+        getContext().getDatabase()));
+    assertEquals(repl, courseService.getSpaceForEventId(str));
+  }
 }
