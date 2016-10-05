@@ -31,9 +31,11 @@ import org.xwiki.script.service.ScriptService;
 import com.celements.common.classes.IClassCollectionRole;
 import com.celements.course.classcollections.CourseClasses;
 import com.celements.course.service.ICourseServiceRole;
+import com.celements.model.access.IModelAccessFacade;
+import com.celements.model.access.exception.DocumentNotExistsException;
+import com.celements.model.access.exception.DocumentSaveException;
 import com.celements.model.util.ModelUtils;
 import com.xpn.xwiki.XWikiContext;
-import com.xpn.xwiki.XWikiException;
 import com.xpn.xwiki.doc.XWikiDocument;
 import com.xpn.xwiki.objects.BaseObject;
 import com.xpn.xwiki.objects.classes.PasswordClass;
@@ -53,7 +55,10 @@ public class CourseScriptService implements ScriptService {
   IClassCollectionRole courseClasses;
 
   @Requirement
-  ModelUtils modelUtils;
+  private IModelAccessFacade modelAccess;
+
+  @Requirement
+  private ModelUtils modelUtils;
 
   @Requirement
   Execution execution;
@@ -106,8 +111,8 @@ public class CourseScriptService implements ScriptService {
         CourseClasses.COURSE_CLASSES_SPACE, CourseClasses.COURSE_PARTICIPANT_CLASS_DOC);
 
     try {
-      XWikiDocument courseDoc = getContext().getWiki().getDocument(new DocumentReference(
-          modelUtils.resolveRef(courseFN)), getContext());
+      XWikiDocument courseDoc = modelAccess.getDocument(new DocumentReference(modelUtils.resolveRef(
+          courseFN)));
       BaseObject partiObj = courseDoc.getXObject(partiClassRef, "email", normalizeEmail(emailAdr),
           false);
       LOGGER.debug("validateParticipant courseDoc [{}] found participant: [{}]", courseDoc,
@@ -120,8 +125,7 @@ public class CourseScriptService implements ScriptService {
         if (hashedCode.equals(savedHash)) {
           if ("unconfirmed".equals(partiObj.getStringValue("status"))) {
             partiObj.setStringValue("status", "confirmed");
-            getContext().getWiki().saveDocument(courseDoc, "validate email addresse by" + " link.",
-                getContext());
+            modelAccess.saveDocument(courseDoc, "validate email addresse by" + " link.");
             return true;
           } else {
             LOGGER.debug("validateParticipant failed because initial status is not"
@@ -136,7 +140,7 @@ public class CourseScriptService implements ScriptService {
         LOGGER.debug("validateParticipant failed because no partizipant object for" + " email ["
             + normalizeEmail(emailAdr) + "], on course [" + courseFN + "] found.");
       }
-    } catch (XWikiException exp) {
+    } catch (DocumentNotExistsException | DocumentSaveException exp) {
       LOGGER.error("Failed to validateParticipant for [" + courseFN + "], [" + emailAdr + "], ["
           + activationCode + "].", exp);
     }
