@@ -4,12 +4,15 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import javax.annotation.concurrent.NotThreadSafe;
+
 import org.apache.commons.lang.RandomStringUtils;
 import org.xwiki.model.reference.DocumentReference;
 
 import com.google.common.base.Strings;
 import com.xpn.xwiki.web.XWikiRequest;
 
+@NotThreadSafe
 public class RegistrationData {
 
   private String eventid;
