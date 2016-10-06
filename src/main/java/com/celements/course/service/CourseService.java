@@ -79,14 +79,14 @@ public class CourseService implements ICourseServiceRole {
     try {
       courseObj = modelAccess.getXObject(courseDocRef, getCourseClasses().getCourseClassRef(
           wikiRef.getName()));
+      if (courseObj != null) {
+        String typeFN = courseObj.getStringValue("type");
+        if (StringUtils.isNotBlank(typeFN)) {
+          typeDocRef = webUtilsService.resolveDocumentReference(typeFN, wikiRef);
+        }
+      }
     } catch (DocumentNotExistsException dnee) {
       LOGGER.error("getCourseTypeForCourse: Course document {} does not exist", courseDocRef, dnee);
-    }
-    if (courseObj != null) {
-      String typeFN = courseObj.getStringValue("type");
-      if (StringUtils.isNotBlank(typeFN)) {
-        typeDocRef = webUtilsService.resolveDocumentReference(typeFN, wikiRef);
-      }
     }
     return typeDocRef;
   }
@@ -98,11 +98,11 @@ public class CourseService implements ICourseServiceRole {
     try {
       typeObj = modelAccess.getXObject(courseTypeDocRef, getCourseClasses().getCourseTypeClassRef(
           webUtilsService.getWikiRef(courseTypeDocRef).getName()));
+      if (typeObj != null) {
+        typeName = typeObj.getStringValue("typeName");
+      }
     } catch (DocumentNotExistsException dnee) {
       LOGGER.error("getCourseTypeName: Course document {} does not exist", courseTypeDocRef, dnee);
-    }
-    if (typeObj != null) {
-      typeName = typeObj.getStringValue("typeName");
     }
     return typeName;
   }
