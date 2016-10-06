@@ -196,8 +196,7 @@ public class CourseService implements ICourseServiceRole {
       LOGGER.error("could not convert mail html content to plain text", ctpte);
     }
     XWikiMessageTool msgTool = webUtilsService.getMessageTool(getContext().getLanguage());
-    // TODO https://synjira.atlassian.net/browse/CELDEV-357 (Event Registration
-    // Confirmation Mail from / replyTo addresses)
+    // TODO CELDEV-357 (Event Registration Confirmation Mail from / replyTo addresses)
     // TODO add generic dictionary key to general dictionary
     // (event_reg_verification_mail_subject)
     mailSender.sendMail("reg@bellis.cel.sneakapeek.ch", "reg@bellis.cel.sneakapeek.ch",
