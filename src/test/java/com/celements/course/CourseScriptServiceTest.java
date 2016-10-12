@@ -26,12 +26,12 @@ import static org.junit.Assert.*;
 import org.junit.Before;
 import org.junit.Test;
 import org.xwiki.model.reference.DocumentReference;
-import org.xwiki.model.reference.EntityReferenceResolver;
 import org.xwiki.script.service.ScriptService;
 
 import com.celements.common.test.AbstractComponentTest;
 import com.celements.course.classcollections.CourseClasses;
-import com.xpn.xwiki.XWiki;
+import com.celements.model.access.ModelAccessStrategy;
+import com.xpn.xwiki.XWikiException;
 import com.xpn.xwiki.doc.XWikiDocument;
 import com.xpn.xwiki.objects.BaseObject;
 import com.xpn.xwiki.web.Utils;
@@ -44,14 +44,10 @@ public class CourseScriptServiceTest extends AbstractComponentTest {
       + "dd8c7cc0f89ab3fbce394";
 
   private CourseScriptService courseScriptService;
-  private XWiki xwiki;
-  private EntityReferenceResolver<String> stringRefResolverMock;
 
-  @SuppressWarnings("unchecked")
   @Before
-  public void prepareTestCourseScriptServiceTest() throws Exception {
-    xwiki = getWikiMock();
-    stringRefResolverMock = registerComponentMock(EntityReferenceResolver.class);
+  public void prepareTest() throws Exception {
+    registerComponentMock(ModelAccessStrategy.class);
     courseScriptService = (CourseScriptService) Utils.getComponent(ScriptService.class,
         "celcourse");
   }
@@ -65,23 +61,18 @@ public class CourseScriptServiceTest extends AbstractComponentTest {
   public void testValidateParticipant_no_object() throws Exception {
     DocumentReference courseDocRef = new DocumentReference(getContext().getDatabase(), "Kurse",
         "Kurs2");
-    XWikiDocument courseDoc = new XWikiDocument(courseDocRef);
-    expect(xwiki.exists(eq(courseDocRef), same(getContext()))).andReturn(true);
-    expect(xwiki.getDocument(eq(courseDocRef), same(getContext()))).andReturn(courseDoc);
-    expectLastCall().once();
-    replayAll();
+    expectDoc(courseDocRef);
+    replayDefault();
     assertFalse(courseScriptService.validateParticipant("Kurse.Kurs2", "test@test.com",
         ACTIVATION_CODE));
-    verifyAll();
+    verifyDefault();
   }
 
   @Test
   public void testValidateParticipant_wrong_initial_status() throws Exception {
     DocumentReference courseDocRef = new DocumentReference(getContext().getDatabase(), "Kurse",
         "Kurs2");
-    XWikiDocument courseDoc = new XWikiDocument(courseDocRef);
-    expect(xwiki.exists(eq(courseDocRef), same(getContext()))).andReturn(true);
-    expect(xwiki.getDocument(eq(courseDocRef), same(getContext()))).andReturn(courseDoc);
+    XWikiDocument courseDoc = expectDoc(courseDocRef);
     DocumentReference partiClassRef = new DocumentReference(getContext().getDatabase(), "Classes",
         "CourseParticipantClass");
     BaseObject partiObj = new BaseObject();
@@ -91,19 +82,17 @@ public class CourseScriptServiceTest extends AbstractComponentTest {
     partiObj.setStringValue("validkey", ACTIVATION_HASH);
     partiObj.setStringValue("status", "some different status");
     courseDoc.setXObject(0, partiObj);
-    replayAll();
+    replayDefault();
     assertFalse(courseScriptService.validateParticipant("Kurse.Kurs2", emailAdr, ACTIVATION_CODE));
     assertEquals("some different status", partiObj.getStringValue("status"));
-    verifyAll();
+    verifyDefault();
   }
 
   @Test
   public void testValidateParticipant() throws Exception {
     DocumentReference courseDocRef = new DocumentReference(getContext().getDatabase(), "Kurse",
         "Kurs2");
-    XWikiDocument courseDoc = new XWikiDocument(courseDocRef);
-    expect(xwiki.exists(eq(courseDocRef), same(getContext()))).andReturn(true);
-    expect(xwiki.getDocument(eq(courseDocRef), same(getContext()))).andReturn(courseDoc);
+    XWikiDocument courseDoc = expectDoc(courseDocRef);
     DocumentReference partiClassRef = new DocumentReference(getContext().getDatabase(),
         CourseClasses.COURSE_CLASSES_SPACE, CourseClasses.COURSE_PARTICIPANT_CLASS_DOC);
     BaseObject partiObj = new BaseObject();
@@ -113,23 +102,21 @@ public class CourseScriptServiceTest extends AbstractComponentTest {
     partiObj.setStringValue("validkey", ACTIVATION_HASH);
     partiObj.setStringValue("status", "unconfirmed");
     courseDoc.setXObject(0, partiObj);
-    xwiki.saveDocument(same(courseDoc), eq("validate email addresse by link."), eq(false), same(
-        getContext()));
+    getMock(ModelAccessStrategy.class).saveDocument(same(courseDoc), eq(
+        "validate email addresse by link."), eq(false));
     expectLastCall().once();
-    replayAll();
+    replayDefault();
     assertTrue(courseScriptService.validateParticipant("Kurse.Kurs2", emailAdr, ACTIVATION_CODE));
     assertEquals("confirmed", partiObj.getStringValue("status"));
-    verifyAll();
+    verifyDefault();
   }
 
-  private void replayAll(Object... mocks) {
-    replay(xwiki, stringRefResolverMock);
-    replay(mocks);
-  }
-
-  private void verifyAll(Object... mocks) {
-    verify(xwiki, stringRefResolverMock);
-    verify(mocks);
+  private XWikiDocument expectDoc(DocumentReference docRef) throws XWikiException {
+    XWikiDocument doc = new XWikiDocument(docRef);
+    expect(getMock(ModelAccessStrategy.class).exists(eq(docRef), eq(""))).andReturn(true).once();
+    expect(getMock(ModelAccessStrategy.class).getDocument(eq(docRef), eq(""))).andReturn(
+        doc).once();
+    return doc;
   }
 
 }
