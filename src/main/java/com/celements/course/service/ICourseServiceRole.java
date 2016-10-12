@@ -8,10 +8,12 @@ import com.xpn.xwiki.XWikiException;
 @ComponentRole
 public interface ICourseServiceRole {
 
-  public DocumentReference getCourseTypeForCourse(DocumentReference courseDocRef
-      ) throws XWikiException;
+  public DocumentReference getCourseTypeForCourse(DocumentReference courseDocRef)
+      throws XWikiException;
 
-  public String getCourseTypeName(DocumentReference courseTypeDocRef
-      ) throws XWikiException;
+  public String getCourseTypeName(DocumentReference courseTypeDocRef) throws XWikiException;
 
+  public boolean registerParticipantFromRequest(boolean sendConfirmationMail);
+
+  public String normalizeEmail(String emailAdr);
 }

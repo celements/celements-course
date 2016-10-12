@@ -83,6 +83,9 @@
     <column name="CPC_ID" not-null="true" />
     <generator class="assigned" />
   </id>
+  <property name="eventid" type="string">
+    <column name="CPC_EVENT_ID" length="128"/>
+  </property>
   <property name="title" type="string">
     <column name="CPC_TITLE" length="8"/>
   </property>
@@ -106,15 +109,24 @@
   </property>
   <property name="email" type="string">
     <column name="CPC_EMAIL" length="64"/>
-  </property>    
+  </property>
   <property name="dob" type="timestamp">
     <column name="CPC_DOB" />
   </property>
   <property name="status" type="string">
     <column name="CPC_STATUS" length="16"/>
   </property>
+  <property name="comment" type="text">
+    <column name="CPC_COMMENT"/>
+  </property>
   <property name="validkey" type="string" unique="false" optimistic-lock="true" lazy="false" generated="never">
     <column name="CPC_VALIDATION_KEY" />
+  </property>
+  <property name="timestamp" type="timestamp">
+    <column name="CPC_TIMESTAMP" />
+  </property>
+  <property name="client" type="string">
+    <column name="CPC_CLIENT" length="256" />
   </property>
 </class>
 

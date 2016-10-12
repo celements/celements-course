@@ -28,11 +28,11 @@
       <artifactId>celements</artifactId>
       <version>2.19</version>
   </parent>
-  <modelVersion>4.0.0</modelVersion>  
+  <modelVersion>4.0.0</modelVersion>
   <artifactId>celements-course</artifactId>
   <version>1.10-SNAPSHOT</version>
-  <description>Celements Course</description> 
-  <dependencies>    
+  <description>Celements Course</description>
+  <dependencies>
     <!-- Add here all your dependencies -->
     <dependency>
       <groupId>com.celements</groupId>
@@ -42,11 +42,11 @@
     </dependency>
     <dependency>
       <groupId>com.celements</groupId>
-  	  <artifactId>celements-core</artifactId>
-  	  <version>1.151</version>
+      <artifactId>celements-core</artifactId>
+      <version>1.151</version>
       <scope>provided</scope>
     </dependency>
-  </dependencies>  
+  </dependencies>
   <scm>
     <connection>scm:git:git@github.com:celements/celements-course.git</connection>
     <developerConnection>scm:git:git@github.com:celements/celements-course.git</developerConnection>
