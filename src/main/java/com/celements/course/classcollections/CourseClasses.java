@@ -219,7 +219,8 @@ public class CourseClasses extends AbstractClassCollection {
     needsUpdate |= bclass.addTextField("city", "City", 30);
     needsUpdate |= bclass.addTextField("phone", "Phone", 30);
     needsUpdate |= bclass.addTextField("email", "Email", 30);
-    needsUpdate |= bclass.addDateField("dob", "Day of Birth", null, 0);
+    needsUpdate = addDateField(bclass, "dob", "Date of birth (dd.MM.yyyy)", "dd.MM.yyyy", 20, 0,
+        null, null);
     needsUpdate |= bclass.addStaticListField("status", "Status", 1, false,
         "unconfirmed|confirmed|payed|cancelled", "select", ",|");
     needsUpdate |= bclass.addTextAreaField("comment", "Comment", 80, 15);
