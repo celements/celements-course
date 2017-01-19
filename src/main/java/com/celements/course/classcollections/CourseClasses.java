@@ -223,6 +223,8 @@ public class CourseClasses extends AbstractClassCollection {
         null, null);
     needsUpdate |= bclass.addStaticListField("status", "Status", 1, false,
         "unconfirmed|confirmed|cancelled", "select", ",|");
+    needsUpdate |= bclass.addStaticListField("payed", "Payed", 1, false,
+        "unbezahlt|voll bezahlt|teilbezahlt", "select", ",|");
     needsUpdate |= bclass.addBooleanField("payed", "Payed", "yesno");
     needsUpdate |= bclass.addTextAreaField("comment", "Comment", 80, 15);
     needsUpdate |= bclass.addPasswordField("validkey", "Validation Key", 10);
