@@ -116,7 +116,7 @@
   <property name="status" type="string">
     <column name="CPC_STATUS" length="16"/>
   </property>
-  <property name="payed" type="status">
+  <property name="payed" type="string">
     <column name="CPC_PAYED" length="16"/>
   </property>
   <property name="comment" type="text">
