@@ -26,6 +26,7 @@ import org.xwiki.component.annotation.Requirement;
 import org.xwiki.context.Execution;
 import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.model.reference.EntityReferenceResolver;
+import org.xwiki.model.reference.SpaceReference;
 import org.xwiki.script.service.ScriptService;
 
 import com.celements.common.classes.IClassCollectionRole;
@@ -156,6 +157,13 @@ public class CourseScriptService implements ScriptService {
    */
   public boolean registerParticipantFromRequest(boolean sendConfirmationMail) {
     return courseService.registerParticipantFromRequest(sendConfirmationMail);
+  }
+
+  public DocumentReference createParticipantDocRef(SpaceReference spaceRef) {
+    if (spaceRef != null) {
+      return courseService.createParticipantDocRef(spaceRef);
+    }
+    return null;
   }
 
 }

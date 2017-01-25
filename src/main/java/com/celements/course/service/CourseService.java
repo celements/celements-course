@@ -9,6 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xwiki.component.annotation.Component;
 import org.xwiki.component.annotation.Requirement;
+import org.xwiki.configuration.ConfigurationSource;
 import org.xwiki.context.Execution;
 import org.xwiki.model.ModelConfiguration;
 import org.xwiki.model.reference.DocumentReference;
@@ -30,6 +31,7 @@ import com.celements.rendering.RenderCommand;
 import com.celements.web.plugin.cmd.ConvertToPlainTextException;
 import com.celements.web.plugin.cmd.PlainTextCommand;
 import com.celements.web.service.IWebUtilsService;
+import com.google.common.base.Preconditions;
 import com.xpn.xwiki.XWikiContext;
 import com.xpn.xwiki.XWikiException;
 import com.xpn.xwiki.doc.XWikiDocument;
@@ -41,6 +43,8 @@ import com.xpn.xwiki.web.XWikiRequest;
 public class CourseService implements ICourseServiceRole {
 
   private static Logger LOGGER = LoggerFactory.getLogger(CourseService.class);
+
+  static final String CFGSRC_PARTICIPANT_DOC_NAME_PREFIX = "celements.course.participant.docNamePrefix";
 
   @Requirement("CelCourseClasses")
   private IClassCollectionRole courseClasses;
@@ -62,6 +66,9 @@ public class CourseService implements ICourseServiceRole {
 
   @Requirement
   IMailSenderRole mailSender;
+
+  @Requirement
+  ConfigurationSource cfgSrc;
 
   @Requirement
   private Execution execution;
@@ -112,7 +119,7 @@ public class CourseService implements ICourseServiceRole {
     XWikiRequest req = getContext().getRequest();
     RegistrationData data = new RegistrationData();
     data.setData(req);
-    data.setRegDocRef(nextFreeDoc.getNextUntitledPageDocRef(getSpaceForEventId(data.getEventid())));
+    data.setRegDocRef(createParticipantDocRef(getSpaceForEventId(data.getEventid())));
     try {
       XWikiDocument regDoc = modelAccess.createDocument(data.getRegDocRef());
       setMandatoryRegSpaceDocs(regDoc);
@@ -150,6 +157,19 @@ public class CourseService implements ICourseServiceRole {
       LOGGER.error("exception while creating new registration", excp);
     }
     return false;
+  }
+
+  @Override
+  public DocumentReference createParticipantDocRef(SpaceReference spaceRef) {
+    Preconditions.checkNotNull(spaceRef);
+    DocumentReference ret;
+    String name = cfgSrc.getProperty(CFGSRC_PARTICIPANT_DOC_NAME_PREFIX, "");
+    if (name.isEmpty()) {
+      ret = nextFreeDoc.getNextUntitledPageDocRef(spaceRef);
+    } else {
+      ret = nextFreeDoc.getNextTitledPageDocRef(spaceRef, name);
+    }
+    return ret;
   }
 
   void setMandatoryRegSpaceDocs(XWikiDocument regDoc) {

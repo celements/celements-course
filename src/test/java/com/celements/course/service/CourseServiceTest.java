@@ -32,6 +32,7 @@ import org.xwiki.model.reference.WikiReference;
 import com.celements.common.test.AbstractComponentTest;
 import com.celements.model.access.ModelAccessStrategy;
 import com.celements.model.access.exception.DocumentLoadException;
+import com.celements.nextfreedoc.INextFreeDocRole;
 import com.xpn.xwiki.XWikiException;
 import com.xpn.xwiki.doc.XWikiDocument;
 import com.xpn.xwiki.objects.BaseObject;
@@ -46,6 +47,7 @@ public class CourseServiceTest extends AbstractComponentTest {
 
   @Before
   public void prepareTest() throws Exception {
+    registerComponentMock(INextFreeDocRole.class);
     registerComponentMock(ModelAccessStrategy.class);
     courseService = (CourseService) Utils.getComponent(ICourseServiceRole.class);
     db = "db";
@@ -187,6 +189,38 @@ public class CourseServiceTest extends AbstractComponentTest {
     SpaceReference repl = new SpaceReference("TestString_With_Separators", new WikiReference(
         getContext().getDatabase()));
     assertEquals(repl, courseService.getSpaceForEventId(str));
+  }
+
+  @Test
+  public void test_createParticipantDocRef_nullSpaceRef() {
+    replayDefault();
+    try {
+      courseService.createParticipantDocRef(null);
+      fail("expecting NPE");
+    } catch (NullPointerException npe) {
+      // expected
+    }
+    verifyDefault();
+  }
+
+  @Test
+  public void test_createParticipantDocRef_untitled() {
+    expect(getMock(INextFreeDocRole.class).getNextUntitledPageDocRef(eq(
+        docRef.getLastSpaceReference()))).andReturn(docRef).once();
+    replayDefault();
+    assertSame(docRef, courseService.createParticipantDocRef(docRef.getLastSpaceReference()));
+    verifyDefault();
+  }
+
+  @Test
+  public void test_createParticipantDocRef_titled() {
+    String name = "asdf";
+    getConfigurationSource().setProperty(CourseService.CFGSRC_PARTICIPANT_DOC_NAME_PREFIX, name);
+    expect(getMock(INextFreeDocRole.class).getNextTitledPageDocRef(eq(
+        docRef.getLastSpaceReference()), eq(name))).andReturn(docRef).once();
+    replayDefault();
+    assertSame(docRef, courseService.createParticipantDocRef(docRef.getLastSpaceReference()));
+    verifyDefault();
   }
 
   private void expectDoc(boolean throwExc) throws XWikiException {
