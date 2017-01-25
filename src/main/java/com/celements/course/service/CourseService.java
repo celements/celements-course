@@ -53,28 +53,28 @@ public class CourseService implements ICourseServiceRole {
   private IClassCollectionRole courseClasses;
 
   @Requirement
-  IWebUtilsService webUtilsService;
+  private IWebUtilsService webUtilsService;
 
   @Requirement
-  IModelAccessFacade modelAccess;
+  private IModelAccessFacade modelAccess;
 
   @Requirement
-  ModelContext modelContext;
+  private ModelContext modelContext;
 
   @Requirement
-  ModelUtils modelUtils;
+  private ModelUtils modelUtils;
 
   @Requirement
-  ModelConfiguration modelConfig;
+  private ModelConfiguration modelConfig;
 
   @Requirement
-  INextFreeDocRole nextFreeDoc;
+  private INextFreeDocRole nextFreeDoc;
 
   @Requirement
-  IMailSenderRole mailSender;
+  private IMailSenderRole mailSender;
 
   @Requirement
-  ConfigurationSource cfgSrc;
+  private ConfigurationSource cfgSrc;
 
   @Requirement
   private Execution execution;

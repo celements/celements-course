@@ -31,6 +31,7 @@ import org.xwiki.model.reference.SpaceReference;
 import com.celements.common.test.AbstractComponentTest;
 import com.celements.model.access.ModelAccessStrategy;
 import com.celements.model.access.exception.DocumentLoadException;
+import com.celements.model.util.ModelUtils;
 import com.celements.nextfreedoc.INextFreeDocRole;
 import com.xpn.xwiki.XWikiException;
 import com.xpn.xwiki.doc.XWikiDocument;
@@ -66,7 +67,7 @@ public class CourseServiceTest extends AbstractComponentTest {
     expectDoc(false);
     BaseObject obj = new BaseObject();
     obj.setXClassReference(courseService.getCourseClasses().getCourseClassRef(db));
-    obj.setStringValue("type", courseService.webUtilsService.serializeRef(typeDocRef));
+    obj.setStringValue("type", getModelUtils().serializeRef(typeDocRef));
     doc.addXObject(obj);
 
     replayDefault();
@@ -211,6 +212,10 @@ public class CourseServiceTest extends AbstractComponentTest {
       expect(getMock(ModelAccessStrategy.class).getDocument(eq(docRef), eq(""))).andReturn(
           doc).once();
     }
+  }
+
+  private ModelUtils getModelUtils() {
+    return Utils.getComponent(ModelUtils.class);
   }
 
 }
