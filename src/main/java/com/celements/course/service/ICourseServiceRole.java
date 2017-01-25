@@ -4,7 +4,6 @@ import javax.validation.constraints.NotNull;
 
 import org.xwiki.component.annotation.ComponentRole;
 import org.xwiki.model.reference.DocumentReference;
-import org.xwiki.model.reference.SpaceReference;
 
 import com.xpn.xwiki.XWikiException;
 
@@ -18,7 +17,8 @@ public interface ICourseServiceRole {
 
   public boolean registerParticipantFromRequest(boolean sendConfirmationMail);
 
-  public @NotNull DocumentReference createParticipantDocRef(@NotNull SpaceReference spaceRef);
+  public @NotNull DocumentReference createParticipantDocRef(
+      @NotNull DocumentReference courseDocRef);
 
   public String normalizeEmail(String emailAdr);
 }

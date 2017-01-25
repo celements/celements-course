@@ -26,12 +26,15 @@ import com.celements.model.access.exception.DocumentAlreadyExistsException;
 import com.celements.model.access.exception.DocumentNotExistsException;
 import com.celements.model.access.exception.DocumentSaveException;
 import com.celements.model.context.ModelContext;
+import com.celements.model.util.ModelUtils;
 import com.celements.nextfreedoc.INextFreeDocRole;
 import com.celements.rendering.RenderCommand;
 import com.celements.web.plugin.cmd.ConvertToPlainTextException;
 import com.celements.web.plugin.cmd.PlainTextCommand;
 import com.celements.web.service.IWebUtilsService;
+import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Strings;
 import com.xpn.xwiki.XWikiContext;
 import com.xpn.xwiki.XWikiException;
 import com.xpn.xwiki.doc.XWikiDocument;
@@ -59,6 +62,9 @@ public class CourseService implements ICourseServiceRole {
   ModelContext modelContext;
 
   @Requirement
+  ModelUtils modelUtils;
+
+  @Requirement
   ModelConfiguration modelConfig;
 
   @Requirement
@@ -73,6 +79,7 @@ public class CourseService implements ICourseServiceRole {
   @Requirement
   private Execution execution;
 
+  @Deprecated
   private XWikiContext getContext() {
     return (XWikiContext) execution.getContext().getProperty("xwikicontext");
   }
@@ -117,59 +124,29 @@ public class CourseService implements ICourseServiceRole {
   @Override
   public boolean registerParticipantFromRequest(boolean sendConfirmationMail) {
     XWikiRequest req = getContext().getRequest();
+    LOGGER.trace("registerParticipantFromRequest: request '{}': {}", req.hashCode(), req);
     RegistrationData data = new RegistrationData();
     data.setData(req);
-    data.setRegDocRef(createParticipantDocRef(getSpaceForEventId(data.getEventid())));
-    try {
-      XWikiDocument regDoc = modelAccess.createDocument(data.getRegDocRef());
-      setMandatoryRegSpaceDocs(regDoc);
-      DocumentReference classRef = getCourseClasses().getCourseParticipantClassRef(
-          modelContext.getWikiRef().getName());
-      for (Person person : data.getPersons()) {
-        if (!person.isEmpty() || (modelAccess.getXObjects(regDoc, classRef).size() == 0)) {
-          BaseObject obj = modelAccess.newXObject(regDoc, classRef);
-          obj.setStringValue("eventid", data.getEventid());
-          obj.setStringValue("title", person.getTitle());
-          obj.setStringValue("firstname", person.getGivenName());
-          obj.setStringValue("lastname", person.getSurname());
-          obj.setStringValue("address", person.getAddress());
-          obj.setStringValue("zip", person.getZip());
-          obj.setStringValue("city", person.getCity());
-          obj.setStringValue("phone", person.getPhone());
-          obj.setStringValue("email", normalizeEmail(person.getEmail()));
-          obj.setDateValue("dob", person.getDateOfBirth());
-          obj.setStringValue("status", person.getStatus());
-          if (obj.getNumber() == 0) {
-            obj.setLargeStringValue("comment", data.getComment());
-            // using set since there is no setPassword method
-            obj.set("validkey", data.getValidationKey(), getContext());
-            obj.setDateValue("timestamp", new Date());
-            obj.setStringValue("client", getClientInfo());
-          }
+    if (!Strings.isNullOrEmpty(data.getEventid())) {
+      DocumentReference courseDocRef = modelUtils.resolveRef(data.getEventid(),
+          DocumentReference.class);
+      data.setRegDocRef(createParticipantDocRef(courseDocRef));
+      try {
+        XWikiDocument regDoc = modelAccess.createDocument(data.getRegDocRef());
+        setMandatoryRegSpaceDocs(regDoc);
+        createParticipantObjects(regDoc, data);
+        modelAccess.saveDocument(regDoc, "created new registration");
+        if (sendConfirmationMail) {
+          sendConfirmationMail(data);
         }
+        return true;
+      } catch (DocumentAlreadyExistsException | DocumentSaveException | XWikiException excp) {
+        LOGGER.error("exception while creating new registration", excp);
       }
-      modelAccess.saveDocument(regDoc, "created new registration");
-      if (sendConfirmationMail) {
-        sendConfirmationMail(data);
-      }
-      return true;
-    } catch (DocumentAlreadyExistsException | DocumentSaveException | XWikiException excp) {
-      LOGGER.error("exception while creating new registration", excp);
+    } else {
+      LOGGER.info("registerParticipantFromRequest: request '{}' no eventid", req.hashCode());
     }
     return false;
-  }
-
-  @Override
-  public DocumentReference createParticipantDocRef(SpaceReference spaceRef) {
-    Preconditions.checkNotNull(spaceRef);
-    DocumentReference ret;
-    String name = cfgSrc.getProperty(CFGSRC_PARTICIPANT_DOC_NAME_PREFIX, "");
-    if (name.isEmpty()) {
-      ret = nextFreeDoc.getNextUntitledPageDocRef(spaceRef);
-    } else {
-      ret = nextFreeDoc.getNextTitledPageDocRef(spaceRef, name);
-    }
-    return ret;
   }
 
   void setMandatoryRegSpaceDocs(XWikiDocument regDoc) {
@@ -199,6 +176,34 @@ public class CourseService implements ICourseServiceRole {
           modelAccess.saveDocument(webHomeDoc, "createdAndSetContent");
         } catch (DocumentSaveException dse) {
           LOGGER.error("Exception saving registration space WebHome document.", dse);
+        }
+      }
+    }
+  }
+
+  private void createParticipantObjects(XWikiDocument regDoc, RegistrationData data) {
+    DocumentReference classRef = getCourseClasses().getCourseParticipantClassRef(
+        modelContext.getWikiRef().getName());
+    for (Person person : data.getPersons()) {
+      if (!person.isEmpty() || (modelAccess.getXObjects(regDoc, classRef).size() == 0)) {
+        BaseObject obj = modelAccess.newXObject(regDoc, classRef);
+        obj.setStringValue("eventid", data.getEventid());
+        obj.setStringValue("title", person.getTitle());
+        obj.setStringValue("firstname", person.getGivenName());
+        obj.setStringValue("lastname", person.getSurname());
+        obj.setStringValue("address", person.getAddress());
+        obj.setStringValue("zip", person.getZip());
+        obj.setStringValue("city", person.getCity());
+        obj.setStringValue("phone", person.getPhone());
+        obj.setStringValue("email", normalizeEmail(person.getEmail()));
+        obj.setDateValue("dob", person.getDateOfBirth());
+        obj.setStringValue("status", person.getStatus());
+        if (obj.getNumber() == 0) {
+          obj.setLargeStringValue("comment", data.getComment());
+          // using set since there is no setPassword method
+          obj.set("validkey", data.getValidationKey(), getContext());
+          obj.setDateValue("timestamp", new Date());
+          obj.setStringValue("client", getClientInfo());
         }
       }
     }
@@ -237,8 +242,23 @@ public class CourseService implements ICourseServiceRole {
     return clientInfo.toString();
   }
 
-  SpaceReference getSpaceForEventId(String eventid) {
-    return new SpaceReference(eventid.replaceAll("[\\.:]", "_"), modelContext.getWikiRef());
+  @Override
+  public DocumentReference createParticipantDocRef(DocumentReference courseDocRef) {
+    DocumentReference ret;
+    SpaceReference spaceRef = getSpaceForEventId(Preconditions.checkNotNull(courseDocRef));
+    String name = cfgSrc.getProperty(CFGSRC_PARTICIPANT_DOC_NAME_PREFIX, "");
+    if (name.isEmpty()) {
+      ret = nextFreeDoc.getNextUntitledPageDocRef(spaceRef);
+    } else {
+      ret = nextFreeDoc.getNextTitledPageDocRef(spaceRef, name);
+    }
+    return ret;
+  }
+
+  SpaceReference getSpaceForEventId(DocumentReference courseDocRef) {
+    String spaceName = Joiner.on("_").join(courseDocRef.getParent().getName(),
+        courseDocRef.getName());
+    return new SpaceReference(spaceName, modelContext.getWikiRef());
   }
 
   CourseClasses getCourseClasses() {
