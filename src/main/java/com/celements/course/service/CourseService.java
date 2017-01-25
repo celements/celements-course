@@ -245,7 +245,7 @@ public class CourseService implements ICourseServiceRole {
   @Override
   public DocumentReference createParticipantDocRef(DocumentReference courseDocRef) {
     DocumentReference ret;
-    SpaceReference spaceRef = getSpaceForEventId(Preconditions.checkNotNull(courseDocRef));
+    SpaceReference spaceRef = getRegistrationSpace(Preconditions.checkNotNull(courseDocRef));
     String name = cfgSrc.getProperty(CFGSRC_PARTICIPANT_DOC_NAME_PREFIX, "");
     if (name.isEmpty()) {
       ret = nextFreeDoc.getNextUntitledPageDocRef(spaceRef);
@@ -255,10 +255,10 @@ public class CourseService implements ICourseServiceRole {
     return ret;
   }
 
-  SpaceReference getSpaceForEventId(DocumentReference courseDocRef) {
+  SpaceReference getRegistrationSpace(DocumentReference courseDocRef) {
     String spaceName = Joiner.on("_").join(courseDocRef.getParent().getName(),
         courseDocRef.getName());
-    return new SpaceReference(spaceName, modelContext.getWikiRef());
+    return new SpaceReference(spaceName, courseDocRef.getWikiReference());
   }
 
   CourseClasses getCourseClasses() {
