@@ -158,4 +158,11 @@ public class CourseScriptService implements ScriptService {
     return courseService.registerParticipantFromRequest(sendConfirmationMail);
   }
 
+  public DocumentReference createParticipantDocRef(DocumentReference courseDocRef) {
+    if (courseDocRef != null) {
+      return courseService.createParticipantDocRef(courseDocRef);
+    }
+    return null;
+  }
+
 }

@@ -27,11 +27,12 @@ import org.junit.Before;
 import org.junit.Test;
 import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.model.reference.SpaceReference;
-import org.xwiki.model.reference.WikiReference;
 
 import com.celements.common.test.AbstractComponentTest;
 import com.celements.model.access.ModelAccessStrategy;
 import com.celements.model.access.exception.DocumentLoadException;
+import com.celements.model.util.ModelUtils;
+import com.celements.nextfreedoc.INextFreeDocRole;
 import com.xpn.xwiki.XWikiException;
 import com.xpn.xwiki.doc.XWikiDocument;
 import com.xpn.xwiki.objects.BaseObject;
@@ -46,6 +47,7 @@ public class CourseServiceTest extends AbstractComponentTest {
 
   @Before
   public void prepareTest() throws Exception {
+    registerComponentMock(INextFreeDocRole.class);
     registerComponentMock(ModelAccessStrategy.class);
     courseService = (CourseService) Utils.getComponent(ICourseServiceRole.class);
     db = "db";
@@ -65,7 +67,7 @@ public class CourseServiceTest extends AbstractComponentTest {
     expectDoc(false);
     BaseObject obj = new BaseObject();
     obj.setXClassReference(courseService.getCourseClasses().getCourseClassRef(db));
-    obj.setStringValue("type", courseService.webUtilsService.serializeRef(typeDocRef));
+    obj.setStringValue("type", getModelUtils().serializeRef(typeDocRef));
     doc.addXObject(obj);
 
     replayDefault();
@@ -159,34 +161,46 @@ public class CourseServiceTest extends AbstractComponentTest {
   }
 
   @Test
-  public void testGetSpaceForEventId_doNothing() {
-    String str = "TestString_WithoutAny-Separators";
-    SpaceReference repl = new SpaceReference(str, new WikiReference(getContext().getDatabase()));
-    assertEquals(repl, courseService.getSpaceForEventId(str));
+  public void test_getRegistrationSpace() {
+    SpaceReference repl = new SpaceReference(docRef.getParent().getName() + "_" + docRef.getName(),
+        docRef.getWikiReference());
+    assertEquals(repl, courseService.getRegistrationSpace(docRef));
   }
 
   @Test
-  public void testGetSpaceForEventId_replaceSpaceDocSeparator() {
-    String str = "TestString_With.Separator";
-    SpaceReference repl = new SpaceReference("TestString_With_Separator", new WikiReference(
-        getContext().getDatabase()));
-    assertEquals(repl, courseService.getSpaceForEventId(str));
+  public void test_createParticipantDocRef_null() {
+    replayDefault();
+    try {
+      courseService.createParticipantDocRef(null);
+      fail("expecting NPE");
+    } catch (NullPointerException npe) {
+      // expected
+    }
+    verifyDefault();
   }
 
   @Test
-  public void testGetSpaceForEventId_replaceWikiSpaceSeparator() {
-    String str = "TestString:With-Separators";
-    SpaceReference repl = new SpaceReference("TestString_With-Separators", new WikiReference(
-        getContext().getDatabase()));
-    assertEquals(repl, courseService.getSpaceForEventId(str));
+  public void test_createParticipantDocRef_untitled() {
+    SpaceReference spaceRef = courseService.getRegistrationSpace(docRef);
+    DocumentReference regDocRef = new DocumentReference("untitled123", spaceRef);
+    expect(getMock(INextFreeDocRole.class).getNextUntitledPageDocRef(eq(spaceRef))).andReturn(
+        regDocRef).once();
+    replayDefault();
+    assertSame(regDocRef, courseService.createParticipantDocRef(docRef));
+    verifyDefault();
   }
 
   @Test
-  public void testGetSpaceForEventId_replaceWikiSpaceAndDocSeparator() {
-    String str = "TestString:With.Separators";
-    SpaceReference repl = new SpaceReference("TestString_With_Separators", new WikiReference(
-        getContext().getDatabase()));
-    assertEquals(repl, courseService.getSpaceForEventId(str));
+  public void test_createParticipantDocRef_titled() {
+    SpaceReference spaceRef = courseService.getRegistrationSpace(docRef);
+    String name = "asdf";
+    DocumentReference regDocRef = new DocumentReference(name + "123", spaceRef);
+    getConfigurationSource().setProperty(CourseService.CFGSRC_PARTICIPANT_DOC_NAME_PREFIX, name);
+    expect(getMock(INextFreeDocRole.class).getNextTitledPageDocRef(eq(spaceRef), eq(
+        name))).andReturn(regDocRef).once();
+    replayDefault();
+    assertSame(regDocRef, courseService.createParticipantDocRef(docRef));
+    verifyDefault();
   }
 
   private void expectDoc(boolean throwExc) throws XWikiException {
@@ -198,6 +212,10 @@ public class CourseServiceTest extends AbstractComponentTest {
       expect(getMock(ModelAccessStrategy.class).getDocument(eq(docRef), eq(""))).andReturn(
           doc).once();
     }
+  }
+
+  private ModelUtils getModelUtils() {
+    return Utils.getComponent(ModelUtils.class);
   }
 
 }

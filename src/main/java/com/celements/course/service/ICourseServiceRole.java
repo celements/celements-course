@@ -1,5 +1,7 @@
 package com.celements.course.service;
 
+import javax.validation.constraints.NotNull;
+
 import org.xwiki.component.annotation.ComponentRole;
 import org.xwiki.model.reference.DocumentReference;
 
@@ -14,6 +16,9 @@ public interface ICourseServiceRole {
   public String getCourseTypeName(DocumentReference courseTypeDocRef) throws XWikiException;
 
   public boolean registerParticipantFromRequest(boolean sendConfirmationMail);
+
+  public @NotNull DocumentReference createParticipantDocRef(
+      @NotNull DocumentReference courseDocRef);
 
   public String normalizeEmail(String emailAdr);
 }
