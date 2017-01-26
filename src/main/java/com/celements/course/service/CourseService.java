@@ -255,7 +255,9 @@ public class CourseService implements ICourseServiceRole {
     return ret;
   }
 
-  SpaceReference getRegistrationSpace(DocumentReference courseDocRef) {
+  @Override
+  public SpaceReference getRegistrationSpace(DocumentReference courseDocRef) {
+    Preconditions.checkNotNull(courseDocRef);
     String spaceName = Joiner.on("_").join(courseDocRef.getParent().getName(),
         courseDocRef.getName());
     return new SpaceReference(spaceName, courseDocRef.getWikiReference());

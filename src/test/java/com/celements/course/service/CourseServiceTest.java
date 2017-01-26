@@ -161,6 +161,18 @@ public class CourseServiceTest extends AbstractComponentTest {
   }
 
   @Test
+  public void test_getRegistrationSpace_null() {
+    replayDefault();
+    try {
+      courseService.getRegistrationSpace(null);
+      fail("expecting NPE");
+    } catch (NullPointerException npe) {
+      // expected
+    }
+    verifyDefault();
+  }
+
+  @Test
   public void test_getRegistrationSpace() {
     SpaceReference repl = new SpaceReference(docRef.getParent().getName() + "_" + docRef.getName(),
         docRef.getWikiReference());
