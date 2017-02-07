@@ -119,6 +119,9 @@
   <property name="payed" type="string">
     <column name="CPC_PAYED" length="16"/>
   </property>
+  <property name="payedDate" type="timestamp">
+    <column name="CPC_PAYED_DATE" />
+  </property>
   <property name="comment" type="text">
     <column name="CPC_COMMENT"/>
   </property>
