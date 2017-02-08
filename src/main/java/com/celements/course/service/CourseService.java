@@ -30,6 +30,7 @@ import com.celements.model.context.ModelContext;
 import com.celements.model.util.ModelUtils;
 import com.celements.nextfreedoc.INextFreeDocRole;
 import com.celements.rendering.RenderCommand;
+import com.celements.web.plugin.cmd.CelMailConfiguration;
 import com.celements.web.plugin.cmd.ConvertToPlainTextException;
 import com.celements.web.plugin.cmd.PlainTextCommand;
 import com.celements.web.service.IWebUtilsService;
@@ -237,6 +238,7 @@ public class CourseService implements ICourseServiceRole {
   void sendConfirmationMails(RegistrationData data) throws XWikiException {
     VelocityContext vcontext = (VelocityContext) getContext().get("vcontext");
     vcontext.put("registrationData", data);
+    String sender = new CelMailConfiguration().getDefaultAdminSenderAddress();
     XWikiMessageTool msgTool = webUtilsService.getMessageTool(getContext().getLanguage());
     for (Person person : data.getPersons()) {
       if (!Strings.nullToEmpty(person.getEmail()).trim().isEmpty()) {
@@ -249,10 +251,7 @@ public class CourseService implements ICourseServiceRole {
         } catch (ConvertToPlainTextException ctpte) {
           LOGGER.error("could not convert mail html content to plain text", ctpte);
         }
-        // TODO CELDEV-357 (Event Registration Confirmation Mail from / replyTo addresses)
-        // TODO add generic dict key to general dictionary (event_reg_verification_mail_subject)
-        // XXX from/replyTo should be read out from preferences when null
-        mailSender.sendMail(null, null, person.getEmail(), null, null, msgTool.get(
+        mailSender.sendMail(sender, null, person.getEmail(), null, null, msgTool.get(
             "event_reg_verification_mail_subject"), htmlContent, textContent, null, null);
       }
     }
