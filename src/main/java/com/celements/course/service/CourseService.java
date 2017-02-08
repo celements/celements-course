@@ -33,6 +33,7 @@ import com.celements.web.plugin.cmd.ConvertToPlainTextException;
 import com.celements.web.plugin.cmd.PlainTextCommand;
 import com.celements.web.service.IWebUtilsService;
 import com.google.common.base.Joiner;
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.xpn.xwiki.XWikiContext;
@@ -133,6 +134,10 @@ public class CourseService implements ICourseServiceRole {
       data.setRegDocRef(createParticipantDocRef(courseDocRef));
       try {
         XWikiDocument regDoc = modelAccess.createDocument(data.getRegDocRef());
+        Optional<DocumentReference> templRef = getTemplRef();
+        if (templRef.isPresent()) {
+          regDoc.readFromTemplate(templRef.get(), modelContext.getXWikiContext());
+        }
         setMandatoryRegSpaceDocs(regDoc);
         createParticipantObjects(regDoc, data);
         modelAccess.saveDocument(regDoc, "created new registration");
@@ -147,6 +152,17 @@ public class CourseService implements ICourseServiceRole {
       LOGGER.info("registerParticipantFromRequest: request '{}' no eventid", req.hashCode());
     }
     return false;
+  }
+
+  private Optional<DocumentReference> getTemplRef() {
+    DocumentReference templRef = null;
+    String template = modelContext.getRequest().isPresent() ? Strings.nullToEmpty(
+        modelContext.getRequest().get().getParameter("template")).trim() : "";
+    if (!template.isEmpty()) {
+      templRef = modelUtils.resolveRef(template, DocumentReference.class);
+      templRef = modelAccess.exists(templRef) ? templRef : null;
+    }
+    return Optional.fromNullable(templRef);
   }
 
   void setMandatoryRegSpaceDocs(XWikiDocument regDoc) {
@@ -224,9 +240,9 @@ public class CourseService implements ICourseServiceRole {
     // TODO CELDEV-357 (Event Registration Confirmation Mail from / replyTo addresses)
     // TODO add generic dictionary key to general dictionary
     // (event_reg_verification_mail_subject)
-    mailSender.sendMail("reg@bellis.cel.sneakapeek.ch", "reg@bellis.cel.sneakapeek.ch",
-        data.getMainEmail(), null, null, msgTool.get("event_reg_verification_mail_subject"),
-        htmlContent, textContent, null, null);
+    // XXX from/replyTo should be read out from preferences when null
+    mailSender.sendMail(null, null, data.getMainEmail(), null, null, msgTool.get(
+        "event_reg_verification_mail_subject"), htmlContent, textContent, null, null);
   }
 
   @Override
