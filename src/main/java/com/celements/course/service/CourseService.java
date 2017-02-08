@@ -143,7 +143,7 @@ public class CourseService implements ICourseServiceRole {
         createParticipantObjects(regDoc, data);
         modelAccess.saveDocument(regDoc, "created new registration");
         if (sendConfirmationMail) {
-          sendConfirmationMail(data);
+          sendConfirmationMails(data);
         }
         return true;
       } catch (DocumentAlreadyExistsException | DocumentSaveException | XWikiException excp) {
@@ -233,24 +233,28 @@ public class CourseService implements ICourseServiceRole {
     }
   }
 
-  void sendConfirmationMail(RegistrationData data) throws XWikiException {
+  void sendConfirmationMails(RegistrationData data) throws XWikiException {
     VelocityContext vcontext = (VelocityContext) getContext().get("vcontext");
     vcontext.put("registrationData", data);
-    String htmlContent = new RenderCommand().renderCelementsCell(new DocumentReference(
-        modelContext.getWikiRef().getName(), "MailContent", "NeueAnmeldung"));
-    String textContent = "-";
-    try {
-      textContent = new PlainTextCommand().convertHtmlToPlainText(htmlContent);
-    } catch (ConvertToPlainTextException ctpte) {
-      LOGGER.error("could not convert mail html content to plain text", ctpte);
-    }
     XWikiMessageTool msgTool = webUtilsService.getMessageTool(getContext().getLanguage());
-    // TODO CELDEV-357 (Event Registration Confirmation Mail from / replyTo addresses)
-    // TODO add generic dictionary key to general dictionary
-    // (event_reg_verification_mail_subject)
-    // XXX from/replyTo should be read out from preferences when null
-    mailSender.sendMail(null, null, data.getMainEmail(), null, null, msgTool.get(
-        "event_reg_verification_mail_subject"), htmlContent, textContent, null, null);
+    for (Person person : data.getPersons()) {
+      if (!Strings.nullToEmpty(person.getEmail()).trim().isEmpty()) {
+        vcontext.put("registrationPerson", person);
+        String htmlContent = new RenderCommand().renderCelementsCell(new DocumentReference(
+            modelContext.getWikiRef().getName(), "MailContent", "NeueAnmeldung"));
+        String textContent = "-";
+        try {
+          textContent = new PlainTextCommand().convertHtmlToPlainText(htmlContent);
+        } catch (ConvertToPlainTextException ctpte) {
+          LOGGER.error("could not convert mail html content to plain text", ctpte);
+        }
+        // TODO CELDEV-357 (Event Registration Confirmation Mail from / replyTo addresses)
+        // TODO add generic dict key to general dictionary (event_reg_verification_mail_subject)
+        // XXX from/replyTo should be read out from preferences when null
+        mailSender.sendMail(null, null, person.getEmail(), null, null, msgTool.get(
+            "event_reg_verification_mail_subject"), htmlContent, textContent, null, null);
+      }
+    }
   }
 
   @Override
