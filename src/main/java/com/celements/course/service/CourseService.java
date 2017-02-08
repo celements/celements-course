@@ -2,6 +2,7 @@ package com.celements.course.service;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.List;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.velocity.VelocityContext;
@@ -200,9 +201,16 @@ public class CourseService implements ICourseServiceRole {
   private void createParticipantObjects(XWikiDocument regDoc, RegistrationData data) {
     DocumentReference classRef = getCourseClasses().getCourseParticipantClassRef(
         modelContext.getWikiRef().getName());
-    for (Person person : data.getPersons()) {
+    List<Person> persons = data.getPersons();
+    for (int nb = 0; nb < persons.size(); nb++) {
+      Person person = persons.get(nb);
       if (!person.isEmpty() || (modelAccess.getXObjects(regDoc, classRef).size() == 0)) {
-        BaseObject obj = modelAccess.newXObject(regDoc, classRef);
+        BaseObject obj;
+        if (modelAccess.getXObject(regDoc, classRef, nb).isPresent()) {
+          obj = modelAccess.getXObject(regDoc, classRef, nb).get();
+        } else {
+          obj = modelAccess.newXObject(regDoc, classRef);
+        }
         obj.setStringValue("eventid", data.getEventid());
         obj.setStringValue("title", person.getTitle());
         obj.setStringValue("firstname", person.getGivenName());
