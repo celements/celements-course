@@ -33,13 +33,9 @@ import com.celements.common.classes.IClassCollectionRole;
 import com.celements.course.classcollections.CourseClasses;
 import com.celements.course.service.ICourseServiceRole;
 import com.celements.model.access.IModelAccessFacade;
-import com.celements.model.access.exception.DocumentNotExistsException;
-import com.celements.model.access.exception.DocumentSaveException;
 import com.celements.model.util.ModelUtils;
+import com.google.common.base.Strings;
 import com.xpn.xwiki.XWikiContext;
-import com.xpn.xwiki.doc.XWikiDocument;
-import com.xpn.xwiki.objects.BaseObject;
-import com.xpn.xwiki.objects.classes.PasswordClass;
 
 @Component("celcourse")
 public class CourseScriptService implements ScriptService {
@@ -97,53 +93,17 @@ public class CourseScriptService implements ScriptService {
   }
 
   public String passwordHashString(String str) {
-    return new PasswordClass().getEquivalentPassword("hash:SHA-512:", str);
+    return courseService.passwordHashString(str);
   }
 
   public String normalizeEmail(String emailAdr) {
     return courseService.normalizeEmail(emailAdr);
   }
 
-  public boolean validateParticipant(String courseFN, String emailAdr, String activationCode) {
-    LOGGER.debug(
-        "validateParticipant with registration doc [{}], email [{}] and activation code [{}]",
-        courseFN, emailAdr, activationCode);
-    DocumentReference partiClassRef = new DocumentReference(getContext().getDatabase(),
-        CourseClasses.COURSE_CLASSES_SPACE, CourseClasses.COURSE_PARTICIPANT_CLASS_DOC);
-
-    try {
-      XWikiDocument courseDoc = modelAccess.getDocument(new DocumentReference(modelUtils.resolveRef(
-          courseFN)));
-      BaseObject partiObj = courseDoc.getXObject(partiClassRef, "email", normalizeEmail(emailAdr),
-          false);
-      LOGGER.debug("validateParticipant courseDoc [{}] found participant: [{}]", courseDoc,
-          partiObj != null);
-      if (partiObj != null) {
-        String hashedCode = passwordHashString(activationCode);
-        String savedHash = partiObj.getStringValue("validkey");
-        LOGGER.trace("validateParticipant: email [" + normalizeEmail(emailAdr) + "], hashedCode ["
-            + hashedCode + "], savedHash [" + savedHash + "].");
-        if (hashedCode.equals(savedHash)) {
-          if ("unconfirmed".equals(partiObj.getStringValue("status"))) {
-            partiObj.setStringValue("status", "confirmed");
-            modelAccess.saveDocument(courseDoc, "validate email addresse by" + " link.");
-            return true;
-          } else {
-            LOGGER.debug("validateParticipant failed because initial status is not"
-                + "'unconfirmed' but [" + partiObj.getStringValue("status") + "].");
-          }
-        } else {
-          LOGGER.debug("validateParticipant failed because activationCode does not match"
-              + " object key. email [" + normalizeEmail(emailAdr) + "], hashedCode [" + hashedCode
-              + "], savedHash [" + savedHash + "]");
-        }
-      } else {
-        LOGGER.debug("validateParticipant failed because no partizipant object for" + " email ["
-            + normalizeEmail(emailAdr) + "], on course [" + courseFN + "] found.");
-      }
-    } catch (DocumentNotExistsException | DocumentSaveException exp) {
-      LOGGER.error("Failed to validateParticipant for [" + courseFN + "], [" + emailAdr + "], ["
-          + activationCode + "].", exp);
+  public boolean validateParticipant(String regFN, String emailAdr, String activationCode) {
+    if (!Strings.isNullOrEmpty(regFN)) {
+      return courseService.validateParticipant(modelUtils.resolveRef(regFN,
+          DocumentReference.class), emailAdr, activationCode);
     }
     return false;
   }

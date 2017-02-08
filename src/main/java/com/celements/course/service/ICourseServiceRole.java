@@ -24,4 +24,9 @@ public interface ICourseServiceRole {
   public @NotNull SpaceReference getRegistrationSpace(@NotNull DocumentReference courseDocRef);
 
   public String normalizeEmail(String emailAdr);
+
+  public String passwordHashString(String str);
+
+  public boolean validateParticipant(DocumentReference regDocRef, String emailAdr,
+      String activationCode);
 }

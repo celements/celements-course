@@ -23,7 +23,7 @@ import com.celements.course.registration.Person;
 import com.celements.course.registration.RegistrationData;
 import com.celements.mailsender.IMailSenderRole;
 import com.celements.model.access.IModelAccessFacade;
-import com.celements.model.access.exception.DocumentAlreadyExistsException;
+import com.celements.model.access.exception.DocumentAccessException;
 import com.celements.model.access.exception.DocumentNotExistsException;
 import com.celements.model.access.exception.DocumentSaveException;
 import com.celements.model.context.ModelContext;
@@ -35,6 +35,7 @@ import com.celements.web.plugin.cmd.ConvertToPlainTextException;
 import com.celements.web.plugin.cmd.PlainTextCommand;
 import com.celements.web.service.IWebUtilsService;
 import com.google.common.base.Joiner;
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
@@ -42,7 +43,7 @@ import com.xpn.xwiki.XWikiContext;
 import com.xpn.xwiki.XWikiException;
 import com.xpn.xwiki.doc.XWikiDocument;
 import com.xpn.xwiki.objects.BaseObject;
-import com.xpn.xwiki.web.XWikiMessageTool;
+import com.xpn.xwiki.objects.classes.PasswordClass;
 import com.xpn.xwiki.web.XWikiRequest;
 
 @Component
@@ -147,7 +148,7 @@ public class CourseService implements ICourseServiceRole {
           sendConfirmationMails(data);
         }
         return true;
-      } catch (DocumentAlreadyExistsException | DocumentSaveException | XWikiException excp) {
+      } catch (DocumentAccessException | XWikiException excp) {
         LOGGER.error("exception while creating new registration", excp);
       }
     } else {
@@ -200,8 +201,7 @@ public class CourseService implements ICourseServiceRole {
   }
 
   private void createParticipantObjects(XWikiDocument regDoc, RegistrationData data) {
-    DocumentReference classRef = getCourseClasses().getCourseParticipantClassRef(
-        modelContext.getWikiRef().getName());
+    DocumentReference classRef = getParticipantClassRef();
     List<Person> persons = data.getPersons();
     for (int nb = 0; nb < persons.size(); nb++) {
       Person person = persons.get(nb);
@@ -224,36 +224,22 @@ public class CourseService implements ICourseServiceRole {
         obj.setDateValue("dob", person.getDateOfBirth());
         obj.setStringValue("status", person.getStatus());
         obj.setStringValue("payed", "unpayed");
-        if (obj.getNumber() == 0) {
-          obj.setLargeStringValue("comment", data.getComment());
-          // using set since there is no setPassword method
-          obj.set("validkey", data.getValidationKey(), getContext());
-          obj.setDateValue("timestamp", new Date());
-          obj.setStringValue("client", getClientInfo());
-        }
+        obj.setLargeStringValue("comment", data.getComment());
+        // using set since there is no setPassword method
+        obj.set("validkey", data.getValidationKey(), getContext());
+        obj.setDateValue("timestamp", new Date());
+        obj.setStringValue("client", getClientInfo());
       }
     }
   }
 
-  void sendConfirmationMails(RegistrationData data) throws XWikiException {
-    VelocityContext vcontext = (VelocityContext) getContext().get("vcontext");
-    vcontext.put("registrationData", data);
-    String sender = new CelMailConfiguration().getDefaultAdminSenderAddress();
-    XWikiMessageTool msgTool = webUtilsService.getMessageTool(getContext().getLanguage());
+  void sendConfirmationMails(RegistrationData data) throws DocumentNotExistsException,
+      XWikiException {
+    getVeloContext().put("registrationData", data);
+    XWikiDocument emailContentDoc = modelAccess.getDocument(new DocumentReference(
+        modelContext.getWikiRef().getName(), "MailContent", "NeueAnmeldung"));
     for (Person person : data.getPersons()) {
-      if (!Strings.nullToEmpty(person.getEmail()).trim().isEmpty()) {
-        vcontext.put("registrationPerson", person);
-        String htmlContent = new RenderCommand().renderCelementsCell(new DocumentReference(
-            modelContext.getWikiRef().getName(), "MailContent", "NeueAnmeldung"));
-        String textContent = "-";
-        try {
-          textContent = new PlainTextCommand().convertHtmlToPlainText(htmlContent);
-        } catch (ConvertToPlainTextException ctpte) {
-          LOGGER.error("could not convert mail html content to plain text", ctpte);
-        }
-        mailSender.sendMail(sender, null, person.getEmail(), null, null, msgTool.get(
-            "event_reg_verification_mail_subject"), htmlContent, textContent, null, null);
-      }
+      sendMail(null, person, emailContentDoc, false);
     }
   }
 
@@ -289,6 +275,113 @@ public class CourseService implements ICourseServiceRole {
     String spaceName = Joiner.on("_").join(courseDocRef.getParent().getName(),
         courseDocRef.getName());
     return new SpaceReference(spaceName, courseDocRef.getWikiReference());
+  }
+
+  @Override
+  public String passwordHashString(String str) {
+    return new PasswordClass().getEquivalentPassword("hash:SHA-512:", str);
+  }
+
+  @Override
+  public boolean validateParticipant(DocumentReference regDocRef, String emailAdr,
+      String activationCode) {
+    LOGGER.debug("validateParticipant: with regDoc [{}], email [{}] and activation code [{}]",
+        regDocRef, emailAdr, activationCode);
+    try {
+      XWikiDocument regDoc = modelAccess.getDocument(regDocRef);
+      BaseObject partiObj = modelAccess.getXObject(regDoc, getParticipantClassRef(), "email",
+          normalizeEmail(emailAdr));
+      LOGGER.debug("validateParticipant courseDoc [{}] found participant: [{}]", regDocRef,
+          partiObj != null);
+      if (partiObj != null) {
+        String hashedCode = passwordHashString(activationCode);
+        String savedHash = partiObj.getStringValue("validkey");
+        LOGGER.trace("validateParticipant: email [" + normalizeEmail(emailAdr) + "], hashedCode ["
+            + hashedCode + "], savedHash [" + savedHash + "].");
+        if (hashedCode.equals(savedHash)) {
+          if ("unconfirmed".equals(partiObj.getStringValue("status"))) {
+            partiObj.setStringValue("status", "confirmed");
+            modelAccess.saveDocument(regDoc, "validate email addresse by" + " link.");
+            return sendValidationMail(partiObj);
+          } else {
+            LOGGER.debug("validateParticipant failed because initial status is not"
+                + "'unconfirmed' but [" + partiObj.getStringValue("status") + "].");
+          }
+        } else {
+          LOGGER.debug("validateParticipant failed because activationCode does not match"
+              + " object key. email [" + normalizeEmail(emailAdr) + "], hashedCode [" + hashedCode
+              + "], savedHash [" + savedHash + "]");
+        }
+      } else {
+        LOGGER.debug("validateParticipant failed because no partizipant object for" + " email ["
+            + normalizeEmail(emailAdr) + "], on course [" + regDocRef + "] found.");
+      }
+    } catch (DocumentAccessException | XWikiException exp) {
+      LOGGER.error("Failed to validateParticipant for [" + regDocRef + "], [" + emailAdr + "], ["
+          + activationCode + "].", exp);
+    }
+    return false;
+  }
+
+  private boolean sendValidationMail(BaseObject partiObj) throws DocumentNotExistsException,
+      XWikiException {
+    getVeloContext().put("courseDocRef", modelUtils.resolveRef(partiObj.getStringValue("eventid"),
+        DocumentReference.class));
+    Person person = createPersonFromParticipant(partiObj);
+    XWikiDocument emailContentDoc = modelAccess.getDocument(getValidationEmailDocRef());
+    return sendMail(null, person, emailContentDoc, true);
+  }
+
+  DocumentReference getValidationEmailDocRef() {
+    return new DocumentReference(modelContext.getWikiRef().getName(), "MailContent",
+        "AnmeldungBestaetigt");
+  }
+
+  private Person createPersonFromParticipant(BaseObject bObj) {
+    Person person = new Person();
+    person.setTitle(bObj.getStringValue("title"));
+    person.setGivenName(bObj.getStringValue("firstname"));
+    person.setSurname(bObj.getStringValue("lastname"));
+    person.setAddress(bObj.getStringValue("address"));
+    person.setZip(bObj.getStringValue("zip"));
+    person.setCity(bObj.getStringValue("city"));
+    person.setPhone(bObj.getStringValue("phone"));
+    person.setEmail(bObj.getStringValue("email"));
+    person.setDateOfBirth(bObj.getDateValue("dob"));
+    person.setStatus(bObj.getStringValue("status"));
+    return person;
+  }
+
+  private boolean sendMail(String sender, Person person, XWikiDocument emailContentDoc,
+      boolean sendToSender) throws XWikiException {
+    boolean success = false;
+    if (!Strings.nullToEmpty(person.getEmail()).trim().isEmpty()) {
+      sender = MoreObjects.firstNonNull(Strings.emptyToNull(sender),
+          new CelMailConfiguration().getDefaultAdminSenderAddress());
+      getVeloContext().put("registrationPerson", person);
+      String htmlContent = new RenderCommand().renderCelementsDocument(emailContentDoc, "view");
+      String textContent = "-";
+      try {
+        textContent = new PlainTextCommand().convertHtmlToPlainText(htmlContent);
+      } catch (ConvertToPlainTextException ctpte) {
+        LOGGER.error("could not convert mail html content to plain text", ctpte);
+      }
+      success = mailSender.sendMail(sender, null, person.getEmail(), null, null,
+          emailContentDoc.getTitle(), htmlContent, textContent, null, null) >= 0;
+      if (success && sendToSender) {
+        success = mailSender.sendMail(sender, null, sender, null, null, emailContentDoc.getTitle(),
+            htmlContent, textContent, null, null) >= 0;
+      }
+    }
+    return false;
+  }
+
+  private VelocityContext getVeloContext() {
+    return (VelocityContext) getContext().get("vcontext");
+  }
+
+  private DocumentReference getParticipantClassRef() {
+    return getCourseClasses().getCourseParticipantClassRef(modelContext.getWikiRef().getName());
   }
 
   CourseClasses getCourseClasses() {
