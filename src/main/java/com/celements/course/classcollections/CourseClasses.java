@@ -225,7 +225,6 @@ public class CourseClasses extends AbstractClassCollection {
         "unconfirmed|confirmed|cancelled", "select", ",|");
     needsUpdate |= bclass.addStaticListField("payed", "Payed", 1, false,
         "unpayed|payed|partially paid", "select", ",|");
-    needsUpdate |= bclass.addBooleanField("payed", "Payed", "yesno");
     needsUpdate |= bclass.addDateField("payedDate", "Payed Date", "dd.MM.yyyy", 0);
     needsUpdate |= bclass.addTextAreaField("comment", "Comment", 80, 15);
     needsUpdate |= bclass.addPasswordField("validkey", "Validation Key", 10);

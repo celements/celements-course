@@ -222,6 +222,7 @@ public class CourseService implements ICourseServiceRole {
         obj.setStringValue("email", normalizeEmail(person.getEmail()));
         obj.setDateValue("dob", person.getDateOfBirth());
         obj.setStringValue("status", person.getStatus());
+        obj.setStringValue("payed", "unpayed");
         if (obj.getNumber() == 0) {
           obj.setLargeStringValue("comment", data.getComment());
           // using set since there is no setPassword method
