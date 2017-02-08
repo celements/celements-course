@@ -240,6 +240,7 @@ public class CourseService implements ICourseServiceRole {
     // TODO CELDEV-357 (Event Registration Confirmation Mail from / replyTo addresses)
     // TODO add generic dictionary key to general dictionary
     // (event_reg_verification_mail_subject)
+    // XXX from/replyTo should be read out from preferences when null
     mailSender.sendMail(null, null, data.getMainEmail(), null, null, msgTool.get(
         "event_reg_verification_mail_subject"), htmlContent, textContent, null, null);
   }
