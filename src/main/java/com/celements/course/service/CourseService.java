@@ -285,32 +285,24 @@ public class CourseService implements ICourseServiceRole {
   @Override
   public boolean validateParticipant(DocumentReference regDocRef, String emailAdr,
       String activationCode) {
+    boolean success = false;
     LOGGER.debug("validateParticipant: with regDoc [{}], email [{}] and activation code [{}]",
         regDocRef, emailAdr, activationCode);
     try {
       XWikiDocument regDoc = modelAccess.getDocument(regDocRef);
-      BaseObject partiObj = modelAccess.getXObject(regDoc, getParticipantClassRef(), "email",
-          normalizeEmail(emailAdr));
-      LOGGER.debug("validateParticipant courseDoc [{}] found participant: [{}]", regDocRef,
-          partiObj != null);
-      if (partiObj != null) {
-        String hashedCode = passwordHashString(activationCode);
-        String savedHash = partiObj.getStringValue("validkey");
-        LOGGER.trace("validateParticipant: email [" + normalizeEmail(emailAdr) + "], hashedCode ["
-            + hashedCode + "], savedHash [" + savedHash + "].");
-        if (hashedCode.equals(savedHash)) {
-          if ("unconfirmed".equals(partiObj.getStringValue("status"))) {
-            partiObj.setStringValue("status", "confirmed");
-            modelAccess.saveDocument(regDoc, "validate email addresse by" + " link.");
-            return sendValidationMail(partiObj);
+      Optional<BaseObject> partiObj = getParticipantObj(regDocRef, emailAdr, regDoc);
+      if (partiObj.isPresent()) {
+        success = "confirmed".equals(partiObj.get().getStringValue("status"));
+        if (!success) {
+          if (validateParticipant(activationCode, partiObj.get())) {
+            modelAccess.saveDocument(regDoc, "validate email addresse by link.");
+            success = sendValidationMail(partiObj.get());
           } else {
-            LOGGER.debug("validateParticipant failed because initial status is not"
-                + "'unconfirmed' but [" + partiObj.getStringValue("status") + "].");
+            LOGGER.debug("validateParticipant failed because activationCode does not match"
+                + " object key. email [" + normalizeEmail(emailAdr) + "]");
           }
         } else {
-          LOGGER.debug("validateParticipant failed because activationCode does not match"
-              + " object key. email [" + normalizeEmail(emailAdr) + "], hashedCode [" + hashedCode
-              + "], savedHash [" + savedHash + "]");
+          LOGGER.debug("validateParticipant was successful because status is confirmed");
         }
       } else {
         LOGGER.debug("validateParticipant failed because no partizipant object for" + " email ["
@@ -320,7 +312,26 @@ public class CourseService implements ICourseServiceRole {
       LOGGER.error("Failed to validateParticipant for [" + regDocRef + "], [" + emailAdr + "], ["
           + activationCode + "].", exp);
     }
+    return success;
+  }
+
+  private boolean validateParticipant(String activationCode, BaseObject partiObj) {
+    String hashedCode = passwordHashString(activationCode);
+    String savedHash = partiObj.getStringValue("validkey");
+    if (hashedCode.equals(savedHash)) {
+      partiObj.setStringValue("status", "confirmed");
+      return true;
+    }
     return false;
+  }
+
+  private Optional<BaseObject> getParticipantObj(DocumentReference regDocRef, String emailAdr,
+      XWikiDocument regDoc) {
+    Optional<BaseObject> partiObj = Optional.fromNullable(modelAccess.getXObject(regDoc,
+        getParticipantClassRef(), "email", normalizeEmail(emailAdr)));
+    LOGGER.debug("validateParticipant courseDoc [{}] found participant: [{}]", regDocRef,
+        partiObj.isPresent());
+    return partiObj;
   }
 
   private boolean sendValidationMail(BaseObject partiObj) throws DocumentNotExistsException,
@@ -368,7 +379,7 @@ public class CourseService implements ICourseServiceRole {
       }
       success = mailSender.sendMail(sender, null, person.getEmail(), null, null,
           emailContentDoc.getTitle(), htmlContent, textContent, null, null) >= 0;
-      if (success && sendToSender) {
+      if (sendToSender) {
         success = mailSender.sendMail(sender, null, sender, null, null, emailContentDoc.getTitle(),
             htmlContent, textContent, null, null) >= 0;
       }
