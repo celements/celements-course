@@ -23,22 +23,35 @@ import static com.celements.common.test.CelementsTestUtils.*;
 import static org.easymock.EasyMock.*;
 import static org.junit.Assert.*;
 
+import java.util.List;
+import java.util.Map;
+
+import org.apache.velocity.VelocityContext;
 import org.junit.Before;
 import org.junit.Test;
 import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.model.reference.SpaceReference;
 
 import com.celements.common.test.AbstractComponentTest;
+import com.celements.course.classcollections.CourseClasses;
+import com.celements.mailsender.IMailSenderRole;
 import com.celements.model.access.ModelAccessStrategy;
 import com.celements.model.access.exception.DocumentLoadException;
 import com.celements.model.util.ModelUtils;
 import com.celements.nextfreedoc.INextFreeDocRole;
+import com.celements.rendering.RenderCommand;
+import com.celements.web.plugin.cmd.CelMailConfiguration;
 import com.xpn.xwiki.XWikiException;
 import com.xpn.xwiki.doc.XWikiDocument;
 import com.xpn.xwiki.objects.BaseObject;
 import com.xpn.xwiki.web.Utils;
 
 public class CourseServiceTest extends AbstractComponentTest {
+
+  private static final String ACTIVATION_CODE = "123ho123jjk5689";
+  private static final String ACTIVATION_HASH = "hash:SHA-512:1a572fd8d66a08e922a0168671"
+      + "fe28cd04be6b84e2fe956f3fff2d0353621108bc0834f2676fd7415542d8759e6a888a4fed9dce738"
+      + "dd8c7cc0f89ab3fbce394";
 
   private CourseService courseService;
   private String db;
@@ -47,9 +60,11 @@ public class CourseServiceTest extends AbstractComponentTest {
 
   @Before
   public void prepareTest() throws Exception {
-    registerComponentMock(INextFreeDocRole.class);
-    registerComponentMock(ModelAccessStrategy.class);
+    registerComponentMocks(INextFreeDocRole.class, ModelAccessStrategy.class,
+        IMailSenderRole.class);
+    getContext().put("vcontext", new VelocityContext());
     courseService = (CourseService) Utils.getComponent(ICourseServiceRole.class);
+    courseService.injected_RenderCommand = createMockAndAddToDefault(RenderCommand.class);
     db = "db";
     docRef = new DocumentReference(db, "CourseSpace", "CourseX");
     doc = new XWikiDocument(docRef);
@@ -213,6 +228,87 @@ public class CourseServiceTest extends AbstractComponentTest {
     replayDefault();
     assertSame(regDocRef, courseService.createParticipantDocRef(docRef));
     verifyDefault();
+  }
+
+  @Test
+  public void testPasswordHashString() {
+    assertEquals(ACTIVATION_HASH, courseService.passwordHashString(ACTIVATION_CODE));
+  }
+
+  @Test
+  public void testValidateParticipant_no_object() throws Exception {
+    DocumentReference courseDocRef = new DocumentReference(getContext().getDatabase(), "Kurse",
+        "Kurs2");
+    expectDoc(courseDocRef);
+    replayDefault();
+    assertFalse(courseService.validateParticipant(courseDocRef, "test@test.com", ACTIVATION_CODE));
+    verifyDefault();
+  }
+
+  @Test
+  public void testValidateParticipant_wrong_initial_status() throws Exception {
+    DocumentReference courseDocRef = new DocumentReference(getContext().getDatabase(), "Kurse",
+        "Kurs2");
+    XWikiDocument courseDoc = expectDoc(courseDocRef);
+    DocumentReference partiClassRef = new DocumentReference(getContext().getDatabase(), "Classes",
+        "CourseParticipantClass");
+    BaseObject partiObj = new BaseObject();
+    String emailAdr = "test@test.com";
+    partiObj.setXClassReference(partiClassRef);
+    partiObj.setStringValue("email", emailAdr);
+    partiObj.setStringValue("validkey", ACTIVATION_HASH);
+    partiObj.setStringValue("status", "some different status");
+    courseDoc.setXObject(0, partiObj);
+    replayDefault();
+    assertFalse(courseService.validateParticipant(courseDocRef, emailAdr, ACTIVATION_CODE));
+    assertEquals("some different status", partiObj.getStringValue("status"));
+    verifyDefault();
+  }
+
+  @Test
+  public void testValidateParticipant() throws Exception {
+    DocumentReference courseDocRef = new DocumentReference(getContext().getDatabase(), "Kurse",
+        "Kurs2");
+    XWikiDocument courseDoc = expectDoc(courseDocRef);
+    DocumentReference partiClassRef = new DocumentReference(getContext().getDatabase(),
+        CourseClasses.COURSE_CLASSES_SPACE, CourseClasses.COURSE_PARTICIPANT_CLASS_DOC);
+    BaseObject partiObj = new BaseObject();
+    String emailAdr = "test@test.com";
+    partiObj.setXClassReference(partiClassRef);
+    partiObj.setStringValue("email", emailAdr);
+    partiObj.setStringValue("validkey", ACTIVATION_HASH);
+    partiObj.setStringValue("status", "unconfirmed");
+    partiObj.setStringValue("eventid", "Kurse.Kurs2");
+    courseDoc.addXObject(partiObj);
+    getMock(ModelAccessStrategy.class).saveDocument(same(courseDoc), eq(
+        "validate email addresse by link."), eq(false));
+    expectLastCall().once();
+    XWikiDocument emailDoc = expectDoc(courseService.getValidationEmailDocRef());
+    String sender = "asdf@fdsa.ch";
+    expect(getWikiMock().getXWikiPreference(eq("admin_email"), eq(
+        CelMailConfiguration.MAIL_DEFAULT_ADMIN_EMAIL_KEY), eq(""), same(getContext()))).andReturn(
+            sender).once();
+    String content = "someContent";
+    expect(courseService.injected_RenderCommand.renderCelementsDocument(same(emailDoc), eq(
+        "view"))).andReturn(content).once();
+    expect(getMock(IMailSenderRole.class).sendMail(eq(sender), isNull(String.class), eq(emailAdr),
+        isNull(String.class), isNull(String.class), eq(""), eq(content), eq(content), isNull(
+            List.class), isNull(Map.class))).andReturn(0).once();
+    expect(getMock(IMailSenderRole.class).sendMail(eq(sender), isNull(String.class), eq(sender),
+        isNull(String.class), isNull(String.class), eq(""), eq(content), eq(content), isNull(
+            List.class), isNull(Map.class))).andReturn(0).once();
+    replayDefault();
+    assertTrue(courseService.validateParticipant(courseDocRef, emailAdr, ACTIVATION_CODE));
+    assertEquals("confirmed", partiObj.getStringValue("status"));
+    verifyDefault();
+  }
+
+  private XWikiDocument expectDoc(DocumentReference docRef) throws XWikiException {
+    XWikiDocument doc = new XWikiDocument(docRef);
+    expect(getMock(ModelAccessStrategy.class).exists(eq(docRef), eq(""))).andReturn(true).once();
+    expect(getMock(ModelAccessStrategy.class).getDocument(eq(docRef), eq(""))).andReturn(
+        doc).once();
+    return doc;
   }
 
   private void expectDoc(boolean throwExc) throws XWikiException {

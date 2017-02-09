@@ -233,7 +233,7 @@ public class CourseService implements ICourseServiceRole {
     }
   }
 
-  void sendConfirmationMails(RegistrationData data) throws DocumentNotExistsException,
+  private void sendConfirmationMails(RegistrationData data) throws DocumentNotExistsException,
       XWikiException {
     getVeloContext().put("registrationData", data);
     XWikiDocument emailContentDoc = modelAccess.getDocument(new DocumentReference(
@@ -359,7 +359,7 @@ public class CourseService implements ICourseServiceRole {
       sender = MoreObjects.firstNonNull(Strings.emptyToNull(sender),
           new CelMailConfiguration().getDefaultAdminSenderAddress());
       getVeloContext().put("registrationPerson", person);
-      String htmlContent = new RenderCommand().renderCelementsDocument(emailContentDoc, "view");
+      String htmlContent = getRenderCommand().renderCelementsDocument(emailContentDoc, "view");
       String textContent = "-";
       try {
         textContent = new PlainTextCommand().convertHtmlToPlainText(htmlContent);
@@ -373,7 +373,16 @@ public class CourseService implements ICourseServiceRole {
             htmlContent, textContent, null, null) >= 0;
       }
     }
-    return false;
+    return success;
+  }
+
+  RenderCommand injected_RenderCommand;
+
+  private RenderCommand getRenderCommand() {
+    if (injected_RenderCommand != null) {
+      return injected_RenderCommand;
+    }
+    return new RenderCommand();
   }
 
   private VelocityContext getVeloContext() {
