@@ -296,7 +296,8 @@ public class CourseService implements ICourseServiceRole {
         if (!success) {
           if (validateParticipant(activationCode, partiObj.get())) {
             modelAccess.saveDocument(regDoc, "validate email addresse by link.");
-            success = sendValidationMail(partiObj.get());
+            sendValidationMail(partiObj.get());
+            success = true;
           } else {
             LOGGER.debug("validateParticipant failed because activationCode does not match"
                 + " object key. email [" + normalizeEmail(emailAdr) + "]");
