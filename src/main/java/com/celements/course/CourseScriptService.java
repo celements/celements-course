@@ -133,4 +133,8 @@ public class CourseScriptService implements ScriptService {
     return null;
   }
 
+  public boolean isConfirmed(String status) {
+    return status.equals(ICourseServiceRole.statusConfirmed) ? true : false;
+  }
+
 }
