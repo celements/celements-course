@@ -5,8 +5,7 @@ public enum CourseConfirmState {
 
   CONFIRMED("confirmed"),
   PARTIALCONFIRMED("partialConfirmed"),
-  UNCONFIRMED("unconfirmed"),
-  CANCELLED("cancelled");
+  UNCONFIRMED("unconfirmed");
   
   public final String id;
 

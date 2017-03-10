@@ -138,7 +138,7 @@ public class CourseScriptService implements ScriptService {
     return null;
   }
 
-  public CourseConfirmState isConfirmed(DocumentReference objDocRef) {
+  public CourseConfirmState getConfirmeState(DocumentReference objDocRef) {
     DocumentReference courseParticipantClassRef = getCourseClasses().getCourseParticipantClassRef(
         getContext().getDatabase());
     CourseConfirmState confirmState = CourseConfirmState.UNCONFIRMED;
@@ -147,14 +147,18 @@ public class CourseScriptService implements ScriptService {
       int index = 0;
       for (BaseObject obj : partiObjs) {
         String state = obj.getStringValue("status");
-        if (state.equals(CourseConfirmState.CONFIRMED) && (index == 0)) {
+        if ((state.equals(CourseConfirmState.CONFIRMED.id) && (index == 0)) || (state.equals(
+            CourseConfirmState.CONFIRMED.id) && confirmState.equals(
+                CourseConfirmState.CONFIRMED))) {
           confirmState = CourseConfirmState.CONFIRMED;
-        } else if (state.equals(CourseConfirmState.CONFIRMED) && confirmState.equals(
-            CourseConfirmState.CONFIRMED)) {
-          confirmState = CourseConfirmState.CONFIRMED;
-        } else if (state.equals(CourseConfirmState.CONFIRMED) && !confirmState.equals(
-            CourseConfirmState.CONFIRMED)) {
+        } else if ((state.equals(CourseConfirmState.CONFIRMED.id) && !confirmState.equals(
+            CourseConfirmState.CONFIRMED)) || (!state.equals(CourseConfirmState.CONFIRMED.id)
+                && confirmState.equals(CourseConfirmState.CONFIRMED)) || (!state.equals(
+                    CourseConfirmState.CONFIRMED.id) && confirmState.equals(
+                        CourseConfirmState.PARTIALCONFIRMED))) {
           confirmState = CourseConfirmState.PARTIALCONFIRMED;
+        } else {
+          confirmState = CourseConfirmState.UNCONFIRMED;
         }
         index++;
       }
