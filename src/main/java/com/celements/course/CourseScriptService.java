@@ -146,7 +146,10 @@ public class CourseScriptService implements ScriptService {
       List<BaseObject> partiObjs = modelAccess.getXObjects(objDocRef, courseParticipantClassRef);
       int index = 0;
       for (BaseObject obj : partiObjs) {
+        System.out.println("<<<<<<<<<<<<<<<<<<<< CourseScriptService getConfirmeState obj: " + obj);
         String state = obj.getStringValue("status");
+        System.out.println("<<<<<<<<<<<<<<<<<<<< CourseScriptService getConfirmeState state: "
+            + state);
         if ((state.equals(CourseConfirmState.CONFIRMED.id) && (index == 0)) || (state.equals(
             CourseConfirmState.CONFIRMED.id) && confirmState.equals(
                 CourseConfirmState.CONFIRMED))) {
@@ -160,8 +163,12 @@ public class CourseScriptService implements ScriptService {
         } else {
           confirmState = CourseConfirmState.UNCONFIRMED;
         }
+        System.out.println(
+            "<<<<<<<<<<<<<<<<<<<< CourseScriptService getConfirmeState confirmState: "
+                + confirmState);
         index++;
       }
+      System.out.println("\n");
     } catch (DocumentNotExistsException exp) {
       LOGGER.info("Failed to get XObjects for docRef '{}' and classRef '{}'", objDocRef,
           courseParticipantClassRef);
