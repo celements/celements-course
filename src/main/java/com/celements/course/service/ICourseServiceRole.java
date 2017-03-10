@@ -11,8 +11,6 @@ import com.xpn.xwiki.XWikiException;
 @ComponentRole
 public interface ICourseServiceRole {
 
-  public static final String statusConfirmed = "confirmed";
-
   public DocumentReference getCourseTypeForCourse(DocumentReference courseDocRef)
       throws XWikiException;
 
