@@ -29,4 +29,7 @@ public interface ICourseServiceRole {
 
   public boolean validateParticipant(DocumentReference regDocRef, String emailAdr,
       String activationCode);
+
+  public CourseConfirmState getConfirmeState(DocumentReference objDocRef);
+
 }

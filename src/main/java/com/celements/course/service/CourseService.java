@@ -316,6 +316,37 @@ public class CourseService implements ICourseServiceRole {
     return success;
   }
 
+  public CourseConfirmState getConfirmeState(DocumentReference objDocRef) {
+    DocumentReference courseParticipantClassRef = getCourseClasses().getCourseParticipantClassRef(
+        modelContext.getXWikiContext().getDatabase());
+    CourseConfirmState confirmState = CourseConfirmState.UNCONFIRMED;
+    try {
+      List<BaseObject> partiObjs = modelAccess.getXObjects(objDocRef, courseParticipantClassRef);
+      int index = 0;
+      for (BaseObject obj : partiObjs) {
+        String state = obj.getStringValue("status");
+        if ((state.equals(CourseConfirmState.CONFIRMED.id) && (index == 0)) || (state.equals(
+            CourseConfirmState.CONFIRMED.id) && confirmState.equals(
+                CourseConfirmState.CONFIRMED))) {
+          confirmState = CourseConfirmState.CONFIRMED;
+        } else if ((state.equals(CourseConfirmState.CONFIRMED.id) && !confirmState.equals(
+            CourseConfirmState.CONFIRMED)) || (!state.equals(CourseConfirmState.CONFIRMED.id)
+                && confirmState.equals(CourseConfirmState.CONFIRMED)) || (!state.equals(
+                    CourseConfirmState.CONFIRMED.id) && confirmState.equals(
+                        CourseConfirmState.PARTIALCONFIRMED))) {
+          confirmState = CourseConfirmState.PARTIALCONFIRMED;
+        } else {
+          confirmState = CourseConfirmState.UNCONFIRMED;
+        }
+        index++;
+      }
+    } catch (DocumentNotExistsException exp) {
+      LOGGER.info("Failed to get XObjects for docRef '{}' and classRef '{}'", objDocRef,
+          courseParticipantClassRef);
+    }
+    return confirmState;
+  }
+
   private boolean validateParticipant(String activationCode, BaseObject partiObj) {
     String hashedCode = passwordHashString(activationCode);
     String savedHash = partiObj.getStringValue("validkey");

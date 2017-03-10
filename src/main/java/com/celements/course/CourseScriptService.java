@@ -19,8 +19,6 @@
  */
 package com.celements.course;
 
-import java.util.List;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xwiki.component.annotation.Component;
@@ -36,11 +34,9 @@ import com.celements.course.classcollections.CourseClasses;
 import com.celements.course.service.CourseConfirmState;
 import com.celements.course.service.ICourseServiceRole;
 import com.celements.model.access.IModelAccessFacade;
-import com.celements.model.access.exception.DocumentNotExistsException;
 import com.celements.model.util.ModelUtils;
 import com.google.common.base.Strings;
 import com.xpn.xwiki.XWikiContext;
-import com.xpn.xwiki.objects.BaseObject;
 
 @Component("celcourse")
 public class CourseScriptService implements ScriptService {
@@ -139,34 +135,10 @@ public class CourseScriptService implements ScriptService {
   }
 
   public CourseConfirmState getConfirmeState(DocumentReference objDocRef) {
-    DocumentReference courseParticipantClassRef = getCourseClasses().getCourseParticipantClassRef(
-        getContext().getDatabase());
-    CourseConfirmState confirmState = CourseConfirmState.UNCONFIRMED;
-    try {
-      List<BaseObject> partiObjs = modelAccess.getXObjects(objDocRef, courseParticipantClassRef);
-      int index = 0;
-      for (BaseObject obj : partiObjs) {
-        String state = obj.getStringValue("status");
-        if ((state.equals(CourseConfirmState.CONFIRMED.id) && (index == 0)) || (state.equals(
-            CourseConfirmState.CONFIRMED.id) && confirmState.equals(
-                CourseConfirmState.CONFIRMED))) {
-          confirmState = CourseConfirmState.CONFIRMED;
-        } else if ((state.equals(CourseConfirmState.CONFIRMED.id) && !confirmState.equals(
-            CourseConfirmState.CONFIRMED)) || (!state.equals(CourseConfirmState.CONFIRMED.id)
-                && confirmState.equals(CourseConfirmState.CONFIRMED)) || (!state.equals(
-                    CourseConfirmState.CONFIRMED.id) && confirmState.equals(
-                        CourseConfirmState.PARTIALCONFIRMED))) {
-          confirmState = CourseConfirmState.PARTIALCONFIRMED;
-        } else {
-          confirmState = CourseConfirmState.UNCONFIRMED;
-        }
-        index++;
-      }
-    } catch (DocumentNotExistsException exp) {
-      LOGGER.info("Failed to get XObjects for docRef '{}' and classRef '{}'", objDocRef,
-          courseParticipantClassRef);
+    if (objDocRef != null) {
+      return courseService.getConfirmeState(objDocRef);
     }
-    return confirmState;
+    return null;
   }
 
 }
