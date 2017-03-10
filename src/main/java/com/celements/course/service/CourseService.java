@@ -316,6 +316,7 @@ public class CourseService implements ICourseServiceRole {
     return success;
   }
 
+  @Override
   public CourseConfirmState getConfirmeState(DocumentReference objDocRef) {
     DocumentReference courseParticipantClassRef = getCourseClasses().getCourseParticipantClassRef(
         modelContext.getXWikiContext().getDatabase());
