@@ -89,8 +89,7 @@ public class CourseService implements ICourseServiceRole {
   }
 
   @Override
-  public DocumentReference getCourseTypeForCourse(DocumentReference courseDocRef)
-      throws XWikiException {
+  public DocumentReference getCourseTypeForCourse(DocumentReference courseDocRef) {
     DocumentReference typeDocRef = null;
     WikiReference wikiRef = webUtilsService.getWikiRef(courseDocRef);
     BaseObject courseObj = null;
@@ -110,7 +109,7 @@ public class CourseService implements ICourseServiceRole {
   }
 
   @Override
-  public String getCourseTypeName(DocumentReference courseTypeDocRef) throws XWikiException {
+  public String getCourseTypeName(DocumentReference courseTypeDocRef) {
     String typeName = "";
     BaseObject typeObj = null;
     try {
