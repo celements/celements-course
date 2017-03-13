@@ -35,6 +35,7 @@ import com.celements.course.service.CourseConfirmState;
 import com.celements.course.service.ICourseServiceRole;
 import com.celements.model.access.IModelAccessFacade;
 import com.celements.model.util.ModelUtils;
+import com.google.common.base.Optional;
 import com.google.common.base.Strings;
 import com.xpn.xwiki.XWikiContext;
 
@@ -139,6 +140,20 @@ public class CourseScriptService implements ScriptService {
       return courseService.getConfirmeState(objDocRef);
     }
     return null;
+  }
+
+  /**
+   * @param docRef
+   *          course or course type docRef
+   * @return the course type name
+   */
+  public String getCourseTypeName(DocumentReference docRef) {
+    if (docRef != null) {
+      DocumentReference courseTypeDocRef = Optional.fromNullable(
+          courseService.getCourseTypeForCourse(docRef)).or(docRef);
+      return courseService.getCourseTypeName(courseTypeDocRef);
+    }
+    return "";
   }
 
 }
