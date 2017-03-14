@@ -19,6 +19,8 @@
  */
 package com.celements.course;
 
+import javax.annotation.Nullable;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xwiki.component.annotation.Component;
@@ -135,9 +137,10 @@ public class CourseScriptService implements ScriptService {
     return null;
   }
 
-  public CourseConfirmState getConfirmeState(DocumentReference objDocRef) {
-    if (objDocRef != null) {
-      return courseService.getConfirmeState(objDocRef);
+  @Nullable
+  public CourseConfirmState getConfirmeState(@Nullable DocumentReference regDocRef) {
+    if (regDocRef != null) {
+      return courseService.getConfirmeState(regDocRef);
     }
     return null;
   }

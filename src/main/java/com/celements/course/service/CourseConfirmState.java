@@ -1,20 +1,17 @@
 package com.celements.course.service;
 
+import com.google.common.base.Optional;
 
 public enum CourseConfirmState {
 
-  CONFIRMED("confirmed"),
-  PARTIALCONFIRMED("partialConfirmed"),
-  UNCONFIRMED("unconfirmed");
-  
-  public final String id;
+  CONFIRMED, PARTIALCONFIRMED, UNCONFIRMED;
 
-  private CourseConfirmState(String id) {
-    this.id = id;
+  public static Optional<CourseConfirmState> convertStringToEnum(String name) {
+    try {
+      return Optional.fromNullable(CourseConfirmState.valueOf(name.toUpperCase()));
+    } catch (IllegalArgumentException exp) {
+      return Optional.absent();
+    }
   }
 
-  public String getID() {
-    return this.id;
-  }
-  
 }

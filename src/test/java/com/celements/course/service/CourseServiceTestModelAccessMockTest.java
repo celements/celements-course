@@ -19,7 +19,7 @@ import com.celements.rendering.RenderCommand;
 import com.xpn.xwiki.objects.BaseObject;
 import com.xpn.xwiki.web.Utils;
 
-public class CourseServiceTestModelAccessMock extends AbstractComponentTest {
+public class CourseServiceTestModelAccessMockTest extends AbstractComponentTest {
 
   private CourseService courseService;
   private IModelAccessFacade modelAccessMock;
@@ -52,7 +52,6 @@ public class CourseServiceTestModelAccessMock extends AbstractComponentTest {
     CourseConfirmState confirmState = courseService.getConfirmeState(objDocRef);
     verifyDefault();
     assertEquals(CourseConfirmState.CONFIRMED, confirmState);
-    assertEquals("confirmed", confirmState.id);
   }
 
   @Test
@@ -75,7 +74,6 @@ public class CourseServiceTestModelAccessMock extends AbstractComponentTest {
     CourseConfirmState confirmState = courseService.getConfirmeState(objDocRef);
     verifyDefault();
     assertEquals(CourseConfirmState.UNCONFIRMED, confirmState);
-    assertEquals("unconfirmed", confirmState.id);
   }
 
   @Test
@@ -98,7 +96,6 @@ public class CourseServiceTestModelAccessMock extends AbstractComponentTest {
     CourseConfirmState confirmState = courseService.getConfirmeState(objDocRef);
     verifyDefault();
     assertEquals(CourseConfirmState.PARTIALCONFIRMED, confirmState);
-    assertEquals("partialConfirmed", confirmState.id);
   }
 
   @Test
@@ -121,7 +118,6 @@ public class CourseServiceTestModelAccessMock extends AbstractComponentTest {
     CourseConfirmState confirmState = courseService.getConfirmeState(objDocRef);
     verifyDefault();
     assertEquals(CourseConfirmState.PARTIALCONFIRMED, confirmState);
-    assertEquals("partialConfirmed", confirmState.id);
   }
 
 }

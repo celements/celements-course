@@ -316,35 +316,54 @@ public class CourseService implements ICourseServiceRole {
   }
 
   @Override
-  public CourseConfirmState getConfirmeState(DocumentReference objDocRef) {
+  public CourseConfirmState getConfirmeState(DocumentReference regDocRef) {
     DocumentReference courseParticipantClassRef = getCourseClasses().getCourseParticipantClassRef(
         modelContext.getXWikiContext().getDatabase());
     CourseConfirmState confirmState = CourseConfirmState.UNCONFIRMED;
     try {
-      List<BaseObject> partiObjs = modelAccess.getXObjects(objDocRef, courseParticipantClassRef);
+      List<BaseObject> partiObjs = modelAccess.getXObjects(regDocRef, courseParticipantClassRef);
       int index = 0;
       for (BaseObject obj : partiObjs) {
-        String state = obj.getStringValue("status");
-        if ((state.equals(CourseConfirmState.CONFIRMED.id) && (index == 0)) || (state.equals(
-            CourseConfirmState.CONFIRMED.id) && confirmState.equals(
-                CourseConfirmState.CONFIRMED))) {
-          confirmState = CourseConfirmState.CONFIRMED;
-        } else if ((state.equals(CourseConfirmState.CONFIRMED.id) && !confirmState.equals(
-            CourseConfirmState.CONFIRMED)) || (!state.equals(CourseConfirmState.CONFIRMED.id)
-                && confirmState.equals(CourseConfirmState.CONFIRMED)) || (!state.equals(
-                    CourseConfirmState.CONFIRMED.id) && confirmState.equals(
-                        CourseConfirmState.PARTIALCONFIRMED))) {
-          confirmState = CourseConfirmState.PARTIALCONFIRMED;
+        Optional<CourseConfirmState> state = CourseConfirmState.convertStringToEnum(
+            obj.getStringValue("status"));
+        if (state.isPresent()) {
+          if (isConfirmed(state.get(), confirmState, index)) {
+            confirmState = CourseConfirmState.CONFIRMED;
+          } else if (isPartialConfirmed(state.get(), confirmState)) {
+            confirmState = CourseConfirmState.PARTIALCONFIRMED;
+          } else {
+            confirmState = CourseConfirmState.UNCONFIRMED;
+          }
         } else {
           confirmState = CourseConfirmState.UNCONFIRMED;
         }
         index++;
       }
     } catch (DocumentNotExistsException exp) {
-      LOGGER.info("Failed to get XObjects for docRef '{}' and classRef '{}'", objDocRef,
+      LOGGER.info("Failed to get XObjects for docRef '{}' and classRef '{}'", regDocRef,
           courseParticipantClassRef);
     }
     return confirmState;
+  }
+
+  private boolean isConfirmed(CourseConfirmState state, CourseConfirmState confirmState,
+      int index) {
+    if ((state.equals(CourseConfirmState.CONFIRMED) && (index == 0)) || (state.equals(
+        CourseConfirmState.CONFIRMED) && confirmState.equals(CourseConfirmState.CONFIRMED))) {
+      return true;
+    }
+    return false;
+  }
+
+  private boolean isPartialConfirmed(CourseConfirmState state, CourseConfirmState confirmState) {
+    if ((state.equals(CourseConfirmState.CONFIRMED) && !confirmState.equals(
+        CourseConfirmState.CONFIRMED)) || (!state.equals(CourseConfirmState.CONFIRMED)
+            && confirmState.equals(CourseConfirmState.CONFIRMED)) || (!state.equals(
+                CourseConfirmState.CONFIRMED) && confirmState.equals(
+                    CourseConfirmState.PARTIALCONFIRMED))) {
+      return true;
+    }
+    return false;
   }
 
   private boolean validateParticipant(String activationCode, BaseObject partiObj) {
