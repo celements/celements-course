@@ -319,26 +319,25 @@ public class CourseService implements ICourseServiceRole {
   public CourseConfirmState getConfirmState(DocumentReference regDocRef) {
     DocumentReference courseParticipantClassRef = getCourseClasses().getCourseParticipantClassRef(
         modelContext.getXWikiContext().getDatabase());
-    CourseConfirmState confirmState = null;
+    CourseConfirmState confirmState = CourseConfirmState.UNDEFINED;
     try {
       List<BaseObject> partiObjs = modelAccess.getXObjects(regDocRef, courseParticipantClassRef);
       for (BaseObject obj : partiObjs) {
         Optional<CourseConfirmState> state = CourseConfirmState.convertStringToEnum(
             obj.getStringValue("status"));
         if (state.isPresent()) {
-          if (confirmState == null) {
-            confirmState = state.get();
-          } else {
-            switch (confirmState) {
-              case CONFIRMED:
-              case UNCONFIRMED:
-                if (confirmState != state.get()) {
-                  confirmState = CourseConfirmState.PARTIALCONFIRMED;
-                }
-                break;
-              default:
-                break;
-            }
+          switch (confirmState) {
+            case UNDEFINED:
+              confirmState = state.get();
+              break;
+            case CONFIRMED:
+            case UNCONFIRMED:
+              if (confirmState != state.get()) {
+                confirmState = CourseConfirmState.PARTIALCONFIRMED;
+              }
+              break;
+            default:
+              break;
           }
         }
       }
@@ -346,11 +345,7 @@ public class CourseService implements ICourseServiceRole {
       LOGGER.info("Failed to get XObjects for docRef '{}' and classRef '{}'", regDocRef,
           courseParticipantClassRef);
     }
-    if (confirmState == null) {
-      return CourseConfirmState.UNCONFIRMED;
-    } else {
-      return confirmState;
-    }
+    return confirmState;
   }
 
   private boolean validateParticipant(String activationCode, BaseObject partiObj) {
