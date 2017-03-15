@@ -6,7 +6,10 @@ import com.google.common.base.Optional;
 
 public enum CourseConfirmState {
 
-  UNDEFINED, CONFIRMED, PARTIALCONFIRMED, UNCONFIRMED;
+  UNDEFINED,
+  CONFIRMED,
+  PARTIALCONFIRMED,
+  UNCONFIRMED;
 
   @NotNull
   public static Optional<CourseConfirmState> convertStringToEnum(@NotNull String name) {
