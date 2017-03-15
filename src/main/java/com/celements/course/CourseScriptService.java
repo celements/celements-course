@@ -153,8 +153,8 @@ public class CourseScriptService implements ScriptService {
    */
   public String getCourseTypeName(DocumentReference docRef) {
     if (docRef != null) {
-      DocumentReference courseTypeDocRef = Optional.fromNullable(courseService
-          .getCourseTypeForCourse(docRef)).or(docRef);
+      DocumentReference courseTypeDocRef = Optional.fromNullable(
+          courseService.getCourseTypeForCourse(docRef)).or(docRef);
       return courseService.getCourseTypeName(courseTypeDocRef);
     }
     return "";

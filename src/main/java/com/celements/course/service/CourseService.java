@@ -94,8 +94,8 @@ public class CourseService implements ICourseServiceRole {
     WikiReference wikiRef = webUtilsService.getWikiRef(courseDocRef);
     BaseObject courseObj = null;
     try {
-      courseObj = modelAccess.getXObject(courseDocRef, getCourseClasses().getCourseClassRef(wikiRef
-          .getName()));
+      courseObj = modelAccess.getXObject(courseDocRef, getCourseClasses().getCourseClassRef(
+          wikiRef.getName()));
       if (courseObj != null) {
         String typeFN = courseObj.getStringValue("type");
         if (StringUtils.isNotBlank(typeFN)) {
@@ -158,8 +158,8 @@ public class CourseService implements ICourseServiceRole {
 
   private Optional<DocumentReference> getTemplRef() {
     DocumentReference templRef = null;
-    String template = modelContext.getRequest().isPresent() ? Strings.nullToEmpty(modelContext
-        .getRequest().get().getParameter("template")).trim() : "";
+    String template = modelContext.getRequest().isPresent() ? Strings.nullToEmpty(
+        modelContext.getRequest().get().getParameter("template")).trim() : "";
     if (!template.isEmpty()) {
       templRef = modelUtils.resolveRef(template, DocumentReference.class);
       templRef = modelAccess.exists(templRef) ? templRef : null;
@@ -235,8 +235,8 @@ public class CourseService implements ICourseServiceRole {
   private void sendConfirmationMails(RegistrationData data) throws DocumentNotExistsException,
       XWikiException {
     getVeloContext().put("registrationData", data);
-    XWikiDocument emailContentDoc = modelAccess.getDocument(new DocumentReference(modelContext
-        .getWikiRef().getName(), "MailContent", "NeueAnmeldung"));
+    XWikiDocument emailContentDoc = modelAccess.getDocument(new DocumentReference(
+        modelContext.getWikiRef().getName(), "MailContent", "NeueAnmeldung"));
     for (Person person : data.getPersons()) {
       sendMail(null, person, emailContentDoc, false);
     }
@@ -271,8 +271,8 @@ public class CourseService implements ICourseServiceRole {
   @Override
   public SpaceReference getRegistrationSpace(DocumentReference courseDocRef) {
     Preconditions.checkNotNull(courseDocRef);
-    String spaceName = Joiner.on("_").join(courseDocRef.getParent().getName(), courseDocRef
-        .getName());
+    String spaceName = Joiner.on("_").join(courseDocRef.getParent().getName(),
+        courseDocRef.getName());
     return new SpaceReference(spaceName, courseDocRef.getWikiReference());
   }
 
@@ -322,8 +322,8 @@ public class CourseService implements ICourseServiceRole {
     CourseConfirmState confirmState = CourseConfirmState.UNDEFINED;
     try {
       for (BaseObject obj : modelAccess.getXObjects(regDocRef, courseParticipantClassRef)) {
-        Optional<CourseConfirmState> state = CourseConfirmState.convertStringToEnum(obj
-            .getStringValue("status"));
+        Optional<CourseConfirmState> state = CourseConfirmState.convertStringToEnum(
+            obj.getStringValue("status"));
         if (state.isPresent()) {
           switch (confirmState) {
             case UNDEFINED:
@@ -361,8 +361,8 @@ public class CourseService implements ICourseServiceRole {
       XWikiDocument regDoc) {
     Optional<BaseObject> partiObj = Optional.fromNullable(modelAccess.getXObject(regDoc,
         getParticipantClassRef(), "email", normalizeEmail(emailAdr)));
-    LOGGER.debug("validateParticipant courseDoc [{}] found participant: [{}]", regDocRef, partiObj
-        .isPresent());
+    LOGGER.debug("validateParticipant courseDoc [{}] found participant: [{}]", regDocRef,
+        partiObj.isPresent());
     return partiObj;
   }
 
@@ -399,8 +399,8 @@ public class CourseService implements ICourseServiceRole {
       boolean sendToSender) throws XWikiException {
     boolean success = false;
     if (!Strings.nullToEmpty(person.getEmail()).trim().isEmpty()) {
-      sender = MoreObjects.firstNonNull(Strings.emptyToNull(sender), new CelMailConfiguration()
-          .getDefaultAdminSenderAddress());
+      sender = MoreObjects.firstNonNull(Strings.emptyToNull(sender),
+          new CelMailConfiguration().getDefaultAdminSenderAddress());
       getVeloContext().put("registrationPerson", person);
       String htmlContent = getRenderCommand().renderCelementsDocument(emailContentDoc, "view");
       String textContent = "-";
@@ -409,8 +409,8 @@ public class CourseService implements ICourseServiceRole {
       } catch (ConvertToPlainTextException ctpte) {
         LOGGER.error("could not convert mail html content to plain text", ctpte);
       }
-      success = mailSender.sendMail(sender, null, person.getEmail(), null, null, emailContentDoc
-          .getTitle(), htmlContent, textContent, null, null) >= 0;
+      success = mailSender.sendMail(sender, null, person.getEmail(), null, null,
+          emailContentDoc.getTitle(), htmlContent, textContent, null, null) >= 0;
       if (sendToSender) {
         success = mailSender.sendMail(sender, null, sender, null, null, emailContentDoc.getTitle(),
             htmlContent, textContent, null, null) >= 0;
