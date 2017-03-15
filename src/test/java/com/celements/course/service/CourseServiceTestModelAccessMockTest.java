@@ -34,7 +34,7 @@ public class CourseServiceTestModelAccessMockTest extends AbstractComponentTest 
   }
 
   @Test
-  public void testGetConfirmeState_confirmed() throws Exception {
+  public void testGetConfirmState_confirmed() throws Exception {
     DocumentReference regDocRef = new DocumentReference("frommkurse",
         "ProgonEvent_ProgonEventFromm7", "Anmeldung36");
     DocumentReference partiClassRef = new DocumentReference(getContext().getDatabase(),
@@ -56,7 +56,7 @@ public class CourseServiceTestModelAccessMockTest extends AbstractComponentTest 
   }
 
   @Test
-  public void testGetConfirmeState_unconfirmed() throws Exception {
+  public void testGetConfirmState_unconfirmed() throws Exception {
     DocumentReference regDocRef = new DocumentReference("frommkurse",
         "ProgonEvent_ProgonEventFromm7", "Anmeldung36");
     DocumentReference partiClassRef = new DocumentReference(getContext().getDatabase(),
@@ -78,7 +78,7 @@ public class CourseServiceTestModelAccessMockTest extends AbstractComponentTest 
   }
 
   @Test
-  public void testGetConfirmeState_partialConfirmed1() throws Exception {
+  public void testGetConfirmState_partialConfirmed1() throws Exception {
     DocumentReference regDocRef = new DocumentReference("frommkurse",
         "ProgonEvent_ProgonEventFromm7", "Anmeldung36");
     DocumentReference partiClassRef = new DocumentReference(getContext().getDatabase(),
@@ -100,7 +100,7 @@ public class CourseServiceTestModelAccessMockTest extends AbstractComponentTest 
   }
 
   @Test
-  public void testGetConfirmeState_partialConfirmed2() throws Exception {
+  public void testGetConfirmState_partialConfirmed2() throws Exception {
     DocumentReference regDocRef = new DocumentReference("frommkurse",
         "ProgonEvent_ProgonEventFromm7", "Anmeldung36");
     DocumentReference partiClassRef = new DocumentReference(getContext().getDatabase(),
@@ -122,7 +122,7 @@ public class CourseServiceTestModelAccessMockTest extends AbstractComponentTest 
   }
 
   @Test
-  public void testGetConfirmeState_noParticipant() throws Exception {
+  public void testGetConfirmState_noParticipant() throws Exception {
     DocumentReference regDocRef = new DocumentReference("frommkurse",
         "ProgonEvent_ProgonEventFromm7", "Anmeldung36");
     DocumentReference partiClassRef = new DocumentReference(getContext().getDatabase(),
@@ -138,7 +138,7 @@ public class CourseServiceTestModelAccessMockTest extends AbstractComponentTest 
   }
 
   @Test
-  public void testGetConfirmeState_stateAbsent() throws Exception {
+  public void testGetConfirmState_stateAbsent() throws Exception {
     DocumentReference regDocRef = new DocumentReference("frommkurse",
         "ProgonEvent_ProgonEventFromm7", "Anmeldung36");
     DocumentReference partiClassRef = new DocumentReference(getContext().getDatabase(),
