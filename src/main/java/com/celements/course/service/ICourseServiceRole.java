@@ -1,6 +1,5 @@
 package com.celements.course.service;
 
-import javax.annotation.Nullable;
 import javax.validation.constraints.NotNull;
 
 import org.xwiki.component.annotation.ComponentRole;
@@ -29,6 +28,6 @@ public interface ICourseServiceRole {
       String activationCode);
 
   @NotNull
-  public CourseConfirmState getConfirmState(@Nullable DocumentReference regDocRef);
+  public CourseConfirmState getConfirmState(@NotNull DocumentReference regDocRef);
 
 }

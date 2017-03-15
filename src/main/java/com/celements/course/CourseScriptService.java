@@ -20,6 +20,7 @@
 package com.celements.course;
 
 import javax.annotation.Nullable;
+import javax.validation.constraints.NotNull;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -137,12 +138,12 @@ public class CourseScriptService implements ScriptService {
     return null;
   }
 
-  @Nullable
+  @NotNull
   public CourseConfirmState getConfirmeState(@Nullable DocumentReference regDocRef) {
     if (regDocRef != null) {
       return courseService.getConfirmState(regDocRef);
     }
-    return null;
+    return CourseConfirmState.UNDEFINED;
   }
 
   /**
@@ -152,8 +153,8 @@ public class CourseScriptService implements ScriptService {
    */
   public String getCourseTypeName(DocumentReference docRef) {
     if (docRef != null) {
-      DocumentReference courseTypeDocRef = Optional.fromNullable(
-          courseService.getCourseTypeForCourse(docRef)).or(docRef);
+      DocumentReference courseTypeDocRef = Optional.fromNullable(courseService
+          .getCourseTypeForCourse(docRef)).or(docRef);
       return courseService.getCourseTypeName(courseTypeDocRef);
     }
     return "";
