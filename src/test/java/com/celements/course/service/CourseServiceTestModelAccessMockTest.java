@@ -15,6 +15,7 @@ import org.xwiki.model.reference.DocumentReference;
 import com.celements.common.test.AbstractComponentTest;
 import com.celements.course.classcollections.CourseClasses;
 import com.celements.model.access.IModelAccessFacade;
+import com.celements.model.access.exception.DocumentNotExistsException;
 import com.celements.rendering.RenderCommand;
 import com.xpn.xwiki.objects.BaseObject;
 import com.xpn.xwiki.web.Utils;
@@ -34,7 +35,7 @@ public class CourseServiceTestModelAccessMockTest extends AbstractComponentTest 
 
   @Test
   public void testGetConfirmeState_confirmed() throws Exception {
-    DocumentReference objDocRef = new DocumentReference("frommkurse",
+    DocumentReference regDocRef = new DocumentReference("frommkurse",
         "ProgonEvent_ProgonEventFromm7", "Anmeldung36");
     DocumentReference partiClassRef = new DocumentReference(getContext().getDatabase(),
         CourseClasses.COURSE_CLASSES_SPACE, CourseClasses.COURSE_PARTICIPANT_CLASS_DOC);
@@ -46,17 +47,17 @@ public class CourseServiceTestModelAccessMockTest extends AbstractComponentTest 
     partiObj2.setStringValue("status", "confirmed");
     List<BaseObject> partiObjs = Arrays.<BaseObject>asList(partiObj1, partiObj2);
 
-    expect(modelAccessMock.getXObjects(eq(objDocRef), eq(partiClassRef))).andReturn(partiObjs);
+    expect(modelAccessMock.getXObjects(eq(regDocRef), eq(partiClassRef))).andReturn(partiObjs);
 
     replayDefault();
-    CourseConfirmState confirmState = courseService.getConfirmState(objDocRef);
+    CourseConfirmState confirmState = courseService.getConfirmState(regDocRef);
     verifyDefault();
     assertEquals(CourseConfirmState.CONFIRMED, confirmState);
   }
 
   @Test
   public void testGetConfirmeState_unconfirmed() throws Exception {
-    DocumentReference objDocRef = new DocumentReference("frommkurse",
+    DocumentReference regDocRef = new DocumentReference("frommkurse",
         "ProgonEvent_ProgonEventFromm7", "Anmeldung36");
     DocumentReference partiClassRef = new DocumentReference(getContext().getDatabase(),
         CourseClasses.COURSE_CLASSES_SPACE, CourseClasses.COURSE_PARTICIPANT_CLASS_DOC);
@@ -68,17 +69,17 @@ public class CourseServiceTestModelAccessMockTest extends AbstractComponentTest 
     partiObj2.setStringValue("status", "unconfirmed");
     List<BaseObject> partiObjs = Arrays.<BaseObject>asList(partiObj1, partiObj2);
 
-    expect(modelAccessMock.getXObjects(eq(objDocRef), eq(partiClassRef))).andReturn(partiObjs);
+    expect(modelAccessMock.getXObjects(eq(regDocRef), eq(partiClassRef))).andReturn(partiObjs);
 
     replayDefault();
-    CourseConfirmState confirmState = courseService.getConfirmState(objDocRef);
+    CourseConfirmState confirmState = courseService.getConfirmState(regDocRef);
     verifyDefault();
     assertEquals(CourseConfirmState.UNCONFIRMED, confirmState);
   }
 
   @Test
   public void testGetConfirmeState_partialConfirmed1() throws Exception {
-    DocumentReference objDocRef = new DocumentReference("frommkurse",
+    DocumentReference regDocRef = new DocumentReference("frommkurse",
         "ProgonEvent_ProgonEventFromm7", "Anmeldung36");
     DocumentReference partiClassRef = new DocumentReference(getContext().getDatabase(),
         CourseClasses.COURSE_CLASSES_SPACE, CourseClasses.COURSE_PARTICIPANT_CLASS_DOC);
@@ -90,17 +91,17 @@ public class CourseServiceTestModelAccessMockTest extends AbstractComponentTest 
     partiObj2.setStringValue("status", "unconfirmed");
     List<BaseObject> partiObjs = Arrays.<BaseObject>asList(partiObj1, partiObj2);
 
-    expect(modelAccessMock.getXObjects(eq(objDocRef), eq(partiClassRef))).andReturn(partiObjs);
+    expect(modelAccessMock.getXObjects(eq(regDocRef), eq(partiClassRef))).andReturn(partiObjs);
 
     replayDefault();
-    CourseConfirmState confirmState = courseService.getConfirmState(objDocRef);
+    CourseConfirmState confirmState = courseService.getConfirmState(regDocRef);
     verifyDefault();
     assertEquals(CourseConfirmState.PARTIALCONFIRMED, confirmState);
   }
 
   @Test
   public void testGetConfirmeState_partialConfirmed2() throws Exception {
-    DocumentReference objDocRef = new DocumentReference("frommkurse",
+    DocumentReference regDocRef = new DocumentReference("frommkurse",
         "ProgonEvent_ProgonEventFromm7", "Anmeldung36");
     DocumentReference partiClassRef = new DocumentReference(getContext().getDatabase(),
         CourseClasses.COURSE_CLASSES_SPACE, CourseClasses.COURSE_PARTICIPANT_CLASS_DOC);
@@ -112,12 +113,48 @@ public class CourseServiceTestModelAccessMockTest extends AbstractComponentTest 
     partiObj2.setStringValue("status", "confirmed");
     List<BaseObject> partiObjs = Arrays.<BaseObject>asList(partiObj1, partiObj2);
 
-    expect(modelAccessMock.getXObjects(eq(objDocRef), eq(partiClassRef))).andReturn(partiObjs);
+    expect(modelAccessMock.getXObjects(eq(regDocRef), eq(partiClassRef))).andReturn(partiObjs);
 
     replayDefault();
-    CourseConfirmState confirmState = courseService.getConfirmState(objDocRef);
+    CourseConfirmState confirmState = courseService.getConfirmState(regDocRef);
     verifyDefault();
     assertEquals(CourseConfirmState.PARTIALCONFIRMED, confirmState);
+  }
+
+  @Test
+  public void testGetConfirmeState_noParticipant() throws Exception {
+    DocumentReference regDocRef = new DocumentReference("frommkurse",
+        "ProgonEvent_ProgonEventFromm7", "Anmeldung36");
+    DocumentReference partiClassRef = new DocumentReference(getContext().getDatabase(),
+        CourseClasses.COURSE_CLASSES_SPACE, CourseClasses.COURSE_PARTICIPANT_CLASS_DOC);
+
+    expect(modelAccessMock.getXObjects(eq(regDocRef), eq(partiClassRef))).andThrow(
+        new DocumentNotExistsException(regDocRef));
+
+    replayDefault();
+    CourseConfirmState confirmState = courseService.getConfirmState(regDocRef);
+    verifyDefault();
+    assertEquals(CourseConfirmState.UNDEFINED, confirmState);
+  }
+
+  @Test
+  public void testGetConfirmeState_stateAbsent() throws Exception {
+    DocumentReference regDocRef = new DocumentReference("frommkurse",
+        "ProgonEvent_ProgonEventFromm7", "Anmeldung36");
+    DocumentReference partiClassRef = new DocumentReference(getContext().getDatabase(),
+        CourseClasses.COURSE_CLASSES_SPACE, CourseClasses.COURSE_PARTICIPANT_CLASS_DOC);
+
+    BaseObject partiObj1 = new BaseObject();
+    partiObj1.setXClassReference(partiClassRef);
+    partiObj1.setStringValue("status", "nostate");
+    List<BaseObject> partiObjs = Arrays.<BaseObject>asList(partiObj1);
+
+    expect(modelAccessMock.getXObjects(eq(regDocRef), eq(partiClassRef))).andReturn(partiObjs);
+
+    replayDefault();
+    CourseConfirmState confirmState = courseService.getConfirmState(regDocRef);
+    verifyDefault();
+    assertEquals(CourseConfirmState.UNDEFINED, confirmState);
   }
 
 }
