@@ -29,6 +29,6 @@ public interface ICourseServiceRole {
       String activationCode);
 
   @NotNull
-  public CourseConfirmState getConfirmeState(@Nullable DocumentReference regDocRef);
+  public CourseConfirmState getConfirmState(@Nullable DocumentReference regDocRef);
 
 }

@@ -140,7 +140,7 @@ public class CourseScriptService implements ScriptService {
   @Nullable
   public CourseConfirmState getConfirmeState(@Nullable DocumentReference regDocRef) {
     if (regDocRef != null) {
-      return courseService.getConfirmeState(regDocRef);
+      return courseService.getConfirmState(regDocRef);
     }
     return null;
   }

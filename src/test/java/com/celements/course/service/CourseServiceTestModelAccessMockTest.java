@@ -49,7 +49,7 @@ public class CourseServiceTestModelAccessMockTest extends AbstractComponentTest 
     expect(modelAccessMock.getXObjects(eq(objDocRef), eq(partiClassRef))).andReturn(partiObjs);
 
     replayDefault();
-    CourseConfirmState confirmState = courseService.getConfirmeState(objDocRef);
+    CourseConfirmState confirmState = courseService.getConfirmState(objDocRef);
     verifyDefault();
     assertEquals(CourseConfirmState.CONFIRMED, confirmState);
   }
@@ -71,7 +71,7 @@ public class CourseServiceTestModelAccessMockTest extends AbstractComponentTest 
     expect(modelAccessMock.getXObjects(eq(objDocRef), eq(partiClassRef))).andReturn(partiObjs);
 
     replayDefault();
-    CourseConfirmState confirmState = courseService.getConfirmeState(objDocRef);
+    CourseConfirmState confirmState = courseService.getConfirmState(objDocRef);
     verifyDefault();
     assertEquals(CourseConfirmState.UNCONFIRMED, confirmState);
   }
@@ -93,7 +93,7 @@ public class CourseServiceTestModelAccessMockTest extends AbstractComponentTest 
     expect(modelAccessMock.getXObjects(eq(objDocRef), eq(partiClassRef))).andReturn(partiObjs);
 
     replayDefault();
-    CourseConfirmState confirmState = courseService.getConfirmeState(objDocRef);
+    CourseConfirmState confirmState = courseService.getConfirmState(objDocRef);
     verifyDefault();
     assertEquals(CourseConfirmState.PARTIALCONFIRMED, confirmState);
   }
@@ -115,7 +115,7 @@ public class CourseServiceTestModelAccessMockTest extends AbstractComponentTest 
     expect(modelAccessMock.getXObjects(eq(objDocRef), eq(partiClassRef))).andReturn(partiObjs);
 
     replayDefault();
-    CourseConfirmState confirmState = courseService.getConfirmeState(objDocRef);
+    CourseConfirmState confirmState = courseService.getConfirmState(objDocRef);
     verifyDefault();
     assertEquals(CourseConfirmState.PARTIALCONFIRMED, confirmState);
   }
