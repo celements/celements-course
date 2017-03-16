@@ -325,18 +325,11 @@ public class CourseService implements ICourseServiceRole {
         Optional<CourseConfirmState> state = CourseConfirmState.convertStringToEnum(
             obj.getStringValue("status"));
         if (state.isPresent()) {
-          switch (confirmState) {
-            case UNDEFINED:
-              confirmState = state.get();
-              break;
-            case CONFIRMED:
-            case UNCONFIRMED:
-              if (confirmState != state.get()) {
-                confirmState = CourseConfirmState.PARTIALCONFIRMED;
-              }
-              break;
-            default:
-              break;
+          if (confirmState == CourseConfirmState.UNDEFINED) {
+            confirmState = state.get();
+          } else if (confirmState != state.get()) {
+            confirmState = CourseConfirmState.PARTIALCONFIRMED;
+            break;
           }
         }
       }
