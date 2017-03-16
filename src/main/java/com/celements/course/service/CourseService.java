@@ -315,6 +315,31 @@ public class CourseService implements ICourseServiceRole {
     return success;
   }
 
+  @Override
+  public CourseConfirmState getConfirmState(DocumentReference regDocRef) {
+    DocumentReference courseParticipantClassRef = getCourseClasses().getCourseParticipantClassRef(
+        modelContext.getWikiRef().getName());
+    CourseConfirmState confirmState = CourseConfirmState.UNDEFINED;
+    try {
+      for (BaseObject obj : modelAccess.getXObjects(regDocRef, courseParticipantClassRef)) {
+        Optional<CourseConfirmState> state = CourseConfirmState.convertStringToEnum(
+            obj.getStringValue("status"));
+        if (state.isPresent()) {
+          if (confirmState == CourseConfirmState.UNDEFINED) {
+            confirmState = state.get();
+          } else if (confirmState != state.get()) {
+            confirmState = CourseConfirmState.PARTIALCONFIRMED;
+            break;
+          }
+        }
+      }
+    } catch (DocumentNotExistsException exp) {
+      LOGGER.info("Failed to get XObjects for docRef '{}' and classRef '{}'", regDocRef,
+          courseParticipantClassRef);
+    }
+    return confirmState;
+  }
+
   private boolean validateParticipant(String activationCode, BaseObject partiObj) {
     String hashedCode = passwordHashString(activationCode);
     String savedHash = partiObj.getStringValue("validkey");

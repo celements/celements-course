@@ -19,6 +19,9 @@
  */
 package com.celements.course;
 
+import javax.annotation.Nullable;
+import javax.validation.constraints.NotNull;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xwiki.component.annotation.Component;
@@ -31,6 +34,7 @@ import org.xwiki.script.service.ScriptService;
 
 import com.celements.common.classes.IClassCollectionRole;
 import com.celements.course.classcollections.CourseClasses;
+import com.celements.course.service.CourseConfirmState;
 import com.celements.course.service.ICourseServiceRole;
 import com.celements.model.access.IModelAccessFacade;
 import com.celements.model.util.ModelUtils;
@@ -132,6 +136,14 @@ public class CourseScriptService implements ScriptService {
       return courseService.getRegistrationSpace(courseDocRef);
     }
     return null;
+  }
+
+  @NotNull
+  public CourseConfirmState getConfirmeState(@Nullable DocumentReference regDocRef) {
+    if (regDocRef != null) {
+      return courseService.getConfirmState(regDocRef);
+    }
+    return CourseConfirmState.UNDEFINED;
   }
 
   /**

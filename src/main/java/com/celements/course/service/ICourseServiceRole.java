@@ -1,5 +1,6 @@
 package com.celements.course.service;
 
+import javax.annotation.Nullable;
 import javax.validation.constraints.NotNull;
 
 import org.xwiki.component.annotation.ComponentRole;
@@ -9,7 +10,8 @@ import org.xwiki.model.reference.SpaceReference;
 @ComponentRole
 public interface ICourseServiceRole {
 
-  public DocumentReference getCourseTypeForCourse(DocumentReference courseDocRef);
+  @Nullable
+  public DocumentReference getCourseTypeForCourse(@NotNull DocumentReference courseDocRef);
 
   public String getCourseTypeName(DocumentReference courseTypeDocRef);
 
@@ -26,4 +28,8 @@ public interface ICourseServiceRole {
 
   public boolean validateParticipant(DocumentReference regDocRef, String emailAdr,
       String activationCode);
+
+  @NotNull
+  public CourseConfirmState getConfirmState(@NotNull DocumentReference regDocRef);
+
 }
