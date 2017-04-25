@@ -230,7 +230,8 @@ public class CourseClasses extends AbstractClassCollection {
     needsUpdate |= bclass.addPasswordField("validkey", "Validation Key", 10);
     needsUpdate |= bclass.addDateField("timestamp", "Timestamp");
     needsUpdate |= bclass.addTextField("client", "Clien Info", 30);
-
+    needsUpdate |= bclass.addNumberField("payed_amount", "Payed Amount", 10, "integer");
+    needsUpdate |= bclass.addTextField("partial_payed_reason", "Partial Payed Reason", 10);
     if (!"internal".equals(bclass.getCustomMapping())) {
       needsUpdate = true;
       bclass.setCustomMapping("internal");
