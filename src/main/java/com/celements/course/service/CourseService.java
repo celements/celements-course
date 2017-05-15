@@ -18,6 +18,7 @@ import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.model.reference.EntityReference;
 import org.xwiki.model.reference.SpaceReference;
 import org.xwiki.model.reference.WikiReference;
+import org.xwiki.query.QueryManager;
 
 import com.celements.common.classes.IClassCollectionRole;
 import com.celements.course.classcollections.CourseClasses;
@@ -91,6 +92,9 @@ public class CourseService implements ICourseServiceRole {
 
   @Requirement
   private ILuceneSearchService searchService;
+
+  @Requirement
+  protected QueryManager queryManager;
 
   @Deprecated
   private XWikiContext getContext() {
@@ -349,8 +353,14 @@ public class CourseService implements ICourseServiceRole {
     return confirmState;
   }
 
-  public List<EntityReference> getAnnouncementsForCourse(LuceneQuery query,
-      List<String> sortFields) {
+  @Override
+  public List<EntityReference> getAnnouncementsForCourse(DocumentReference regSpaceRef,
+      DocumentReference partiClassRef) {
+    List<String> sortFields = new ArrayList<>();
+    sortFields.add("-CourseClasses.CourseParticipantClass.timestamp");
+    LuceneQuery query = searchService.createQuery();
+    query.add(searchService.createSpaceRestriction(regSpaceRef.getLastSpaceReference()));
+    query.add(searchService.createObjectRestriction(partiClassRef));
     LuceneSearchResult result = searchService.search(query, sortFields, null);
     List<EntityReference> retVal = new ArrayList<>();
     try {

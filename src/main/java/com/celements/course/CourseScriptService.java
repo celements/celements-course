@@ -44,7 +44,6 @@ import com.celements.course.service.ICourseServiceRole;
 import com.celements.model.access.IModelAccessFacade;
 import com.celements.model.access.exception.DocumentNotExistsException;
 import com.celements.model.util.ModelUtils;
-import com.celements.search.lucene.query.LuceneQuery;
 import com.google.common.base.Optional;
 import com.google.common.base.Strings;
 import com.xpn.xwiki.XWikiContext;
@@ -168,11 +167,10 @@ public class CourseScriptService implements ScriptService {
     return "";
   }
 
-  public Map<String, Object> getCourseAnnouncementsAsMap(LuceneQuery query,
-      List<String> sortFields) {
-    List<EntityReference> announcementList = courseService.getAnnouncementsForCourse(query,
-        sortFields);
+  public Map<String, Object> getCourseAnnouncementsAsMap(DocumentReference regSpaceRef) {
     DocumentReference partiClassRef = getCourseParticipantClassRef();
+    List<EntityReference> announcementList = courseService.getAnnouncementsForCourse(regSpaceRef,
+        partiClassRef);
     Integer totalAnnouncements = 0;
     Integer confirmAnnouncements = 0;
     for (EntityReference announcement : announcementList) {

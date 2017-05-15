@@ -10,8 +10,6 @@ import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.model.reference.EntityReference;
 import org.xwiki.model.reference.SpaceReference;
 
-import com.celements.search.lucene.query.LuceneQuery;
-
 @ComponentRole
 public interface ICourseServiceRole {
 
@@ -38,7 +36,7 @@ public interface ICourseServiceRole {
   public CourseConfirmState getConfirmState(@NotNull DocumentReference regDocRef);
 
   @NotNull
-  public List<EntityReference> getAnnouncementsForCourse(LuceneQuery query,
-      List<String> sortFields);
+  public List<EntityReference> getAnnouncementsForCourse(DocumentReference regSpaceRef,
+      DocumentReference partiClassRef);
 
 }
