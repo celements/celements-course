@@ -19,6 +19,10 @@
  */
 package com.celements.course;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import javax.annotation.Nullable;
 import javax.validation.constraints.NotNull;
 
@@ -28,6 +32,7 @@ import org.xwiki.component.annotation.Component;
 import org.xwiki.component.annotation.Requirement;
 import org.xwiki.context.Execution;
 import org.xwiki.model.reference.DocumentReference;
+import org.xwiki.model.reference.EntityReference;
 import org.xwiki.model.reference.EntityReferenceResolver;
 import org.xwiki.model.reference.SpaceReference;
 import org.xwiki.script.service.ScriptService;
@@ -38,6 +43,7 @@ import com.celements.course.service.CourseConfirmState;
 import com.celements.course.service.ICourseServiceRole;
 import com.celements.model.access.IModelAccessFacade;
 import com.celements.model.util.ModelUtils;
+import com.celements.search.lucene.query.LuceneQuery;
 import com.google.common.base.Optional;
 import com.google.common.base.Strings;
 import com.xpn.xwiki.XWikiContext;
@@ -158,6 +164,15 @@ public class CourseScriptService implements ScriptService {
       return courseService.getCourseTypeName(courseTypeDocRef);
     }
     return "";
+  }
+
+  public Map<String, Integer> getNumberCourseAnnouncement(LuceneQuery query,
+      List<String> sortFields) {
+    List<EntityReference> announcements = courseService.getAnnouncementsForCourse(query,
+        sortFields);
+    Map<String, Integer> retMap = new HashMap<>();
+    retMap.put("totalAnnouncement", announcements.size());
+    return retMap;
   }
 
 }

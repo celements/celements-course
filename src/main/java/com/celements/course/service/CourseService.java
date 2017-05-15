@@ -1,6 +1,7 @@
 package com.celements.course.service;
 
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -14,6 +15,7 @@ import org.xwiki.configuration.ConfigurationSource;
 import org.xwiki.context.Execution;
 import org.xwiki.model.ModelConfiguration;
 import org.xwiki.model.reference.DocumentReference;
+import org.xwiki.model.reference.EntityReference;
 import org.xwiki.model.reference.SpaceReference;
 import org.xwiki.model.reference.WikiReference;
 
@@ -30,6 +32,10 @@ import com.celements.model.context.ModelContext;
 import com.celements.model.util.ModelUtils;
 import com.celements.nextfreedoc.INextFreeDocRole;
 import com.celements.rendering.RenderCommand;
+import com.celements.search.lucene.ILuceneSearchService;
+import com.celements.search.lucene.LuceneSearchException;
+import com.celements.search.lucene.LuceneSearchResult;
+import com.celements.search.lucene.query.LuceneQuery;
 import com.celements.web.plugin.cmd.CelMailConfiguration;
 import com.celements.web.plugin.cmd.ConvertToPlainTextException;
 import com.celements.web.plugin.cmd.PlainTextCommand;
@@ -82,6 +88,9 @@ public class CourseService implements ICourseServiceRole {
 
   @Requirement
   private Execution execution;
+
+  @Requirement
+  private ILuceneSearchService searchService;
 
   @Deprecated
   private XWikiContext getContext() {
@@ -338,6 +347,18 @@ public class CourseService implements ICourseServiceRole {
           courseParticipantClassRef);
     }
     return confirmState;
+  }
+
+  public List<EntityReference> getAnnouncementsForCourse(LuceneQuery query,
+      List<String> sortFields) {
+    LuceneSearchResult result = searchService.search(query, sortFields, null);
+    List<EntityReference> retVal = new ArrayList<>();
+    try {
+      retVal = result.getResults();
+    } catch (LuceneSearchException exp) {
+      LOGGER.info("Failed to get Results for query {} and sortFields '{}'", query, sortFields);
+    }
+    return retVal;
   }
 
   private boolean validateParticipant(String activationCode, BaseObject partiObj) {
