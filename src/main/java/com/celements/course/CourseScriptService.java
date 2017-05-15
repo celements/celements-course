@@ -168,7 +168,7 @@ public class CourseScriptService implements ScriptService {
     return "";
   }
 
-  public Map<String, Integer> getNumberCourseAnnouncement(LuceneQuery query,
+  public Map<String, Object> getCourseAnnouncementsAsMap(LuceneQuery query,
       List<String> sortFields) {
     List<EntityReference> announcementList = courseService.getAnnouncementsForCourse(query,
         sortFields);
@@ -187,15 +187,15 @@ public class CourseScriptService implements ScriptService {
           }
         }
         totalAnnouncements += partiObjs.size();
-
       } catch (DocumentNotExistsException exp) {
         LOGGER.info("Failed to get XObjects for announcementDocRef {} and partiClassRef '{}'",
             announcementDocRef, partiClassRef, exp);
       }
     }
-    Map<String, Integer> retMap = new HashMap<>();
+    Map<String, Object> retMap = new HashMap<>();
     retMap.put("totalAnnouncement", totalAnnouncements);
     retMap.put("confirmAnnouncements", confirmAnnouncements);
+    retMap.put("announcementList", announcementList);
     return retMap;
   }
 
