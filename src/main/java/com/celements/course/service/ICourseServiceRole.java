@@ -36,7 +36,7 @@ public interface ICourseServiceRole {
   public CourseConfirmState getConfirmState(@NotNull DocumentReference regDocRef);
 
   @NotNull
-  public List<EntityReference> getAnnouncementsForCourse(DocumentReference regSpaceRef,
+  public List<EntityReference> getAnnouncementsForCourse(SpaceReference regSpaceRef,
       DocumentReference partiClassRef);
 
 }

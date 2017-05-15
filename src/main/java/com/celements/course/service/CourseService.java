@@ -354,12 +354,12 @@ public class CourseService implements ICourseServiceRole {
   }
 
   @Override
-  public List<EntityReference> getAnnouncementsForCourse(DocumentReference regSpaceRef,
+  public List<EntityReference> getAnnouncementsForCourse(SpaceReference regSpaceRef,
       DocumentReference partiClassRef) {
     List<String> sortFields = new ArrayList<>();
     sortFields.add("-CourseClasses.CourseParticipantClass.timestamp");
     LuceneQuery query = searchService.createQuery();
-    query.add(searchService.createSpaceRestriction(regSpaceRef.getLastSpaceReference()));
+    query.add(searchService.createSpaceRestriction(regSpaceRef));
     query.add(searchService.createObjectRestriction(partiClassRef));
     LuceneSearchResult result = searchService.search(query, sortFields, null);
     List<EntityReference> retVal = new ArrayList<>();

@@ -167,10 +167,10 @@ public class CourseScriptService implements ScriptService {
     return "";
   }
 
-  public Map<String, Object> getCourseAnnouncementsAsMap(DocumentReference regSpaceRef) {
+  public Map<String, Object> getCourseAnnouncementsAsMap(DocumentReference docRef) {
     DocumentReference partiClassRef = getCourseParticipantClassRef();
-    List<EntityReference> announcementList = courseService.getAnnouncementsForCourse(regSpaceRef,
-        partiClassRef);
+    List<EntityReference> announcementList = courseService.getAnnouncementsForCourse(
+        getRegistrationSpace(docRef), partiClassRef);
     Integer totalAnnouncements = 0;
     Integer confirmAnnouncements = 0;
     for (EntityReference announcement : announcementList) {
