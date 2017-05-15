@@ -174,11 +174,20 @@ public class CourseScriptService implements ScriptService {
         sortFields);
     DocumentReference partiClassRef = getCourseParticipantClassRef();
     Integer totalAnnouncements = 0;
+    Integer confirmAnnouncements = 0;
     for (EntityReference announcement : announcementList) {
       DocumentReference announcementDocRef = new DocumentReference(announcement);
       try {
         List<BaseObject> partiObjs = modelAccess.getXObjects(announcementDocRef, partiClassRef);
+        for (BaseObject obj : partiObjs) {
+          Optional<CourseConfirmState> state = CourseConfirmState.convertStringToEnum(
+              obj.getStringValue("status"));
+          if (state.isPresent() && (state.get() == CourseConfirmState.CONFIRMED)) {
+            confirmAnnouncements++;
+          }
+        }
         totalAnnouncements += partiObjs.size();
+
       } catch (DocumentNotExistsException exp) {
         LOGGER.info("Failed to get XObjects for announcementDocRef {} and partiClassRef '{}'",
             announcementDocRef, partiClassRef, exp);
@@ -186,6 +195,7 @@ public class CourseScriptService implements ScriptService {
     }
     Map<String, Integer> retMap = new HashMap<>();
     retMap.put("totalAnnouncement", totalAnnouncements);
+    retMap.put("confirmAnnouncements", confirmAnnouncements);
     return retMap;
   }
 
