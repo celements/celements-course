@@ -42,11 +42,13 @@ import com.celements.course.classcollections.CourseClasses;
 import com.celements.course.service.CourseConfirmState;
 import com.celements.course.service.ICourseServiceRole;
 import com.celements.model.access.IModelAccessFacade;
+import com.celements.model.access.exception.DocumentNotExistsException;
 import com.celements.model.util.ModelUtils;
 import com.celements.search.lucene.query.LuceneQuery;
 import com.google.common.base.Optional;
 import com.google.common.base.Strings;
 import com.xpn.xwiki.XWikiContext;
+import com.xpn.xwiki.objects.BaseObject;
 
 @Component("celcourse")
 public class CourseScriptService implements ScriptService {
@@ -168,10 +170,22 @@ public class CourseScriptService implements ScriptService {
 
   public Map<String, Integer> getNumberCourseAnnouncement(LuceneQuery query,
       List<String> sortFields) {
-    List<EntityReference> announcements = courseService.getAnnouncementsForCourse(query,
+    List<EntityReference> announcementList = courseService.getAnnouncementsForCourse(query,
         sortFields);
+    DocumentReference partiClassRef = getCourseParticipantClassRef();
+    Integer totalAnnouncements = 0;
+    for (EntityReference announcement : announcementList) {
+      DocumentReference announcementDocRef = new DocumentReference(announcement);
+      try {
+        List<BaseObject> partiObjs = modelAccess.getXObjects(announcementDocRef, partiClassRef);
+        totalAnnouncements += partiObjs.size();
+      } catch (DocumentNotExistsException exp) {
+        LOGGER.info("Failed to get XObjects for announcementDocRef {} and partiClassRef '{}'",
+            announcementDocRef, partiClassRef, exp);
+      }
+    }
     Map<String, Integer> retMap = new HashMap<>();
-    retMap.put("totalAnnouncement", announcements.size());
+    retMap.put("totalAnnouncement", totalAnnouncements);
     return retMap;
   }
 
