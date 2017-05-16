@@ -176,7 +176,7 @@ public class CourseScriptService implements ScriptService {
     List<DocumentReference> announcementList;
     Map<String, Object> retMap = new HashMap<>();
     try {
-      announcementList = courseService.getAnnouncementsForCourse(getRegistrationSpace(docRef),
+      announcementList = courseService.getRegistrationsForCourse(getRegistrationSpace(docRef),
           sortFields);
       Integer totalAnnouncements = 0;
       Integer confirmAnnouncements = 0;
@@ -224,6 +224,18 @@ public class CourseScriptService implements ScriptService {
       e.printStackTrace();
     }
     return 0;
+  }
+
+  public List<DocumentReference> getRegistrationsForCourse(DocumentReference courseDocRef,
+      List<String> sortFields) {
+    try {
+      return courseService.getRegistrationsForCourse(getRegistrationSpace(courseDocRef),
+          sortFields);
+    } catch (LuceneSearchException e) {
+      // TODO Auto-generated catch block
+      e.printStackTrace();
+    }
+    return null;
   }
 
   public CourseConfirmState getCourseConfirmState(String state) {

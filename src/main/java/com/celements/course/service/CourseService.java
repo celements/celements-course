@@ -354,13 +354,20 @@ public class CourseService implements ICourseServiceRole {
   }
 
   @Override
-  public List<DocumentReference> getAnnouncementsForCourse(SpaceReference regSpaceRef,
+  public List<DocumentReference> getRegistrationsForCourse(SpaceReference regSpaceRef,
       List<String> sortFields) throws LuceneSearchException {
     LuceneQuery query = searchService.createQuery();
     query.add(searchService.createSpaceRestriction(regSpaceRef));
     query.add(searchService.createObjectRestriction(getCourseParticipantClassRef()));
     LuceneSearchResult result = searchService.search(query, sortFields, null);
     return result.getResults(DocumentReference.class);
+  }
+
+  @Override
+  public List<DocumentReference> getRegistrationsForCourse(DocumentReference courseDocRef)
+      throws LuceneSearchException {
+    List<String> sortFields = new ArrayList<>();
+    return getRegistrationsForCourse(getRegistrationSpace(courseDocRef), sortFields);
   }
 
   @Override
@@ -373,7 +380,7 @@ public class CourseService implements ICourseServiceRole {
       throws LuceneSearchException {
     List<String> sortFields = new ArrayList<>();
     sortFields.add("-CourseClasses.CourseParticipantClass.timestamp");
-    List<DocumentReference> announcementList = getAnnouncementsForCourse(getRegistrationSpace(
+    List<DocumentReference> announcementList = getRegistrationsForCourse(getRegistrationSpace(
         courseDocRef), sortFields);
 
     long retVal = 0;

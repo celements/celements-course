@@ -37,8 +37,12 @@ public interface ICourseServiceRole {
   public CourseConfirmState getConfirmState(@NotNull DocumentReference regDocRef);
 
   @NotNull
-  public List<DocumentReference> getAnnouncementsForCourse(@NotNull SpaceReference regSpaceRef,
+  public List<DocumentReference> getRegistrationsForCourse(@NotNull SpaceReference regSpaceRef,
       @Nullable List<String> sortFields) throws LuceneSearchException;
+
+  @NotNull
+  public List<DocumentReference> getRegistrationsForCourse(@NotNull DocumentReference courseDocRef)
+      throws LuceneSearchException;
 
   public long getRegistrationCount(@NotNull DocumentReference courseDocRef)
       throws LuceneSearchException;
