@@ -354,21 +354,55 @@ public class CourseService implements ICourseServiceRole {
   }
 
   @Override
-  public List<EntityReference> getAnnouncementsForCourse(SpaceReference regSpaceRef,
-      DocumentReference partiClassRef) {
-    List<String> sortFields = new ArrayList<>();
-    sortFields.add("-CourseClasses.CourseParticipantClass.timestamp");
+  public List<DocumentReference> getAnnouncementsForCourse(SpaceReference regSpaceRef,
+      List<String> sortFields) throws LuceneSearchException {
     LuceneQuery query = searchService.createQuery();
     query.add(searchService.createSpaceRestriction(regSpaceRef));
-    query.add(searchService.createObjectRestriction(partiClassRef));
+    query.add(searchService.createObjectRestriction(getCourseParticipantClassRef()));
     LuceneSearchResult result = searchService.search(query, sortFields, null);
-    List<EntityReference> retVal = new ArrayList<>();
-    try {
-      retVal = result.getResults();
-    } catch (LuceneSearchException exp) {
-      LOGGER.info("Failed to get Results for query {} and sortFields '{}'", query, sortFields);
+    return result.getResults(DocumentReference.class);
+  }
+
+  @Override
+  public long getRegistrationCount(DocumentReference courseDocRef) throws LuceneSearchException {
+    return getRegistrationCount(courseDocRef, null);
+  }
+
+  @Override
+  public long getRegistrationCount(DocumentReference courseDocRef, CourseConfirmState state)
+      throws LuceneSearchException {
+    List<String> sortFields = new ArrayList<>();
+    sortFields.add("-CourseClasses.CourseParticipantClass.timestamp");
+    List<DocumentReference> announcementList = getAnnouncementsForCourse(getRegistrationSpace(
+        courseDocRef), sortFields);
+
+    long retVal = 0;
+    for (EntityReference announcement : announcementList) {
+      DocumentReference announcementDocRef = new DocumentReference(announcement);
+      try {
+        List<BaseObject> partiObjs = modelAccess.getXObjects(announcementDocRef,
+            getCourseParticipantClassRef());
+        for (BaseObject obj : partiObjs) {
+          if (state == null) {
+            retVal++;
+          } else {
+            Optional<CourseConfirmState> objState = CourseConfirmState.convertStringToEnum(
+                obj.getStringValue("status"));
+            if (objState.isPresent() && (objState.get() == state)) {
+              retVal++;
+            }
+          }
+        }
+      } catch (DocumentNotExistsException exp) {
+        LOGGER.info("Failed to get XObjects for announcementDocRef {} and partiClassRef '{}'",
+            announcementDocRef, getCourseParticipantClassRef(), exp);
+      }
     }
     return retVal;
+  }
+
+  private DocumentReference getCourseParticipantClassRef() {
+    return getCourseClasses().getCourseParticipantClassRef(modelContext.getWikiRef().getName());
   }
 
   private boolean validateParticipant(String activationCode, BaseObject partiObj) {

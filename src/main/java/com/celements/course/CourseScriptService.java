@@ -19,6 +19,7 @@
  */
 package com.celements.course;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -44,6 +45,7 @@ import com.celements.course.service.ICourseServiceRole;
 import com.celements.model.access.IModelAccessFacade;
 import com.celements.model.access.exception.DocumentNotExistsException;
 import com.celements.model.util.ModelUtils;
+import com.celements.search.lucene.LuceneSearchException;
 import com.google.common.base.Optional;
 import com.google.common.base.Strings;
 import com.xpn.xwiki.XWikiContext;
@@ -169,32 +171,63 @@ public class CourseScriptService implements ScriptService {
 
   public Map<String, Object> getCourseAnnouncementsAsMap(DocumentReference docRef) {
     DocumentReference partiClassRef = getCourseParticipantClassRef();
-    List<EntityReference> announcementList = courseService.getAnnouncementsForCourse(
-        getRegistrationSpace(docRef), partiClassRef);
-    Integer totalAnnouncements = 0;
-    Integer confirmAnnouncements = 0;
-    for (EntityReference announcement : announcementList) {
-      DocumentReference announcementDocRef = new DocumentReference(announcement);
-      try {
-        List<BaseObject> partiObjs = modelAccess.getXObjects(announcementDocRef, partiClassRef);
-        for (BaseObject obj : partiObjs) {
-          Optional<CourseConfirmState> state = CourseConfirmState.convertStringToEnum(
-              obj.getStringValue("status"));
-          if (state.isPresent() && (state.get() == CourseConfirmState.CONFIRMED)) {
-            confirmAnnouncements++;
-          }
-        }
-        totalAnnouncements += partiObjs.size();
-      } catch (DocumentNotExistsException exp) {
-        LOGGER.info("Failed to get XObjects for announcementDocRef {} and partiClassRef '{}'",
-            announcementDocRef, partiClassRef, exp);
-      }
-    }
+    List<String> sortFields = new ArrayList<>();
+    sortFields.add("-CourseClasses.CourseParticipantClass.timestamp");
+    List<DocumentReference> announcementList;
     Map<String, Object> retMap = new HashMap<>();
-    retMap.put("totalAnnouncement", totalAnnouncements);
-    retMap.put("confirmAnnouncements", confirmAnnouncements);
-    retMap.put("announcementList", announcementList);
+    try {
+      announcementList = courseService.getAnnouncementsForCourse(getRegistrationSpace(docRef),
+          sortFields);
+      Integer totalAnnouncements = 0;
+      Integer confirmAnnouncements = 0;
+      for (EntityReference announcement : announcementList) {
+        DocumentReference announcementDocRef = new DocumentReference(announcement);
+        try {
+          List<BaseObject> partiObjs = modelAccess.getXObjects(announcementDocRef, partiClassRef);
+          for (BaseObject obj : partiObjs) {
+            Optional<CourseConfirmState> state = CourseConfirmState.convertStringToEnum(
+                obj.getStringValue("status"));
+            if (state.isPresent() && (state.get() == CourseConfirmState.CONFIRMED)) {
+              confirmAnnouncements++;
+            }
+          }
+          totalAnnouncements += partiObjs.size();
+        } catch (DocumentNotExistsException exp) {
+          LOGGER.info("Failed to get XObjects for announcementDocRef {} and partiClassRef '{}'",
+              announcementDocRef, partiClassRef, exp);
+        }
+      }
+      retMap.put("totalAnnouncement", totalAnnouncements);
+      retMap.put("confirmAnnouncements", confirmAnnouncements);
+      retMap.put("announcementList", announcementList);
+    } catch (LuceneSearchException exp) {
+      LOGGER.info("Failed to get Results for docRef '{}'", docRef, exp);
+    }
     return retMap;
+  }
+
+  public long getRegistrationCount(DocumentReference courseDocRef) {
+    try {
+      return courseService.getRegistrationCount(courseDocRef);
+    } catch (LuceneSearchException e) {
+      // TODO Auto-generated catch block
+      e.printStackTrace();
+    }
+    return 0;
+  }
+
+  public long getRegistrationCount(DocumentReference courseDocRef, CourseConfirmState state) {
+    try {
+      return courseService.getRegistrationCount(courseDocRef, state);
+    } catch (LuceneSearchException e) {
+      // TODO Auto-generated catch block
+      e.printStackTrace();
+    }
+    return 0;
+  }
+
+  public CourseConfirmState getCourseConfirmState(String state) {
+    return CourseConfirmState.valueOf(state);
   }
 
 }
