@@ -378,10 +378,7 @@ public class CourseService implements ICourseServiceRole {
   @Override
   public long getRegistrationCount(DocumentReference courseDocRef, CourseConfirmState state)
       throws LuceneSearchException {
-    List<String> sortFields = new ArrayList<>();
-    sortFields.add("-CourseClasses.CourseParticipantClass.timestamp");
-    List<DocumentReference> announcementList = getRegistrationsForCourse(getRegistrationSpace(
-        courseDocRef), sortFields);
+    List<DocumentReference> announcementList = getRegistrationsForCourse(courseDocRef);
 
     long retVal = 0;
     for (EntityReference announcement : announcementList) {

@@ -207,35 +207,37 @@ public class CourseScriptService implements ScriptService {
   }
 
   public long getRegistrationCount(DocumentReference courseDocRef) {
+    long retVal = 0;
     try {
-      return courseService.getRegistrationCount(courseDocRef);
-    } catch (LuceneSearchException e) {
-      // TODO Auto-generated catch block
-      e.printStackTrace();
+      retVal = courseService.getRegistrationCount(courseDocRef);
+    } catch (LuceneSearchException exp) {
+      LOGGER.info("Failed to get Results for courseDocRef '{}'", courseDocRef, exp);
     }
-    return 0;
+    return retVal;
   }
 
   public long getRegistrationCount(DocumentReference courseDocRef, CourseConfirmState state) {
+    long retVal = 0;
     try {
-      return courseService.getRegistrationCount(courseDocRef, state);
-    } catch (LuceneSearchException e) {
-      // TODO Auto-generated catch block
-      e.printStackTrace();
+      retVal = courseService.getRegistrationCount(courseDocRef, state);
+    } catch (LuceneSearchException exp) {
+      LOGGER.info("Failed to get Results for courseDocRef '{}' and state '{}'", courseDocRef, state,
+          exp);
     }
-    return 0;
+    return retVal;
   }
 
   public List<DocumentReference> getRegistrationsForCourse(DocumentReference courseDocRef,
       List<String> sortFields) {
+    List<DocumentReference> retVal = new ArrayList<>();
     try {
-      return courseService.getRegistrationsForCourse(getRegistrationSpace(courseDocRef),
+      retVal = courseService.getRegistrationsForCourse(getRegistrationSpace(courseDocRef),
           sortFields);
-    } catch (LuceneSearchException e) {
-      // TODO Auto-generated catch block
-      e.printStackTrace();
+    } catch (LuceneSearchException exp) {
+      LOGGER.info("Failed to get Results for courseDocRef '{}' and sortFields '{}'", courseDocRef,
+          sortFields, exp);
     }
-    return null;
+    return retVal;
   }
 
   public CourseConfirmState getCourseConfirmState(String state) {
