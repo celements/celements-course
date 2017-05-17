@@ -375,26 +375,14 @@ public class CourseService implements ICourseServiceRole {
   @Override
   public long getRegistrationCount(DocumentReference courseDocRef, CourseConfirmState state)
       throws LuceneSearchException {
-    List<DocumentReference> registrationList = getRegistrationsForCourse(courseDocRef);
     long retVal = 0;
-    for (DocumentReference registration : registrationList) {
+    for (DocumentReference registrationDocRef : getRegistrationsForCourse(courseDocRef)) {
       try {
-        List<BaseObject> partiObjs = modelAccess.getXObjects(registration,
-            getCourseParticipantClassRef());
-        if (state == null) {
-          retVal += partiObjs.size();
-        } else {
-          for (BaseObject obj : partiObjs) {
-            Optional<CourseConfirmState> objState = CourseConfirmState.convertStringToEnum(
-                obj.getStringValue("status"));
-            if (objState.isPresent() && (objState.get() == state)) {
-              retVal++;
-            }
-          }
-        }
+        retVal += modelAccess.getXObjects(registrationDocRef, getCourseParticipantClassRef(),
+            (state != null ? "status" : null), (state != null ? state.name() : null)).size();
       } catch (DocumentNotExistsException exp) {
         LOGGER.info("Failed to get XObjects for registrationDocRef {} and partiClassRef '{}'",
-            registration, getCourseParticipantClassRef(), exp);
+            registrationDocRef, getCourseParticipantClassRef(), exp);
       }
     }
     return retVal;
