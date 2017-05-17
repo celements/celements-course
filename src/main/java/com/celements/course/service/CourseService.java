@@ -15,7 +15,6 @@ import org.xwiki.configuration.ConfigurationSource;
 import org.xwiki.context.Execution;
 import org.xwiki.model.ModelConfiguration;
 import org.xwiki.model.reference.DocumentReference;
-import org.xwiki.model.reference.EntityReference;
 import org.xwiki.model.reference.SpaceReference;
 import org.xwiki.model.reference.WikiReference;
 import org.xwiki.query.QueryManager;
@@ -366,8 +365,7 @@ public class CourseService implements ICourseServiceRole {
   @Override
   public List<DocumentReference> getRegistrationsForCourse(DocumentReference courseDocRef)
       throws LuceneSearchException {
-    List<String> sortFields = new ArrayList<>();
-    return getRegistrationsForCourse(getRegistrationSpace(courseDocRef), sortFields);
+    return getRegistrationsForCourse(getRegistrationSpace(courseDocRef), null);
   }
 
   @Override
@@ -378,28 +376,21 @@ public class CourseService implements ICourseServiceRole {
   @Override
   public long getRegistrationCount(DocumentReference courseDocRef, CourseConfirmState state)
       throws LuceneSearchException {
-    List<DocumentReference> announcementList = getRegistrationsForCourse(courseDocRef);
-
+    List<DocumentReference> registrationList = getRegistrationsForCourse(courseDocRef);
     long retVal = 0;
-    for (EntityReference announcement : announcementList) {
-      DocumentReference announcementDocRef = new DocumentReference(announcement);
+    for (DocumentReference registration : registrationList) {
       try {
-        List<BaseObject> partiObjs = modelAccess.getXObjects(announcementDocRef,
-            getCourseParticipantClassRef());
-        for (BaseObject obj : partiObjs) {
-          if (state == null) {
-            retVal++;
-          } else {
-            Optional<CourseConfirmState> objState = CourseConfirmState.convertStringToEnum(
-                obj.getStringValue("status"));
-            if (objState.isPresent() && (objState.get() == state)) {
-              retVal++;
-            }
-          }
+        List<BaseObject> partiObjs = new ArrayList<>();
+        if (state == null) {
+          partiObjs = modelAccess.getXObjects(registration, getCourseParticipantClassRef());
+        } else {
+          partiObjs = modelAccess.getXObjects(registration, getCourseParticipantClassRef(),
+              "status", state.name());
         }
+        retVal = partiObjs.size();
       } catch (DocumentNotExistsException exp) {
-        LOGGER.info("Failed to get XObjects for announcementDocRef {} and partiClassRef '{}'",
-            announcementDocRef, getCourseParticipantClassRef(), exp);
+        LOGGER.info("Failed to get XObjects for registrationDocRef {} and partiClassRef '{}'",
+            registration, getCourseParticipantClassRef(), exp);
       }
     }
     return retVal;
