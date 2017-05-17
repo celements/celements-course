@@ -1,6 +1,7 @@
 package com.celements.course.service;
 
 import java.text.SimpleDateFormat;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
@@ -377,12 +378,17 @@ public class CourseService implements ICourseServiceRole {
       throws LuceneSearchException {
     long retVal = 0;
     for (DocumentReference registrationDocRef : getRegistrationsForCourse(courseDocRef)) {
+      String key = null;
+      List<String> values = null;
+      if (state != null) {
+        key = "status";
+        values = Arrays.asList(state.name(), state.name().toLowerCase());
+      }
       try {
-        retVal += modelAccess.getXObjects(registrationDocRef, getCourseParticipantClassRef(),
-            (state != null ? "status" : null), (state != null ? state.name() : null)).size();
+        retVal += modelAccess.getXObjects(registrationDocRef, getCourseParticipantClassRef(), key,
+            values).size();
       } catch (DocumentNotExistsException exp) {
-        LOGGER.info("Failed to get XObjects for registrationDocRef {} and partiClassRef '{}'",
-            registrationDocRef, getCourseParticipantClassRef(), exp);
+        LOGGER.info("Failed to get registrationDocRef '{}'", registrationDocRef, exp);
       }
     }
     return retVal;
