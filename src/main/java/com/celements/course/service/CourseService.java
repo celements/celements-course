@@ -385,6 +385,7 @@ public class CourseService implements ICourseServiceRole {
           partiObjs = modelAccess.getXObjects(registration, getCourseParticipantClassRef());
           retVal += partiObjs.size();
         } else {
+          partiObjs = modelAccess.getXObjects(registration, getCourseParticipantClassRef());
           for (BaseObject obj : partiObjs) {
             Optional<CourseConfirmState> objState = CourseConfirmState.convertStringToEnum(
                 obj.getStringValue("status"));
