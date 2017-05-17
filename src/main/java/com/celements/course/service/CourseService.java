@@ -383,11 +383,16 @@ public class CourseService implements ICourseServiceRole {
         List<BaseObject> partiObjs = new ArrayList<>();
         if (state == null) {
           partiObjs = modelAccess.getXObjects(registration, getCourseParticipantClassRef());
+          retVal += partiObjs.size();
         } else {
-          partiObjs = modelAccess.getXObjects(registration, getCourseParticipantClassRef(),
-              "status", state.name());
+          for (BaseObject obj : partiObjs) {
+            Optional<CourseConfirmState> objState = CourseConfirmState.convertStringToEnum(
+                obj.getStringValue("status"));
+            if (objState.isPresent() && (objState.get() == state)) {
+              retVal++;
+            }
+          }
         }
-        retVal += partiObjs.size();
       } catch (DocumentNotExistsException exp) {
         LOGGER.info("Failed to get XObjects for registrationDocRef {} and partiClassRef '{}'",
             registration, getCourseParticipantClassRef(), exp);
