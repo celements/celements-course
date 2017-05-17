@@ -1,7 +1,6 @@
 package com.celements.course.service;
 
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -380,12 +379,11 @@ public class CourseService implements ICourseServiceRole {
     long retVal = 0;
     for (DocumentReference registration : registrationList) {
       try {
-        List<BaseObject> partiObjs = new ArrayList<>();
+        List<BaseObject> partiObjs = modelAccess.getXObjects(registration,
+            getCourseParticipantClassRef());
         if (state == null) {
-          partiObjs = modelAccess.getXObjects(registration, getCourseParticipantClassRef());
           retVal += partiObjs.size();
         } else {
-          partiObjs = modelAccess.getXObjects(registration, getCourseParticipantClassRef());
           for (BaseObject obj : partiObjs) {
             Optional<CourseConfirmState> objState = CourseConfirmState.convertStringToEnum(
                 obj.getStringValue("status"));
