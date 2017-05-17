@@ -387,7 +387,7 @@ public class CourseService implements ICourseServiceRole {
           partiObjs = modelAccess.getXObjects(registration, getCourseParticipantClassRef(),
               "status", state.name());
         }
-        retVal = partiObjs.size();
+        retVal += partiObjs.size();
       } catch (DocumentNotExistsException exp) {
         LOGGER.info("Failed to get XObjects for registrationDocRef {} and partiClassRef '{}'",
             registration, getCourseParticipantClassRef(), exp);
