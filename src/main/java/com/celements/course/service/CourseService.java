@@ -1,6 +1,7 @@
 package com.celements.course.service;
 
 import java.text.SimpleDateFormat;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
@@ -16,6 +17,7 @@ import org.xwiki.model.ModelConfiguration;
 import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.model.reference.SpaceReference;
 import org.xwiki.model.reference.WikiReference;
+import org.xwiki.query.QueryManager;
 
 import com.celements.common.classes.IClassCollectionRole;
 import com.celements.course.classcollections.CourseClasses;
@@ -30,6 +32,10 @@ import com.celements.model.context.ModelContext;
 import com.celements.model.util.ModelUtils;
 import com.celements.nextfreedoc.INextFreeDocRole;
 import com.celements.rendering.RenderCommand;
+import com.celements.search.lucene.ILuceneSearchService;
+import com.celements.search.lucene.LuceneSearchException;
+import com.celements.search.lucene.LuceneSearchResult;
+import com.celements.search.lucene.query.LuceneQuery;
 import com.celements.web.plugin.cmd.CelMailConfiguration;
 import com.celements.web.plugin.cmd.ConvertToPlainTextException;
 import com.celements.web.plugin.cmd.PlainTextCommand;
@@ -82,6 +88,12 @@ public class CourseService implements ICourseServiceRole {
 
   @Requirement
   private Execution execution;
+
+  @Requirement
+  private ILuceneSearchService searchService;
+
+  @Requirement
+  protected QueryManager queryManager;
 
   @Deprecated
   private XWikiContext getContext() {
@@ -338,6 +350,52 @@ public class CourseService implements ICourseServiceRole {
           courseParticipantClassRef);
     }
     return confirmState;
+  }
+
+  @Override
+  public List<DocumentReference> getRegistrationsForCourse(SpaceReference regSpaceRef,
+      List<String> sortFields) throws LuceneSearchException {
+    LuceneQuery query = searchService.createQuery();
+    query.add(searchService.createSpaceRestriction(regSpaceRef));
+    query.add(searchService.createObjectRestriction(getCourseParticipantClassRef()));
+    LuceneSearchResult result = searchService.search(query, sortFields, null);
+    return result.getResults(DocumentReference.class);
+  }
+
+  @Override
+  public List<DocumentReference> getRegistrationsForCourse(DocumentReference courseDocRef)
+      throws LuceneSearchException {
+    return getRegistrationsForCourse(getRegistrationSpace(courseDocRef), null);
+  }
+
+  @Override
+  public long getRegistrationCount(DocumentReference courseDocRef) throws LuceneSearchException {
+    return getRegistrationCount(courseDocRef, null);
+  }
+
+  @Override
+  public long getRegistrationCount(DocumentReference courseDocRef, CourseConfirmState state)
+      throws LuceneSearchException {
+    long retVal = 0;
+    for (DocumentReference registrationDocRef : getRegistrationsForCourse(courseDocRef)) {
+      String key = null;
+      List<String> values = null;
+      if (state != null) {
+        key = "status";
+        values = Arrays.asList(state.name(), state.name().toLowerCase());
+      }
+      try {
+        retVal += modelAccess.getXObjects(registrationDocRef, getCourseParticipantClassRef(), key,
+            values).size();
+      } catch (DocumentNotExistsException exp) {
+        LOGGER.info("Failed to get registrationDocRef '{}'", registrationDocRef, exp);
+      }
+    }
+    return retVal;
+  }
+
+  private DocumentReference getCourseParticipantClassRef() {
+    return getCourseClasses().getCourseParticipantClassRef(modelContext.getWikiRef().getName());
   }
 
   private boolean validateParticipant(String activationCode, BaseObject partiObj) {

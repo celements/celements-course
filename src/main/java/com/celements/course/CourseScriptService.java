@@ -19,6 +19,9 @@
  */
 package com.celements.course;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import javax.annotation.Nullable;
 import javax.validation.constraints.NotNull;
 
@@ -38,6 +41,7 @@ import com.celements.course.service.CourseConfirmState;
 import com.celements.course.service.ICourseServiceRole;
 import com.celements.model.access.IModelAccessFacade;
 import com.celements.model.util.ModelUtils;
+import com.celements.search.lucene.LuceneSearchException;
 import com.google.common.base.Optional;
 import com.google.common.base.Strings;
 import com.xpn.xwiki.XWikiContext;
@@ -158,6 +162,44 @@ public class CourseScriptService implements ScriptService {
       return courseService.getCourseTypeName(courseTypeDocRef);
     }
     return "";
+  }
+
+  public long getRegistrationCount(DocumentReference courseDocRef) {
+    long retVal = 0;
+    try {
+      retVal = courseService.getRegistrationCount(courseDocRef);
+    } catch (LuceneSearchException exp) {
+      LOGGER.info("Failed to get Results for courseDocRef '{}'", courseDocRef, exp);
+    }
+    return retVal;
+  }
+
+  public long getRegistrationCount(DocumentReference courseDocRef, CourseConfirmState state) {
+    long retVal = 0;
+    try {
+      retVal = courseService.getRegistrationCount(courseDocRef, state);
+    } catch (LuceneSearchException exp) {
+      LOGGER.info("Failed to get Results for courseDocRef '{}' and state '{}'", courseDocRef, state,
+          exp);
+    }
+    return retVal;
+  }
+
+  public List<DocumentReference> getRegistrationsForCourse(DocumentReference courseDocRef,
+      List<String> sortFields) {
+    List<DocumentReference> retVal = new ArrayList<>();
+    try {
+      retVal = courseService.getRegistrationsForCourse(getRegistrationSpace(courseDocRef),
+          sortFields);
+    } catch (LuceneSearchException exp) {
+      LOGGER.info("Failed to get Results for courseDocRef '{}' and sortFields '{}'", courseDocRef,
+          sortFields, exp);
+    }
+    return retVal;
+  }
+
+  public CourseConfirmState getCourseConfirmState(String state) {
+    return CourseConfirmState.valueOf(state);
   }
 
 }
