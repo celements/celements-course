@@ -30,7 +30,7 @@
   </parent>
   <modelVersion>4.0.0</modelVersion>
   <artifactId>celements-course</artifactId>
-  <version>1.17-SNAPSHOT</version>
+  <version>1.16.1</version>
   <description>Celements Course</description>
   <dependencies>
     <!-- Add here all your dependencies -->
@@ -57,6 +57,6 @@
     <connection>scm:git:git@github.com:celements/celements-course.git</connection>
     <developerConnection>scm:git:git@github.com:celements/celements-course.git</developerConnection>
     <url>https://github.com/celements/celements-course</url>
-    <tag>celements-course-1.15</tag>
+    <tag>celements-course-1.16.1</tag>
   </scm>
 </project>
