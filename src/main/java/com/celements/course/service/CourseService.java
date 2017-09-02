@@ -184,14 +184,9 @@ public class CourseService implements ICourseServiceRole {
       SpaceReference regSpace = regDoc.getDocumentReference().getLastSpaceReference();
       DocumentReference webPrefRef = new DocumentReference("WebPreferences", regSpace);
       if (!modelAccess.exists(webPrefRef)) {
-        DocumentReference globalRightsRef = new DocumentReference("XWikiGlobalRights",
-            new SpaceReference("XWiki", modelContext.getWikiRef()));
         XWikiDocument webPrefDoc = modelAccess.getOrCreateDocument(webPrefRef);
-        BaseObject rightsObj = modelAccess.newXObject(webPrefDoc, globalRightsRef);
-        modelAccess.setProperty(rightsObj, "groups", "XWiki.XWikiAdminGroup");
-        modelAccess.setProperty(rightsObj, "levels", "view,edit,delete,undelete");
-        modelAccess.setProperty(rightsObj, "users", "");
-        modelAccess.setProperty(rightsObj, "allow", 1);
+        addAccessRightsEdit(webPrefDoc, "XWiki.XWikiAdminGroup");
+        addAccessRightsEdit(webPrefDoc, "XWiki.CourseEditorGroup");
         try {
           modelAccess.saveDocument(webPrefDoc, "createdAndSetContent");
         } catch (DocumentSaveException dse) {
@@ -209,6 +204,16 @@ public class CourseService implements ICourseServiceRole {
         }
       }
     }
+  }
+
+  void addAccessRightsEdit(XWikiDocument webPrefDoc, String groupName) {
+    DocumentReference globalRightsRef = new DocumentReference("XWikiGlobalRights",
+        new SpaceReference("XWiki", modelContext.getWikiRef()));
+    BaseObject rightsObj = modelAccess.newXObject(webPrefDoc, globalRightsRef);
+    modelAccess.setProperty(rightsObj, "groups", groupName);
+    modelAccess.setProperty(rightsObj, "levels", "view,edit,delete,undelete");
+    modelAccess.setProperty(rightsObj, "users", "");
+    modelAccess.setProperty(rightsObj, "allow", 1);
   }
 
   private void createParticipantObjects(XWikiDocument regDoc, RegistrationData data) {
