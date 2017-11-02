@@ -9,7 +9,9 @@ import javax.annotation.concurrent.NotThreadSafe;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.celements.course.service.ICourseServiceRole;
 import com.google.common.base.Strings;
+import com.xpn.xwiki.web.Utils;
 
 @NotThreadSafe
 public class Person {
@@ -91,7 +93,7 @@ public class Person {
   }
 
   public String getEmail() {
-    return email;
+    return getCourseService().normalizeEmail(email);
   }
 
   public void setEmail(String email) {
@@ -131,4 +133,9 @@ public class Person {
   public void setStatus(String status) {
     this.status = status;
   }
+
+  private ICourseServiceRole getCourseService() {
+    return Utils.getComponent(ICourseServiceRole.class);
+  }
+
 }
