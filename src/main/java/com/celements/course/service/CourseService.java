@@ -116,11 +116,6 @@ public class CourseService implements ICourseServiceRole {
     return typeDocRef;
   }
 
-  private ClassReference getCourseClassRef() {
-    return new ClassReference(getCourseClasses().getCourseClassRef(
-        modelContext.getWikiRef().getName()));
-  }
-
   @Override
   public String getCourseTypeName(DocumentReference courseTypeDocRef) {
     String typeName = "";
@@ -136,13 +131,8 @@ public class CourseService implements ICourseServiceRole {
     return typeName;
   }
 
-  private ClassReference getCourseTypeClassRef() {
-    return new ClassReference(getCourseClasses().getCourseTypeClassRef(
-        modelContext.getWikiRef().getName()));
-  }
-
   @Override
-  public boolean registerParticipantFromRequest(boolean sendConfirmationMail) {
+  public boolean registerParticipantFromRequest(boolean sendValidationMail) {
     XWikiRequest req = getContext().getRequest();
     LOGGER.trace("registerParticipantFromRequest: request '{}': {}", req.hashCode(), req);
     RegistrationData data = new RegistrationData();
@@ -160,11 +150,11 @@ public class CourseService implements ICourseServiceRole {
         setMandatoryRegSpaceDocs(regDoc);
         createParticipantObjects(regDoc, data);
         modelAccess.saveDocument(regDoc, "created new registration");
-        if (sendConfirmationMail) {
-          sendConfirmationMails(data);
+        if (sendValidationMail) {
+          sendValidationMails(data);
         }
         return true;
-      } catch (DocumentAccessException | XWikiException excp) {
+      } catch (DocumentAccessException | XWikiException | IllegalArgumentException excp) {
         LOGGER.error("exception while creating new registration", excp);
       }
     } else {
@@ -247,7 +237,7 @@ public class CourseService implements ICourseServiceRole {
     }
   }
 
-  private void sendConfirmationMails(RegistrationData data) throws DocumentNotExistsException,
+  private void sendValidationMails(RegistrationData data) throws DocumentNotExistsException,
       XWikiException {
     HashSet<String> sentEmails = new HashSet<>();
     getVeloContext().put("registrationData", data);
@@ -302,40 +292,46 @@ public class CourseService implements ICourseServiceRole {
   @Override
   public boolean validateParticipant(DocumentReference regDocRef, String emailAdr,
       String activationCode) {
-    boolean isValidated = false;
+    boolean isValidated;
     LOGGER.debug("validateParticipant: with regDoc [{}], email [{}] and activation code [{}]",
         regDocRef, emailAdr, activationCode);
     try {
-      boolean saveAndSendMail = false;
       XWikiDocument regDoc = modelAccess.getDocument(regDocRef);
-      // TODO isConfirmedParticipant(regDoc, emailAdr);
-      // TODO handle participants with no obj
-      FluentIterable<BaseObject> partiObjs = getParticipantObjects(regDoc, emailAdr);
-      Iterator<BaseObject> iter = partiObjs.iterator();
-      while (iter.hasNext()) {
-        BaseObject partiObj = iter.next();
-        if ("confirmed".equals(partiObj.getStringValue("status"))) {
-          LOGGER.debug("participant status already confirmed");
-          iter.remove();
-          isValidated = true;
-        } else if (validateParticipant(activationCode, partiObj)) {
-          isValidated = true;
-          saveAndSendMail = true;
-        } else {
-          LOGGER.debug("activationCode does not match object key for email [{}]", emailAdr);
-          iter.remove();
-        }
-      }
-      if (saveAndSendMail) {
-        modelAccess.saveDocument(regDoc, "email address validated by link");
-        for (BaseObject partiObj : partiObjs) {
-          sendValidationMail(partiObj);
+      if (isParticipantInState(regDoc, emailAdr, CourseConfirmState.CONFIRMED)) {
+        LOGGER.debug("participant status already confirmed");
+        isValidated = true;
+      } else {
+        FluentIterable<BaseObject> partiObjs = XWikiObjectEditor.on(regDoc).filter(
+            CourseParticipantClass.FIELD_EMAIL, Arrays.asList(emailAdr, null)).fetch().iter();
+        isValidated = validateOrRemoveParticipants(partiObjs, activationCode);
+        if (!partiObjs.isEmpty()) {
+          modelAccess.saveDocument(regDoc, "email address validated by link");
+          for (BaseObject partiObj : partiObjs) {
+            sendConfirmationMail(partiObj);
+          }
         }
       }
     } catch (DocumentAccessException | XWikiException exp) {
-      LOGGER.error("Failed to validateParticipant for [" + regDocRef + "], [" + emailAdr + "], ["
-          + activationCode + "].", exp);
+      LOGGER.error("validateParticipant: failed for [{}], [{}], [{}]", regDocRef, emailAdr,
+          activationCode, exp);
       isValidated = false;
+    }
+    return isValidated;
+  }
+
+  private boolean validateOrRemoveParticipants(Iterable<BaseObject> partiObjs,
+      String activationCode) {
+    boolean isValidated = false;
+    Iterator<BaseObject> iter = partiObjs.iterator();
+    while (iter.hasNext()) {
+      BaseObject obj = iter.next();
+      if (validateParticipant(activationCode, obj)) {
+        isValidated = true;
+      } else {
+        LOGGER.debug("activationCode does not match object key for obj [{}] on doc [{}]",
+            obj.getNumber(), obj.getDocumentReference());
+        iter.remove();
+      }
     }
     return isValidated;
   }
@@ -410,12 +406,15 @@ public class CourseService implements ICourseServiceRole {
     return false;
   }
 
-  private FluentIterable<BaseObject> getParticipantObjects(XWikiDocument regDoc, String emailAdr) {
-    return XWikiObjectEditor.on(regDoc).filter(CourseParticipantClass.FIELD_EMAIL,
-        emailAdr).fetch().iter();
+  private boolean isParticipantInState(XWikiDocument regDoc, String emailAdr,
+      CourseConfirmState state) {
+    XWikiObjectFetcher fetcher = XWikiObjectFetcher.on(regDoc).filter(participantClassDef);
+    fetcher.filter(CourseParticipantClass.FIELD_EMAIL, emailAdr).filter(
+        CourseParticipantClass.FIELD_STATUS, Arrays.asList(state));
+    return fetcher.exists();
   }
 
-  private boolean sendValidationMail(BaseObject partiObj) throws DocumentNotExistsException,
+  private boolean sendConfirmationMail(BaseObject partiObj) throws DocumentNotExistsException,
       XWikiException {
     getVeloContext().put("courseDocRef", modelUtils.resolveRef(partiObj.getStringValue("eventid"),
         DocumentReference.class));
@@ -479,6 +478,16 @@ public class CourseService implements ICourseServiceRole {
 
   private VelocityContext getVeloContext() {
     return (VelocityContext) getContext().get("vcontext");
+  }
+
+  private ClassReference getCourseTypeClassRef() {
+    return new ClassReference(getCourseClasses().getCourseTypeClassRef(
+        modelContext.getWikiRef().getName()));
+  }
+
+  private ClassReference getCourseClassRef() {
+    return new ClassReference(getCourseClasses().getCourseClassRef(
+        modelContext.getWikiRef().getName()));
   }
 
   CourseClasses getCourseClasses() {

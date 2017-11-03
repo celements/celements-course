@@ -124,8 +124,8 @@ public class CourseScriptService implements ScriptService {
    *
    * @return true if registration was successful
    */
-  public boolean registerParticipantFromRequest(boolean sendConfirmationMail) {
-    return courseService.registerParticipantFromRequest(sendConfirmationMail);
+  public boolean registerParticipantFromRequest(boolean sendValidationMail) {
+    return courseService.registerParticipantFromRequest(sendValidationMail);
   }
 
   public DocumentReference createParticipantDocRef(DocumentReference courseDocRef) {
