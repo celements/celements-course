@@ -138,7 +138,7 @@ public class CourseService implements ICourseServiceRole {
     LOGGER.trace("registerParticipantFromRequest: request '{}': {}", req.hashCode(), req);
     RegistrationData data = new RegistrationData();
     data.setData(req);
-    if (!Strings.isNullOrEmpty(data.getEventid())) {
+    if (!Strings.isNullOrEmpty(data.getEventid()) && !Strings.isNullOrEmpty(data.getMainEmail())) {
       DocumentReference courseDocRef = modelUtils.resolveRef(data.getEventid(),
           DocumentReference.class);
       data.setRegDocRef(createParticipantDocRef(courseDocRef));
@@ -159,7 +159,8 @@ public class CourseService implements ICourseServiceRole {
         LOGGER.error("exception while creating new registration", excp);
       }
     } else {
-      LOGGER.info("registerParticipantFromRequest: request '{}' no eventid", req.hashCode());
+      LOGGER.info("registerParticipantFromRequest: request '{}' no eventid or email",
+          req.hashCode());
     }
     return false;
   }
