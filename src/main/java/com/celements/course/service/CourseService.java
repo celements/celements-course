@@ -344,14 +344,17 @@ public class CourseService implements ICourseServiceRole {
 
   @Override
   public CourseConfirmState getConfirmState(DocumentReference regDocRef) {
-    CourseConfirmState confirmState = CourseConfirmState.UNDEFINED;
+    CourseConfirmState confirmState = null;
     try {
       XWikiDocument regDoc = modelAccess.getDocument(regDocRef);
       for (BaseObject obj : XWikiObjectFetcher.on(regDoc).filter(participantClassDef).iter()) {
         Optional<CourseConfirmState> state = FluentIterable.from(modelAccess.getFieldValue(obj,
             CourseParticipantClass.FIELD_STATUS).get()).first();
         if (state.isPresent()) {
-          if (confirmState == CourseConfirmState.UNDEFINED) {
+          if (state.get() == CourseConfirmState.UNDEFINED) {
+            confirmState = CourseConfirmState.UNDEFINED;
+            break;
+          } else if ((confirmState == null)) {
             confirmState = state.get();
           } else if (confirmState != state.get()) {
             confirmState = CourseConfirmState.PARTIALCONFIRMED;
@@ -362,7 +365,7 @@ public class CourseService implements ICourseServiceRole {
     } catch (DocumentNotExistsException exp) {
       LOGGER.info("Failed to get participants for docRef '{}' ", regDocRef);
     }
-    return confirmState;
+    return confirmState != null ? confirmState : CourseConfirmState.UNDEFINED;
   }
 
   @Override

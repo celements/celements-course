@@ -379,18 +379,6 @@ public class CourseServiceTest extends AbstractComponentTest {
   }
 
   @Test
-  public void test_getConfirmState_unconfirmed2() throws Exception {
-    XWikiDocument regDoc = expectDoc(new DocumentReference("db", "Kurse", "Kurs2"));
-    addParticipant(regDoc, CourseConfirmState.UNCONFIRMED);
-    addParticipant(regDoc, CourseConfirmState.UNDEFINED);
-
-    replayDefault();
-    assertSame(CourseConfirmState.UNCONFIRMED, courseService.getConfirmState(
-        regDoc.getDocumentReference()));
-    verifyDefault();
-  }
-
-  @Test
   public void test_getConfirmState_partialConfirmed1() throws Exception {
     XWikiDocument regDoc = expectDoc(new DocumentReference("db", "Kurse", "Kurs2"));
     addParticipant(regDoc, CourseConfirmState.CONFIRMED);
@@ -427,6 +415,19 @@ public class CourseServiceTest extends AbstractComponentTest {
   public void test_getConfirmState_stateAbsent() throws Exception {
     XWikiDocument regDoc = expectDoc(new DocumentReference("db", "Kurse", "Kurs2"));
     addParticipant(regDoc, null);
+
+    replayDefault();
+    assertSame(CourseConfirmState.UNDEFINED, courseService.getConfirmState(
+        regDoc.getDocumentReference()));
+    verifyDefault();
+  }
+
+  @Test
+  public void test_getConfirmState_undefinedObj() throws Exception {
+    XWikiDocument regDoc = expectDoc(new DocumentReference("db", "Kurse", "Kurs2"));
+    addParticipant(regDoc, CourseConfirmState.UNCONFIRMED);
+    addParticipant(regDoc, CourseConfirmState.UNDEFINED);
+    addParticipant(regDoc, CourseConfirmState.CONFIRMED);
 
     replayDefault();
     assertSame(CourseConfirmState.UNDEFINED, courseService.getConfirmState(
