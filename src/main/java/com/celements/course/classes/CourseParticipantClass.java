@@ -55,6 +55,7 @@ public class CourseParticipantClass extends AbstractClassDefinition implements C
           CourseConfirmState.class)).prettyName("Status").separator("|").build();
 
   // TODO ClassField definitions incomplete
+  // [CELDEV-577] Refactor CourseClasses to ClassDefinitions
 
   @Override
   public String getName() {
