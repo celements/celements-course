@@ -52,4 +52,7 @@ public interface ICourseServiceRole {
   public long getRegistrationCount(@NotNull DocumentReference courseDocRef,
       @Nullable CourseConfirmState state) throws LuceneSearchException;
 
+  @NotNull
+  public boolean sendConfirmationMail(@NotNull DocumentReference regDocRef, int participantObjNb);
+
 }

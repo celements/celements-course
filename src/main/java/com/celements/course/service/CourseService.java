@@ -424,6 +424,22 @@ public class CourseService implements ICourseServiceRole {
     return fetcher.exists();
   }
 
+  @Override
+  public boolean sendConfirmationMail(DocumentReference regDocRef, int participantObjNb) {
+    boolean sendSuccess = false;
+    try {
+      Optional<BaseObject> partiObj = XWikiObjectFetcher.on(modelAccess.getDocument(
+          regDocRef)).filter(participantObjNb).first();
+      if (partiObj.isPresent()) {
+        sendSuccess = sendConfirmationMail(partiObj.get(), "");
+      }
+    } catch (DocumentNotExistsException | XWikiException exp) {
+      LOGGER.warn("sendConfirmationMail: failed for [{}], [{}], [{}]", regDocRef, participantObjNb,
+          exp);
+    }
+    return sendSuccess;
+  }
+
   private boolean sendConfirmationMail(BaseObject partiObj, String fallbackEmail)
       throws DocumentNotExistsException, XWikiException {
     getVeloContext().put("courseDocRef", modelUtils.resolveRef(partiObj.getStringValue("eventid"),
