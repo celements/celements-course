@@ -33,10 +33,11 @@ import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.model.reference.SpaceReference;
 
 import com.celements.common.test.AbstractComponentTest;
-import com.celements.course.classcollections.CourseClasses;
+import com.celements.course.classes.CourseParticipantClass;
 import com.celements.mailsender.IMailSenderRole;
 import com.celements.model.access.ModelAccessStrategy;
 import com.celements.model.access.exception.DocumentLoadException;
+import com.celements.model.classes.ClassDefinition;
 import com.celements.model.util.ModelUtils;
 import com.celements.nextfreedoc.INextFreeDocRole;
 import com.celements.rendering.RenderCommand;
@@ -236,78 +237,204 @@ public class CourseServiceTest extends AbstractComponentTest {
   }
 
   @Test
-  public void testValidateParticipant_no_object() throws Exception {
-    DocumentReference courseDocRef = new DocumentReference(getContext().getDatabase(), "Kurse",
-        "Kurs2");
-    expectDoc(courseDocRef);
+  public void test_validateParticipant_no_object() throws Exception {
+    XWikiDocument regDoc = expectDoc(new DocumentReference("db", "Kurse", "Kurs2"));
+    String email = "test@test.com";
+
     replayDefault();
-    assertFalse(courseService.validateParticipant(courseDocRef, "test@test.com", ACTIVATION_CODE));
+    assertFalse(courseService.validateParticipant(regDoc.getDocumentReference(), email,
+        ACTIVATION_CODE));
     verifyDefault();
   }
 
   @Test
-  public void testValidateParticipant_wrong_initial_status() throws Exception {
-    DocumentReference courseDocRef = new DocumentReference(getContext().getDatabase(), "Kurse",
-        "Kurs2");
-    XWikiDocument courseDoc = expectDoc(courseDocRef);
-    DocumentReference partiClassRef = new DocumentReference(getContext().getDatabase(), "Classes",
-        "CourseParticipantClass");
-    BaseObject partiObj = new BaseObject();
-    String emailAdr = "test@test.com";
-    partiObj.setXClassReference(partiClassRef);
-    partiObj.setStringValue("email", emailAdr);
-    partiObj.setStringValue("validkey", ACTIVATION_HASH);
-    partiObj.setStringValue("status", "some different status");
-    courseDoc.setXObject(0, partiObj);
+  public void test_validateParticipant_wrong_key() throws Exception {
+    XWikiDocument regDoc = expectDoc(new DocumentReference("db", "Kurse", "Kurs2"));
+    String email = "test@test.com";
+    addParticipant(regDoc, email, false);
+
     replayDefault();
-    assertFalse(courseService.validateParticipant(courseDocRef, emailAdr, ACTIVATION_CODE));
-    assertEquals("some different status", partiObj.getStringValue("status"));
+    assertFalse(courseService.validateParticipant(regDoc.getDocumentReference(), email,
+        ACTIVATION_CODE));
+    assertSame(CourseConfirmState.UNCONFIRMED, courseService.getConfirmState(
+        regDoc.getDocumentReference()));
     verifyDefault();
   }
 
   @Test
-  public void testValidateParticipant() throws Exception {
-    DocumentReference courseDocRef = new DocumentReference(getContext().getDatabase(), "Kurse",
-        "Kurs2");
-    XWikiDocument courseDoc = expectDoc(courseDocRef);
-    DocumentReference partiClassRef = new DocumentReference(getContext().getDatabase(),
-        CourseClasses.COURSE_CLASSES_SPACE, CourseClasses.COURSE_PARTICIPANT_CLASS_DOC);
-    BaseObject partiObj = new BaseObject();
-    String emailAdr = "test@test.com";
-    partiObj.setXClassReference(partiClassRef);
-    partiObj.setStringValue("email", emailAdr);
-    partiObj.setStringValue("validkey", ACTIVATION_HASH);
-    partiObj.setStringValue("status", "unconfirmed");
-    partiObj.setStringValue("eventid", "Kurse.Kurs2");
-    courseDoc.addXObject(partiObj);
-    getMock(ModelAccessStrategy.class).saveDocument(same(courseDoc), eq(
-        "validate email addresse by link."), eq(false));
+  public void test_validateParticipant() throws Exception {
+    XWikiDocument regDoc = expectDoc(new DocumentReference("db", "Kurse", "Kurs2"));
+    String email = "test@test.com";
+    addParticipant(regDoc, email, true);
+    getMock(ModelAccessStrategy.class).saveDocument(same(regDoc), anyObject(String.class), eq(
+        false));
     expectLastCall().once();
-    XWikiDocument emailDoc = expectDoc(courseService.getValidationEmailDocRef());
+    expectEmail(email, 1);
+
+    replayDefault();
+    assertTrue(courseService.validateParticipant(regDoc.getDocumentReference(), email,
+        ACTIVATION_CODE));
+    assertSame(CourseConfirmState.CONFIRMED, courseService.getConfirmState(
+        regDoc.getDocumentReference()));
+    verifyDefault();
+  }
+
+  @Test
+  public void test_validateParticipant_multiple_sameEmail() throws Exception {
+    XWikiDocument regDoc = expectDoc(new DocumentReference("db", "Kurse", "Kurs2"));
+    String email = "test@test.com";
+    addParticipant(regDoc, email, true);
+    addParticipant(regDoc, email, true);
+    getMock(ModelAccessStrategy.class).saveDocument(same(regDoc), anyObject(String.class), eq(
+        false));
+    expectLastCall().once();
+    expectEmail(email, 2);
+
+    replayDefault();
+    assertTrue(courseService.validateParticipant(regDoc.getDocumentReference(), email,
+        ACTIVATION_CODE));
+    assertSame(CourseConfirmState.CONFIRMED, courseService.getConfirmState(
+        regDoc.getDocumentReference()));
+    verifyDefault();
+  }
+
+  @Test
+  public void test_validateParticipant_multiple_otherEmail() throws Exception {
+    XWikiDocument regDoc = expectDoc(new DocumentReference("db", "Kurse", "Kurs2"));
+    String email = "test@test.com";
+    addParticipant(regDoc, email, true);
+    addParticipant(regDoc, "test2@test.com", true);
+    getMock(ModelAccessStrategy.class).saveDocument(same(regDoc), anyObject(String.class), eq(
+        false));
+    expectLastCall().once();
+    expectEmail(email, 1);
+
+    replayDefault();
+    assertTrue(courseService.validateParticipant(regDoc.getDocumentReference(), email,
+        ACTIVATION_CODE));
+    assertSame(CourseConfirmState.PARTIALCONFIRMED, courseService.getConfirmState(
+        regDoc.getDocumentReference()));
+    verifyDefault();
+  }
+
+  @SuppressWarnings("unchecked")
+  private void expectEmail(String email, int count) throws Exception {
+    XWikiDocument emailDoc = expectDoc(courseService.getConfirmationEmailDocRef());
     String sender = "asdf@fdsa.ch";
     expect(getWikiMock().getXWikiPreference(eq("admin_email"), eq(
         CelMailConfiguration.MAIL_DEFAULT_ADMIN_EMAIL_KEY), eq(""), same(getContext()))).andReturn(
-            sender).once();
+            sender).times(count);
     String content = "someContent";
     expect(courseService.injected_RenderCommand.renderCelementsDocument(same(emailDoc), eq(
-        "view"))).andReturn(content).once();
-    expect(getMock(IMailSenderRole.class).sendMail(eq(sender), isNull(String.class), eq(emailAdr),
+        "view"))).andReturn(content).times(count);
+    expect(getMock(IMailSenderRole.class).sendMail(eq(sender), isNull(String.class), eq(email),
         isNull(String.class), isNull(String.class), eq(""), eq(content), eq(content), isNull(
-            List.class), isNull(Map.class))).andReturn(0).once();
+            List.class), isNull(Map.class))).andReturn(0).times(count);
     expect(getMock(IMailSenderRole.class).sendMail(eq(sender), isNull(String.class), eq(sender),
         isNull(String.class), isNull(String.class), eq(""), eq(content), eq(content), isNull(
-            List.class), isNull(Map.class))).andReturn(0).once();
+            List.class), isNull(Map.class))).andReturn(0).times(count);
+  }
+
+  @Test
+  public void testGetConfirmState_confirmed() throws Exception {
+    XWikiDocument regDoc = expectDoc(new DocumentReference("db", "Kurse", "Kurs2"));
+    addParticipant(regDoc, CourseConfirmState.CONFIRMED);
+    addParticipant(regDoc, CourseConfirmState.CONFIRMED);
+
     replayDefault();
-    assertTrue(courseService.validateParticipant(courseDocRef, emailAdr, ACTIVATION_CODE));
-    assertEquals("confirmed", partiObj.getStringValue("status"));
+    assertSame(CourseConfirmState.CONFIRMED, courseService.getConfirmState(
+        regDoc.getDocumentReference()));
     verifyDefault();
+  }
+
+  @Test
+  public void testGetConfirmState_unconfirmed() throws Exception {
+    XWikiDocument regDoc = expectDoc(new DocumentReference("db", "Kurse", "Kurs2"));
+    addParticipant(regDoc, CourseConfirmState.UNCONFIRMED);
+    addParticipant(regDoc, CourseConfirmState.UNCONFIRMED);
+
+    replayDefault();
+    assertSame(CourseConfirmState.UNCONFIRMED, courseService.getConfirmState(
+        regDoc.getDocumentReference()));
+    verifyDefault();
+  }
+
+  @Test
+  public void testGetConfirmState_partialConfirmed1() throws Exception {
+    XWikiDocument regDoc = expectDoc(new DocumentReference("db", "Kurse", "Kurs2"));
+    addParticipant(regDoc, CourseConfirmState.CONFIRMED);
+    addParticipant(regDoc, CourseConfirmState.UNCONFIRMED);
+
+    replayDefault();
+    assertSame(CourseConfirmState.PARTIALCONFIRMED, courseService.getConfirmState(
+        regDoc.getDocumentReference()));
+    verifyDefault();
+  }
+
+  @Test
+  public void testGetConfirmState_partialConfirmed2() throws Exception {
+    XWikiDocument regDoc = expectDoc(new DocumentReference("db", "Kurse", "Kurs2"));
+    addParticipant(regDoc, CourseConfirmState.UNCONFIRMED);
+    addParticipant(regDoc, CourseConfirmState.CONFIRMED);
+
+    replayDefault();
+    assertSame(CourseConfirmState.PARTIALCONFIRMED, courseService.getConfirmState(
+        regDoc.getDocumentReference()));
+    verifyDefault();
+  }
+
+  @Test
+  public void testGetConfirmState_noParticipant() throws Exception {
+    XWikiDocument regDoc = expectDoc(new DocumentReference("db", "Kurse", "Kurs2"));
+    replayDefault();
+    assertSame(CourseConfirmState.UNDEFINED, courseService.getConfirmState(
+        regDoc.getDocumentReference()));
+    verifyDefault();
+  }
+
+  @Test
+  public void testGetConfirmState_stateAbsent() throws Exception {
+    XWikiDocument regDoc = expectDoc(new DocumentReference("db", "Kurse", "Kurs2"));
+    addParticipant(regDoc, null);
+
+    replayDefault();
+    assertSame(CourseConfirmState.UNDEFINED, courseService.getConfirmState(
+        regDoc.getDocumentReference()));
+    verifyDefault();
+  }
+
+  private BaseObject addParticipant(XWikiDocument regDoc, CourseConfirmState state) {
+    return addParticipant(regDoc, state, null, false);
+  }
+
+  private BaseObject addParticipant(XWikiDocument regDoc, String email, boolean valid) {
+    return addParticipant(regDoc, CourseConfirmState.UNCONFIRMED, email, valid);
+  }
+
+  private BaseObject addParticipant(XWikiDocument regDoc, CourseConfirmState state, String email,
+      boolean valid) {
+    BaseObject partiObj = new BaseObject();
+    partiObj.setXClassReference(getParticipantClassDef().getClassReference().getDocRef(
+        regDoc.getDocumentReference().getWikiReference()));
+    partiObj.setStringValue("status", (state != null ? state.name().toLowerCase() : null));
+    partiObj.setStringValue("email", email);
+    partiObj.setStringValue("validkey", valid ? ACTIVATION_HASH : "x");
+    partiObj.setStringValue("eventid", getModelUtils().serializeRefLocal(
+        regDoc.getDocumentReference()));
+    regDoc.addXObject(partiObj);
+    return partiObj;
+  }
+
+  private ClassDefinition getParticipantClassDef() {
+    return Utils.getComponent(ClassDefinition.class, CourseParticipantClass.CLASS_DEF_HINT);
   }
 
   private XWikiDocument expectDoc(DocumentReference docRef) throws XWikiException {
     XWikiDocument doc = new XWikiDocument(docRef);
-    expect(getMock(ModelAccessStrategy.class).exists(eq(docRef), eq(""))).andReturn(true).once();
+    expect(getMock(ModelAccessStrategy.class).exists(eq(docRef), eq(""))).andReturn(
+        true).atLeastOnce();
     expect(getMock(ModelAccessStrategy.class).getDocument(eq(docRef), eq(""))).andReturn(
-        doc).once();
+        doc).atLeastOnce();
     return doc;
   }
 
