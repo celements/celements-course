@@ -110,7 +110,7 @@ public class CourseScriptService implements ScriptService {
   }
 
   public boolean validateParticipant(String regFN, String emailAdr, String activationCode) {
-    if (!Strings.isNullOrEmpty(regFN)) {
+    if (!Strings.isNullOrEmpty(regFN) && !Strings.isNullOrEmpty(emailAdr)) {
       return courseService.validateParticipant(modelUtils.resolveRef(regFN,
           DocumentReference.class), emailAdr, activationCode);
     }

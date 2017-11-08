@@ -298,25 +298,29 @@ public class CourseService implements ICourseServiceRole {
         regDocRef, emailAdr, activationCode);
     try {
       XWikiDocument regDoc = modelAccess.getDocument(regDocRef);
-      if (isParticipantInState(regDoc, emailAdr, CourseConfirmState.CONFIRMED)) {
-        LOGGER.debug("participant status already confirmed");
-        isValidated = true;
-      } else {
-        List<BaseObject> partiObjs = XWikiObjectEditor.on(regDoc).filter(
-            CourseParticipantClass.FIELD_EMAIL, Arrays.asList(
-                emailAdr/* TODO , null */)).fetch().iter().copyInto(new ArrayList<BaseObject>());
-        isValidated = validateOrRemoveParticipants(partiObjs, activationCode);
-        if (!partiObjs.isEmpty()) {
-          modelAccess.saveDocument(regDoc, "email address validated by link");
-          for (BaseObject partiObj : partiObjs) {
-            sendConfirmationMail(partiObj);
-          }
-        }
-      }
+      isValidated = isParticipantInState(regDoc, emailAdr, CourseConfirmState.CONFIRMED)
+          || validateParticipant(regDoc, emailAdr, activationCode);
     } catch (DocumentAccessException | XWikiException exp) {
       LOGGER.error("validateParticipant: failed for [{}], [{}], [{}]", regDocRef, emailAdr,
           activationCode, exp);
       isValidated = false;
+    }
+    return isValidated;
+  }
+
+  private boolean validateParticipant(XWikiDocument regDoc, String emailAdr, String activationCode)
+      throws DocumentSaveException, DocumentNotExistsException, XWikiException {
+    List<BaseObject> editablePartiObjs = new ArrayList<>();
+    XWikiObjectEditor.on(regDoc).filter(CourseParticipantClass.FIELD_EMAIL,
+        emailAdr).fetch().iter().copyInto(editablePartiObjs);
+    XWikiObjectEditor.on(regDoc).filterAbsent(
+        CourseParticipantClass.FIELD_EMAIL).fetch().iter().copyInto(editablePartiObjs);
+    boolean isValidated = validateOrRemoveParticipants(editablePartiObjs, activationCode);
+    if (!editablePartiObjs.isEmpty()) {
+      modelAccess.saveDocument(regDoc, "email address validated by link");
+      for (BaseObject partiObj : editablePartiObjs) {
+        sendConfirmationMail(partiObj, emailAdr);
+      }
     }
     return isValidated;
   }
@@ -411,16 +415,16 @@ public class CourseService implements ICourseServiceRole {
   private boolean isParticipantInState(XWikiDocument regDoc, String emailAdr,
       CourseConfirmState state) {
     XWikiObjectFetcher fetcher = XWikiObjectFetcher.on(regDoc).filter(participantClassDef);
-    fetcher.filter(CourseParticipantClass.FIELD_EMAIL, emailAdr).filter(
-        CourseParticipantClass.FIELD_STATUS, Arrays.asList(state));
+    fetcher.filter(CourseParticipantClass.FIELD_EMAIL, emailAdr);
+    fetcher.filter(CourseParticipantClass.FIELD_STATUS, Arrays.asList(state));
     return fetcher.exists();
   }
 
-  private boolean sendConfirmationMail(BaseObject partiObj) throws DocumentNotExistsException,
-      XWikiException {
+  private boolean sendConfirmationMail(BaseObject partiObj, String fallbackEmail)
+      throws DocumentNotExistsException, XWikiException {
     getVeloContext().put("courseDocRef", modelUtils.resolveRef(partiObj.getStringValue("eventid"),
         DocumentReference.class));
-    Person person = createPersonFromParticipant(partiObj);
+    Person person = createPersonFromParticipant(partiObj, fallbackEmail);
     XWikiDocument emailContentDoc = modelAccess.getDocument(getConfirmationEmailDocRef());
     return sendMail(null, person, emailContentDoc, true);
   }
@@ -430,7 +434,7 @@ public class CourseService implements ICourseServiceRole {
         "AnmeldungBestaetigt");
   }
 
-  private Person createPersonFromParticipant(BaseObject bObj) {
+  private Person createPersonFromParticipant(BaseObject bObj, String fallbackEmail) {
     Person person = new Person();
     person.setTitle(bObj.getStringValue("title"));
     person.setGivenName(bObj.getStringValue("firstname"));
@@ -439,7 +443,8 @@ public class CourseService implements ICourseServiceRole {
     person.setZip(bObj.getStringValue("zip"));
     person.setCity(bObj.getStringValue("city"));
     person.setPhone(bObj.getStringValue("phone"));
-    person.setEmail(bObj.getStringValue("email"));
+    person.setEmail(modelAccess.getFieldValue(bObj, CourseParticipantClass.FIELD_EMAIL).or(
+        fallbackEmail));
     person.setDateOfBirth(bObj.getDateValue("dob"));
     person.setStatus(bObj.getStringValue("status"));
     return person;
