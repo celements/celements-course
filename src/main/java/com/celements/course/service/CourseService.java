@@ -1,6 +1,7 @@
 package com.celements.course.service;
 
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashSet;
@@ -301,8 +302,9 @@ public class CourseService implements ICourseServiceRole {
         LOGGER.debug("participant status already confirmed");
         isValidated = true;
       } else {
-        FluentIterable<BaseObject> partiObjs = XWikiObjectEditor.on(regDoc).filter(
-            CourseParticipantClass.FIELD_EMAIL, Arrays.asList(emailAdr, null)).fetch().iter();
+        List<BaseObject> partiObjs = XWikiObjectEditor.on(regDoc).filter(
+            CourseParticipantClass.FIELD_EMAIL, Arrays.asList(
+                emailAdr/* TODO , null */)).fetch().iter().copyInto(new ArrayList<BaseObject>());
         isValidated = validateOrRemoveParticipants(partiObjs, activationCode);
         if (!partiObjs.isEmpty()) {
           modelAccess.saveDocument(regDoc, "email address validated by link");
@@ -342,8 +344,8 @@ public class CourseService implements ICourseServiceRole {
     try {
       XWikiDocument regDoc = modelAccess.getDocument(regDocRef);
       for (BaseObject obj : XWikiObjectFetcher.on(regDoc).filter(participantClassDef).iter()) {
-        Optional<CourseConfirmState> state = CourseConfirmState.convertStringToEnum(
-            obj.getStringValue("status"));
+        Optional<CourseConfirmState> state = FluentIterable.from(modelAccess.getFieldValue(obj,
+            CourseParticipantClass.FIELD_STATUS).get()).first();
         if (state.isPresent()) {
           if (confirmState == CourseConfirmState.UNDEFINED) {
             confirmState = state.get();
@@ -419,11 +421,11 @@ public class CourseService implements ICourseServiceRole {
     getVeloContext().put("courseDocRef", modelUtils.resolveRef(partiObj.getStringValue("eventid"),
         DocumentReference.class));
     Person person = createPersonFromParticipant(partiObj);
-    XWikiDocument emailContentDoc = modelAccess.getDocument(getValidationEmailDocRef());
+    XWikiDocument emailContentDoc = modelAccess.getDocument(getConfirmationEmailDocRef());
     return sendMail(null, person, emailContentDoc, true);
   }
 
-  DocumentReference getValidationEmailDocRef() {
+  DocumentReference getConfirmationEmailDocRef() {
     return new DocumentReference(modelContext.getWikiRef().getName(), "MailContent",
         "AnmeldungBestaetigt");
   }
