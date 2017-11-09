@@ -2,6 +2,7 @@ package com.celements.course.classes;
 
 import java.util.List;
 
+import javax.annotation.concurrent.Immutable;
 import javax.inject.Singleton;
 
 import org.xwiki.component.annotation.Component;
@@ -12,8 +13,6 @@ import com.celements.model.classes.AbstractClassDefinition;
 import com.celements.model.classes.fields.ClassField;
 import com.celements.model.classes.fields.StringField;
 import com.celements.model.classes.fields.list.EnumListField;
-
-import groovy.lang.Immutable;
 
 @Immutable
 @Singleton
@@ -39,7 +38,7 @@ public class CourseParticipantClass extends AbstractClassDefinition implements C
       "address").prettyName("Address").size(30).build();
 
   public static final ClassField<String> FIELD_ZIP = new StringField.Builder(CLASS_DEF_HINT,
-      "zip").prettyName("Address").size(30).build();
+      "zip").prettyName("Zip").size(30).build();
 
   public static final ClassField<String> FIELD_CITY = new StringField.Builder(CLASS_DEF_HINT,
       "city").prettyName("City").size(30).build();
