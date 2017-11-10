@@ -351,8 +351,8 @@ public class CourseService implements ICourseServiceRole {
   }
 
   @Override
-  public CourseConfirmState getConfirmState(DocumentReference regDocRef) {
-    CourseConfirmState confirmState = null;
+  public RegistrationState getConfirmState(DocumentReference regDocRef) {
+    RegistrationState regState = null;
     try {
       XWikiDocument regDoc = modelAccess.getDocument(regDocRef);
       XWikiObjectFetcher fetcher = XWikiObjectFetcher.on(regDoc).filter(participantClassDef);
@@ -360,19 +360,19 @@ public class CourseService implements ICourseServiceRole {
           xObjFieldAccessor, CourseParticipantClass.FIELD_STATUS)).toSet();
       if (status.contains(ParticipantStatus.confirmed)) {
         if (!status.contains(ParticipantStatus.unconfirmed)) {
-          confirmState = CourseConfirmState.CONFIRMED;
+          regState = RegistrationState.CONFIRMED;
         } else {
-          confirmState = CourseConfirmState.PARTIALCONFIRMED;
+          regState = RegistrationState.PARTIALCONFIRMED;
         }
       } else if (status.contains(ParticipantStatus.unconfirmed)) {
-        confirmState = CourseConfirmState.UNCONFIRMED;
+        regState = RegistrationState.UNCONFIRMED;
       } else if (status.contains(ParticipantStatus.cancelled)) {
-        confirmState = CourseConfirmState.CANCELLED;
+        regState = RegistrationState.CANCELLED;
       }
     } catch (DocumentNotExistsException exp) {
       LOGGER.info("Failed to get participants for docRef '{}' ", regDocRef);
     }
-    return confirmState != null ? confirmState : CourseConfirmState.UNDEFINED;
+    return regState != null ? regState : RegistrationState.UNDEFINED;
   }
 
   @Override
@@ -398,7 +398,7 @@ public class CourseService implements ICourseServiceRole {
   }
 
   @Override
-  public long getRegistrationCount(DocumentReference courseDocRef, CourseConfirmState state)
+  public long getRegistrationCount(DocumentReference courseDocRef, RegistrationState state)
       throws LuceneSearchException {
     long retVal = 0;
     for (DocumentReference registrationDocRef : getRegistrationsForCourse(courseDocRef)) {
