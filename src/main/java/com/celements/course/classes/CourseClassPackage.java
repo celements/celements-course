@@ -6,11 +6,11 @@ import java.util.List;
 import org.xwiki.component.annotation.Component;
 import org.xwiki.component.annotation.Requirement;
 
-import com.celements.model.classes.AbstractLegacyClassPackage;
+import com.celements.model.classes.AbstractClassPackage;
 import com.celements.model.classes.ClassDefinition;
 
 @Component(CourseClassPackage.NAME)
-public class CourseClassPackage extends AbstractLegacyClassPackage {
+public class CourseClassPackage extends AbstractClassPackage {
 
   public static final String NAME = "course";
 
@@ -27,9 +27,12 @@ public class CourseClassPackage extends AbstractLegacyClassPackage {
     return new ArrayList<>(classDefs);
   }
 
-  @Override
-  public String getLegacyName() {
-    return "celCourse";
-  }
+  // TODO [CELDEV-577] Refactor CourseClasses to ClassDefinitions
+  // extend AbstractLegacyClassPackage and uncomment override
+  //
+  // @Override
+  // public String getLegacyName() {
+  // return "celCourse";
+  // }
 
 }
