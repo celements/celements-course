@@ -9,7 +9,8 @@ public enum CourseConfirmState {
   UNDEFINED,
   CONFIRMED,
   PARTIALCONFIRMED,
-  UNCONFIRMED;
+  UNCONFIRMED,
+  CANCELLED;
 
   @NotNull
   public static Optional<CourseConfirmState> convertStringToEnum(@NotNull String name) {
