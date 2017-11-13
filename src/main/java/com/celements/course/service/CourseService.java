@@ -7,6 +7,7 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.velocity.VelocityContext;
@@ -22,6 +23,7 @@ import org.xwiki.model.reference.SpaceReference;
 import com.celements.common.classes.IClassCollectionRole;
 import com.celements.course.classcollections.CourseClasses;
 import com.celements.course.classes.CourseParticipantClass;
+import com.celements.course.classes.CourseParticipantClass.ParticipantStatus;
 import com.celements.course.registration.Person;
 import com.celements.course.registration.RegistrationData;
 import com.celements.mailsender.IMailSenderRole;
@@ -31,6 +33,9 @@ import com.celements.model.access.exception.DocumentNotExistsException;
 import com.celements.model.access.exception.DocumentSaveException;
 import com.celements.model.classes.ClassDefinition;
 import com.celements.model.context.ModelContext;
+import com.celements.model.field.FieldAccessor;
+import com.celements.model.field.FieldGetterFunction;
+import com.celements.model.field.XObjectFieldAccessor;
 import com.celements.model.object.xwiki.XWikiObjectEditor;
 import com.celements.model.object.xwiki.XWikiObjectFetcher;
 import com.celements.model.util.ModelUtils;
@@ -49,7 +54,6 @@ import com.google.common.base.MoreObjects;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
-import com.google.common.collect.FluentIterable;
 import com.xpn.xwiki.XWikiContext;
 import com.xpn.xwiki.XWikiException;
 import com.xpn.xwiki.doc.XWikiDocument;
@@ -75,6 +79,9 @@ public class CourseService implements ICourseServiceRole {
 
   @Requirement
   private IModelAccessFacade modelAccess;
+
+  @Requirement(XObjectFieldAccessor.NAME)
+  private FieldAccessor<BaseObject> xObjFieldAccessor;
 
   @Requirement
   private ModelContext modelContext;
@@ -299,7 +306,7 @@ public class CourseService implements ICourseServiceRole {
         regDocRef, emailAdr, activationCode);
     try {
       XWikiDocument regDoc = modelAccess.getDocument(regDocRef);
-      isValidated = isParticipantInState(regDoc, emailAdr, CourseConfirmState.CONFIRMED)
+      isValidated = isParticipantInState(regDoc, emailAdr, ParticipantStatus.confirmed)
           || validateParticipant(regDoc, emailAdr, activationCode);
     } catch (DocumentAccessException | XWikiException exp) {
       LOGGER.error("validateParticipant: failed for [{}], [{}], [{}]", regDocRef, emailAdr,
@@ -344,29 +351,28 @@ public class CourseService implements ICourseServiceRole {
   }
 
   @Override
-  public CourseConfirmState getConfirmState(DocumentReference regDocRef) {
-    CourseConfirmState confirmState = null;
+  public RegistrationState getConfirmState(DocumentReference regDocRef) {
+    RegistrationState regState = null;
     try {
       XWikiDocument regDoc = modelAccess.getDocument(regDocRef);
-      for (BaseObject obj : XWikiObjectFetcher.on(regDoc).filter(participantClassDef).iter()) {
-        Optional<CourseConfirmState> state = FluentIterable.from(modelAccess.getFieldValue(obj,
-            CourseParticipantClass.FIELD_STATUS).get()).first();
-        if (state.isPresent()) {
-          if (state.get() == CourseConfirmState.UNDEFINED) {
-            confirmState = CourseConfirmState.UNDEFINED;
-            break;
-          } else if ((confirmState == null)) {
-            confirmState = state.get();
-          } else if (confirmState != state.get()) {
-            confirmState = CourseConfirmState.PARTIALCONFIRMED;
-            break;
-          }
+      XWikiObjectFetcher fetcher = XWikiObjectFetcher.on(regDoc).filter(participantClassDef);
+      Set<ParticipantStatus> status = fetcher.iter().transformAndConcat(new FieldGetterFunction<>(
+          xObjFieldAccessor, CourseParticipantClass.FIELD_STATUS)).toSet();
+      if (status.contains(ParticipantStatus.confirmed)) {
+        if (!status.contains(ParticipantStatus.unconfirmed)) {
+          regState = RegistrationState.CONFIRMED;
+        } else {
+          regState = RegistrationState.PARTIALCONFIRMED;
         }
+      } else if (status.contains(ParticipantStatus.unconfirmed)) {
+        regState = RegistrationState.UNCONFIRMED;
+      } else if (status.contains(ParticipantStatus.cancelled)) {
+        regState = RegistrationState.CANCELLED;
       }
     } catch (DocumentNotExistsException exp) {
       LOGGER.info("Failed to get participants for docRef '{}' ", regDocRef);
     }
-    return confirmState != null ? confirmState : CourseConfirmState.UNDEFINED;
+    return regState != null ? regState : RegistrationState.UNDEFINED;
   }
 
   @Override
@@ -392,13 +398,15 @@ public class CourseService implements ICourseServiceRole {
   }
 
   @Override
-  public long getRegistrationCount(DocumentReference courseDocRef, CourseConfirmState state)
+  public long getRegistrationCount(DocumentReference courseDocRef, RegistrationState state)
       throws LuceneSearchException {
     long retVal = 0;
     for (DocumentReference registrationDocRef : getRegistrationsForCourse(courseDocRef)) {
       try {
-        retVal += XWikiObjectFetcher.on(modelAccess.getDocument(registrationDocRef)).filter(
-            CourseParticipantClass.FIELD_STATUS, Arrays.asList(state)).count();
+        // TODO Should accept ParticipantStatus, not RegistrationState. fix in [CELDEV-581]
+        String key = (state != null ? CourseParticipantClass.FIELD_STATUS.getName() : null);
+        retVal += modelAccess.getXObjects(registrationDocRef, participantClassDef.getDocRef(), key,
+            Arrays.asList(state.name(), state.name().toLowerCase())).size();
       } catch (DocumentNotExistsException exp) {
         LOGGER.info("Failed to get registrationDocRef '{}'", registrationDocRef, exp);
       }
@@ -417,7 +425,7 @@ public class CourseService implements ICourseServiceRole {
   }
 
   private boolean isParticipantInState(XWikiDocument regDoc, String emailAdr,
-      CourseConfirmState state) {
+      ParticipantStatus state) {
     XWikiObjectFetcher fetcher = XWikiObjectFetcher.on(regDoc).filter(participantClassDef);
     fetcher.filter(CourseParticipantClass.FIELD_EMAIL, emailAdr);
     fetcher.filter(CourseParticipantClass.FIELD_STATUS, Arrays.asList(state));

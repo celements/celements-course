@@ -36,7 +36,7 @@ import org.xwiki.script.service.ScriptService;
 
 import com.celements.common.classes.IClassCollectionRole;
 import com.celements.course.classcollections.CourseClasses;
-import com.celements.course.service.CourseConfirmState;
+import com.celements.course.service.RegistrationState;
 import com.celements.course.service.ICourseServiceRole;
 import com.celements.model.access.IModelAccessFacade;
 import com.celements.model.context.ModelContext;
@@ -143,11 +143,11 @@ public class CourseScriptService implements ScriptService {
   }
 
   @NotNull
-  public CourseConfirmState getConfirmeState(@Nullable DocumentReference regDocRef) {
+  public RegistrationState getConfirmeState(@Nullable DocumentReference regDocRef) {
     if (regDocRef != null) {
       return courseService.getConfirmState(regDocRef);
     }
-    return CourseConfirmState.UNDEFINED;
+    return RegistrationState.UNDEFINED;
   }
 
   /**
@@ -174,7 +174,7 @@ public class CourseScriptService implements ScriptService {
     return retVal;
   }
 
-  public long getRegistrationCount(DocumentReference courseDocRef, CourseConfirmState state) {
+  public long getRegistrationCount(DocumentReference courseDocRef, RegistrationState state) {
     long retVal = 0;
     try {
       retVal = courseService.getRegistrationCount(courseDocRef, state);
@@ -205,8 +205,8 @@ public class CourseScriptService implements ScriptService {
     return false;
   }
 
-  public CourseConfirmState getCourseConfirmState(String state) {
-    return CourseConfirmState.valueOf(state);
+  public RegistrationState getCourseConfirmState(String state) {
+    return RegistrationState.valueOf(state);
   }
 
 }

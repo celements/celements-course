@@ -7,8 +7,6 @@ import javax.inject.Singleton;
 
 import org.xwiki.component.annotation.Component;
 
-import com.celements.course.service.CourseConfirmState;
-import com.celements.course.service.CourseConfirmStateMarshaller;
 import com.celements.model.classes.AbstractClassDefinition;
 import com.celements.model.classes.fields.ClassField;
 import com.celements.model.classes.fields.StringField;
@@ -21,6 +19,12 @@ public class CourseParticipantClass extends AbstractClassDefinition implements C
 
   public static final String CLASS_NAME = "CourseParticipantClass";
   public static final String CLASS_DEF_HINT = CLASS_SPACE + "." + CLASS_NAME;
+
+  public enum ParticipantStatus {
+    unconfirmed,
+    confirmed,
+    cancelled;
+  }
 
   public static final ClassField<String> FIELD_COURSE_ID = new StringField.Builder(CLASS_DEF_HINT,
       "eventid").prettyName("Course ID").size(30).build();
@@ -49,9 +53,9 @@ public class CourseParticipantClass extends AbstractClassDefinition implements C
   public static final ClassField<String> FIELD_EMAIL = new StringField.Builder(CLASS_DEF_HINT,
       "email").prettyName("Email").size(30).build();
 
-  public static final ClassField<List<CourseConfirmState>> FIELD_STATUS = new EnumListField.Builder<>(
-      CLASS_DEF_HINT, "status", new CourseConfirmStateMarshaller(
-          CourseConfirmState.class)).prettyName("Status").separator("|").build();
+  public static final ClassField<List<ParticipantStatus>> FIELD_STATUS = new EnumListField.Builder<>(
+      CLASS_DEF_HINT, "status", ParticipantStatus.class).prettyName("Status").separator(
+          "|").build();
 
   // TODO ClassField definitions incomplete
   // [CELDEV-577] Refactor CourseClasses to ClassDefinitions

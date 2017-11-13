@@ -4,17 +4,18 @@ import javax.validation.constraints.NotNull;
 
 import com.google.common.base.Optional;
 
-public enum CourseConfirmState {
+public enum RegistrationState {
 
   UNDEFINED,
   CONFIRMED,
   PARTIALCONFIRMED,
-  UNCONFIRMED;
+  UNCONFIRMED,
+  CANCELLED;
 
   @NotNull
-  public static Optional<CourseConfirmState> convertStringToEnum(@NotNull String name) {
+  public static Optional<RegistrationState> convertStringToEnum(@NotNull String name) {
     try {
-      return Optional.of(CourseConfirmState.valueOf(name.toUpperCase()));
+      return Optional.of(RegistrationState.valueOf(name.toUpperCase()));
     } catch (IllegalArgumentException exp) {
       return Optional.absent();
     }
