@@ -405,8 +405,10 @@ public class CourseService implements ICourseServiceRole {
       try {
         // TODO Should accept ParticipantStatus, not RegistrationState. fix in [CELDEV-581]
         String key = (state != null ? CourseParticipantClass.FIELD_STATUS.getName() : null);
+        List<String> values = (state != null ? Arrays.asList(state.name(),
+            state.name().toLowerCase()) : null);
         retVal += modelAccess.getXObjects(registrationDocRef, participantClassDef.getDocRef(), key,
-            Arrays.asList(state.name(), state.name().toLowerCase())).size();
+            values).size();
       } catch (DocumentNotExistsException exp) {
         LOGGER.info("Failed to get registrationDocRef '{}'", registrationDocRef, exp);
       }
