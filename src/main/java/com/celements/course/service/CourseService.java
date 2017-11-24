@@ -158,11 +158,11 @@ public class CourseService implements ICourseServiceRole {
         if (createParticipantObjects(regDoc, data)) {
           setMandatoryRegSpaceDocs(regDoc);
           modelAccess.saveDocument(regDoc, "created new registration");
+          if (sendValidationMail) {
+            sendValidationMails(data);
+          }
         } else {
           LOGGER.warn("registerParticipantFromRequest: incomplete person data '{}'", data);
-        }
-        if (sendValidationMail) {
-          sendValidationMails(data);
         }
         return true;
       } catch (DocumentAccessException | XWikiException | IllegalArgumentException excp) {
@@ -261,7 +261,7 @@ public class CourseService implements ICourseServiceRole {
     XWikiDocument emailContentDoc = modelAccess.getDocument(new DocumentReference(
         modelContext.getWikiRef().getName(), "MailContent", "NeueAnmeldung"));
     for (Person person : data.getPersons()) {
-      if (sentEmails.add(person.getEmail())) {
+      if (!person.isEmpty() && sentEmails.add(person.getEmail())) {
         sendMail(null, person, emailContentDoc, false);
       }
     }
