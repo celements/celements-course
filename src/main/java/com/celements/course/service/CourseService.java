@@ -155,11 +155,14 @@ public class CourseService implements ICourseServiceRole {
         if (templRef.isPresent()) {
           regDoc.readFromTemplate(templRef.get(), modelContext.getXWikiContext());
         }
-        setMandatoryRegSpaceDocs(regDoc);
-        createParticipantObjects(regDoc, data);
-        modelAccess.saveDocument(regDoc, "created new registration");
-        if (sendValidationMail) {
-          sendValidationMails(data);
+        if (createParticipantObjects(regDoc, data)) {
+          setMandatoryRegSpaceDocs(regDoc);
+          modelAccess.saveDocument(regDoc, "created new registration");
+          if (sendValidationMail) {
+            sendValidationMails(data);
+          }
+        } else {
+          LOGGER.warn("registerParticipantFromRequest: incomplete person data '{}'", data);
         }
         return true;
       } catch (DocumentAccessException | XWikiException | IllegalArgumentException excp) {
@@ -218,13 +221,14 @@ public class CourseService implements ICourseServiceRole {
     modelAccess.setProperty(rightsObj, "allow", 1);
   }
 
-  private void createParticipantObjects(XWikiDocument regDoc, RegistrationData data) {
+  private boolean createParticipantObjects(XWikiDocument regDoc, RegistrationData data) {
+    boolean participantAdded = false;
     List<Person> persons = data.getPersons();
     for (int nb = 0; nb < persons.size(); nb++) {
       Person person = persons.get(nb);
-      XWikiObjectEditor objEditor = XWikiObjectEditor.on(regDoc).filter(participantClassDef);
-      if (!person.isEmpty() || objEditor.fetch().exists()) {
-        BaseObject obj = objEditor.filter(nb).createFirstIfNotExists();
+      if (!person.isEmpty()) {
+        BaseObject obj = XWikiObjectEditor.on(regDoc).filter(participantClassDef).filter(
+            nb).createFirstIfNotExists();
         obj.setStringValue("eventid", data.getEventid());
         obj.setStringValue("title", person.getTitle());
         obj.setStringValue("firstname", person.getGivenName());
@@ -242,8 +246,12 @@ public class CourseService implements ICourseServiceRole {
         obj.set("validkey", data.getValidationKey(), getContext());
         obj.setDateValue("timestamp", new Date());
         obj.setStringValue("client", getClientInfo());
+        participantAdded = true;
+      } else {
+        LOGGER.info("createParticipantObjects: incomplete person '{}'", person);
       }
     }
+    return participantAdded;
   }
 
   private void sendValidationMails(RegistrationData data) throws DocumentNotExistsException,
@@ -253,7 +261,7 @@ public class CourseService implements ICourseServiceRole {
     XWikiDocument emailContentDoc = modelAccess.getDocument(new DocumentReference(
         modelContext.getWikiRef().getName(), "MailContent", "NeueAnmeldung"));
     for (Person person : data.getPersons()) {
-      if (sentEmails.add(person.getEmail())) {
+      if (!person.isEmpty() && sentEmails.add(person.getEmail())) {
         sendMail(null, person, emailContentDoc, false);
       }
     }

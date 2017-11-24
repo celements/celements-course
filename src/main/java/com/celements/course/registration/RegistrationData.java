@@ -136,4 +136,10 @@ public class RegistrationData {
     return person;
   }
 
+  @Override
+  public String toString() {
+    return "RegistrationData [eventid=" + eventid + ", comment=" + comment + ", mainEmail="
+        + getMainEmail() + ", regDocRef=" + regDocRef + ", persons=" + persons + "]";
+  }
+
 }

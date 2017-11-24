@@ -138,4 +138,12 @@ public class Person {
     return Utils.getComponent(ICourseServiceRole.class);
   }
 
+  @Override
+  public String toString() {
+    return "Person [title=" + title + ", givenName=" + givenName + ", surname=" + surname
+        + ", address=" + address + ", zip=" + zip + ", city=" + city + ", phone=" + phone
+        + ", email=" + getEmail() + ", dateOfBirth=" + dateOfBirth + ", status=" + getStatus()
+        + "]";
+  }
+
 }
