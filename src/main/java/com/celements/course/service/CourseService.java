@@ -4,6 +4,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -367,15 +368,17 @@ public class CourseService implements ICourseServiceRole {
       Set<ParticipantStatus> status = fetcher.iter().transformAndConcat(new FieldGetterFunction<>(
           xObjFieldAccessor, CourseParticipantClass.FIELD_STATUS)).toSet();
       if (status.contains(ParticipantStatus.confirmed)) {
-        if (!status.contains(ParticipantStatus.unconfirmed)) {
-          regState = RegistrationState.CONFIRMED;
-        } else {
+        if (status.contains(ParticipantStatus.unconfirmed)) {
           regState = RegistrationState.PARTIALCONFIRMED;
+        } else {
+          regState = RegistrationState.CONFIRMED;
         }
       } else if (status.contains(ParticipantStatus.unconfirmed)) {
         regState = RegistrationState.UNCONFIRMED;
       } else if (status.contains(ParticipantStatus.cancelled)) {
         regState = RegistrationState.CANCELLED;
+      } else if (status.contains(ParticipantStatus.duplicate)) {
+        regState = RegistrationState.DUPLICATE;
       }
     } catch (DocumentNotExistsException exp) {
       LOGGER.info("Failed to get participants for docRef '{}' ", regDocRef);
@@ -406,17 +409,32 @@ public class CourseService implements ICourseServiceRole {
   }
 
   @Override
-  public long getRegistrationCount(DocumentReference courseDocRef, RegistrationState state)
+  public long getRegistrationCount(DocumentReference courseDocRef, ParticipantStatus state)
       throws LuceneSearchException {
+    return getRegistrationCount(courseDocRef, state, null);
+  }
+
+  @Override
+  public long getRegistrationCount(DocumentReference courseDocRef, ParticipantStatus state,
+      List<ParticipantStatus> ignorList) throws LuceneSearchException {
     long retVal = 0;
+    if (ignorList == null) {
+      ignorList = CourseParticipantClass.ignorListForCount;
+    }
     for (DocumentReference registrationDocRef : getRegistrationsForCourse(courseDocRef)) {
       try {
-        // TODO Should accept ParticipantStatus, not RegistrationState. fix in [CELDEV-581]
-        String key = (state != null ? CourseParticipantClass.FIELD_STATUS.getName() : null);
-        List<String> values = (state != null ? Arrays.asList(state.name(),
-            state.name().toLowerCase()) : null);
-        retVal += modelAccess.getXObjects(registrationDocRef, participantClassDef.getDocRef(), key,
-            values).size();
+        List<ParticipantStatus> values = (state != null ? Arrays.asList(state) : null);
+        if (state == null) {
+          values = new ArrayList<ParticipantStatus>(EnumSet.allOf(ParticipantStatus.class));
+          values.removeAll(ignorList);
+        }
+        for (ParticipantStatus val : values) {
+          List<ParticipantStatus> tmpValList = (val != null ? Arrays.asList(val) : null);
+          retVal += XWikiObjectFetcher.on(modelAccess.getDocument(registrationDocRef)).filter(
+              CourseParticipantClass.FIELD_STATUS, tmpValList).list().size();
+
+        }
+
       } catch (DocumentNotExistsException exp) {
         LOGGER.info("Failed to get registrationDocRef '{}'", registrationDocRef, exp);
       }
@@ -428,7 +446,10 @@ public class CourseService implements ICourseServiceRole {
     String hashedCode = passwordHashString(activationCode);
     String savedHash = partiObj.getStringValue("validkey");
     if (hashedCode.equals(savedHash)) {
-      partiObj.setStringValue("status", "confirmed");
+      ParticipantStatus state = ParticipantStatus.valueOf(partiObj.getStringValue("status"));
+      if (!CourseParticipantClass.ignorListForCount.contains(state)) {
+        partiObj.setStringValue("status", "confirmed");
+      }
       return true;
     }
     return false;

@@ -9,6 +9,7 @@ import org.xwiki.component.annotation.ComponentRole;
 import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.model.reference.SpaceReference;
 
+import com.celements.course.classes.CourseParticipantClass.ParticipantStatus;
 import com.celements.search.lucene.LuceneSearchException;
 
 @ComponentRole
@@ -50,7 +51,11 @@ public interface ICourseServiceRole {
 
   @NotNull
   public long getRegistrationCount(@NotNull DocumentReference courseDocRef,
-      @Nullable RegistrationState state) throws LuceneSearchException;
+      @Nullable ParticipantStatus state) throws LuceneSearchException;
+
+  @NotNull
+  public long getRegistrationCount(DocumentReference courseDocRef, ParticipantStatus state,
+      List<ParticipantStatus> ignorList) throws LuceneSearchException;
 
   @NotNull
   public boolean sendConfirmationMail(@NotNull DocumentReference regDocRef, int participantObjNb);
