@@ -24,6 +24,7 @@ import static org.easymock.EasyMock.*;
 import static org.junit.Assert.*;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -617,8 +618,81 @@ public class CourseServiceTest extends AbstractComponentTest {
     fillRegistrationList(regDocs);
 
     replayDefault();
-    long expRes = 4;
-    assertSame(expRes, courseService.getRegistrationCount(courseDoc.getDocumentReference()));
+    assertSame(4l, courseService.getRegistrationCount(courseDoc.getDocumentReference()));
+    verifyDefault();
+  }
+
+  @Test
+  public void test_getConfirmState_getRegistrationCount_withParticipantState() throws Exception {
+    XWikiDocument courseDoc = new XWikiDocument(new DocumentReference("xwikidb", "Kurse", "Kurs2"));
+    List<XWikiDocument> regDocs = new ArrayList<>();
+    XWikiDocument regDoc1 = expectDoc(new DocumentReference("xwikidb", "Registrations", "Reg1"));
+    addParticipant(regDoc1, ParticipantStatus.confirmed);
+    addParticipant(regDoc1, ParticipantStatus.unconfirmed);
+    addParticipant(regDoc1, ParticipantStatus.unconfirmed);
+    addParticipant(regDoc1, ParticipantStatus.duplicate);
+    regDocs.add(regDoc1);
+    XWikiDocument regDoc2 = expectDoc(new DocumentReference("xwikidb", "Registrations", "Reg2"));
+    addParticipant(regDoc2, ParticipantStatus.confirmed);
+    addParticipant(regDoc2, ParticipantStatus.confirmed);
+    addParticipant(regDoc2, ParticipantStatus.duplicate);
+    addParticipant(regDoc2, ParticipantStatus.duplicate);
+    addParticipant(regDoc2, ParticipantStatus.duplicate);
+    regDocs.add(regDoc2);
+    XWikiDocument regDoc3 = expectDoc(new DocumentReference("xwikidb", "Registrations", "Reg3"));
+    addParticipant(regDoc3, ParticipantStatus.unconfirmed);
+    addParticipant(regDoc3, ParticipantStatus.cancelled);
+    addParticipant(regDoc3, ParticipantStatus.cancelled);
+    regDocs.add(regDoc3);
+    fillRegistrationList(regDocs);
+
+    replayDefault();
+    assertSame(2l, courseService.getRegistrationCount(courseDoc.getDocumentReference(),
+        ParticipantStatus.cancelled));
+    assertSame(3l, courseService.getRegistrationCount(courseDoc.getDocumentReference(),
+        ParticipantStatus.confirmed));
+    assertSame(4l, courseService.getRegistrationCount(courseDoc.getDocumentReference(),
+        ParticipantStatus.duplicate));
+    assertSame(3l, courseService.getRegistrationCount(courseDoc.getDocumentReference(),
+        ParticipantStatus.unconfirmed));
+    verifyDefault();
+  }
+
+  @Test
+  public void test_getConfirmState_getRegistrationCount_ignorList() throws Exception {
+    XWikiDocument courseDoc = new XWikiDocument(new DocumentReference("xwikidb", "Kurse", "Kurs2"));
+    List<XWikiDocument> regDocs = new ArrayList<>();
+    XWikiDocument regDoc1 = expectDoc(new DocumentReference("xwikidb", "Registrations", "Reg1"));
+    addParticipant(regDoc1, ParticipantStatus.confirmed);
+    addParticipant(regDoc1, ParticipantStatus.unconfirmed);
+    addParticipant(regDoc1, ParticipantStatus.unconfirmed);
+    addParticipant(regDoc1, ParticipantStatus.duplicate);
+    regDocs.add(regDoc1);
+    XWikiDocument regDoc2 = expectDoc(new DocumentReference("xwikidb", "Registrations", "Reg2"));
+    addParticipant(regDoc2, ParticipantStatus.confirmed);
+    addParticipant(regDoc2, ParticipantStatus.confirmed);
+    addParticipant(regDoc2, ParticipantStatus.duplicate);
+    addParticipant(regDoc2, ParticipantStatus.duplicate);
+    addParticipant(regDoc2, ParticipantStatus.duplicate);
+    regDocs.add(regDoc2);
+    XWikiDocument regDoc3 = expectDoc(new DocumentReference("xwikidb", "Registrations", "Reg3"));
+    addParticipant(regDoc3, ParticipantStatus.unconfirmed);
+    addParticipant(regDoc3, ParticipantStatus.cancelled);
+    addParticipant(regDoc3, ParticipantStatus.cancelled);
+    addParticipant(regDoc3, ParticipantStatus.cancelled);
+    addParticipant(regDoc3, ParticipantStatus.cancelled);
+    regDocs.add(regDoc3);
+    fillRegistrationList(regDocs);
+
+    replayDefault();
+    assertSame(8l, courseService.getRegistrationCount(courseDoc.getDocumentReference(),
+        Arrays.asList(ParticipantStatus.unconfirmed, ParticipantStatus.confirmed)));
+    assertSame(6l, courseService.getRegistrationCount(courseDoc.getDocumentReference(),
+        Arrays.asList(ParticipantStatus.duplicate, ParticipantStatus.cancelled)));
+    assertSame(10l, courseService.getRegistrationCount(courseDoc.getDocumentReference(),
+        Arrays.asList(ParticipantStatus.cancelled)));
+    assertSame(10l, courseService.getRegistrationCount(courseDoc.getDocumentReference(),
+        Arrays.asList(ParticipantStatus.duplicate)));
     verifyDefault();
   }
 
@@ -633,16 +707,17 @@ public class CourseServiceTest extends AbstractComponentTest {
     int index = 0;
     for (XWikiDocument regDoc : docs) {
       list.add(createMockAndAddToDefault(SearchResult.class));
-      expect(list.get(index).getReference()).andReturn(regDoc.getDocumentReference()).anyTimes();
+      expect(list.get(index).getReference()).andReturn(regDoc.getDocumentReference()).atLeastOnce();
       index++;
     }
 
     LucenePlugin lucenePluginMock = createMockAndAddToDefault(LucenePlugin.class);
-    expect(xwiki.getPlugin(eq("lucene"), same(getContext()))).andReturn(lucenePluginMock).once();
+    expect(xwiki.getPlugin(eq("lucene"), same(getContext()))).andReturn(
+        lucenePluginMock).atLeastOnce();
     expect(lucenePluginMock.getSearchResults((String) anyObject(), (String[]) anyObject(),
-        (String) isNull(), eq(""), same(getContext()))).andReturn(sResultsMock).once();
-    expect(sResultsMock.getHitcount()).andReturn(1234);
-    expect(sResultsMock.getResults(eq(1), eq(1234))).andReturn(list).once();
+        (String) isNull(), eq(""), same(getContext()))).andReturn(sResultsMock).atLeastOnce();
+    expect(sResultsMock.getHitcount()).andReturn(1234).atLeastOnce();
+    expect(sResultsMock.getResults(eq(1), eq(1234))).andReturn(list).atLeastOnce();
   }
 
   private BaseObject addParticipant(XWikiDocument regDoc, ParticipantStatus state) {
