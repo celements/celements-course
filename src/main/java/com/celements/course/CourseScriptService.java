@@ -186,6 +186,18 @@ public class CourseScriptService implements ScriptService {
     return retVal;
   }
 
+  public long getRegistrationCount(DocumentReference courseDocRef,
+      List<ParticipantStatus> ignorList) {
+    long retVal = 0;
+    try {
+      retVal = courseService.getRegistrationCount(courseDocRef, ignorList);
+    } catch (LuceneSearchException exp) {
+      LOGGER.info("Failed to get Results for courseDocRef '{}' and ignorList '{}'", courseDocRef,
+          ignorList, exp);
+    }
+    return retVal;
+  }
+
   public List<DocumentReference> getRegistrationsForCourse(DocumentReference courseDocRef,
       List<String> sortFields) {
     List<DocumentReference> retVal = new ArrayList<>();
