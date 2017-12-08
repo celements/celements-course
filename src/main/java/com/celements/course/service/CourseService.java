@@ -405,7 +405,7 @@ public class CourseService implements ICourseServiceRole {
 
   @Override
   public long getRegistrationCount(DocumentReference courseDocRef) throws LuceneSearchException {
-    return getRegistrationCount(courseDocRef, null);
+    return getRegistrationCount(courseDocRef, null, null);
   }
 
   @Override
@@ -415,7 +415,12 @@ public class CourseService implements ICourseServiceRole {
   }
 
   @Override
-  public long getRegistrationCount(DocumentReference courseDocRef, ParticipantStatus state,
+  public long getRegistrationCount(DocumentReference courseDocRef,
+      List<ParticipantStatus> ignorList) throws LuceneSearchException {
+    return getRegistrationCount(courseDocRef, null, ignorList);
+  }
+
+  private long getRegistrationCount(DocumentReference courseDocRef, ParticipantStatus state,
       List<ParticipantStatus> ignorList) throws LuceneSearchException {
     long retVal = 0;
     if (ignorList == null) {

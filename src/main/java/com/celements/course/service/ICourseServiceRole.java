@@ -54,7 +54,7 @@ public interface ICourseServiceRole {
       @Nullable ParticipantStatus state) throws LuceneSearchException;
 
   @NotNull
-  public long getRegistrationCount(DocumentReference courseDocRef, ParticipantStatus state,
+  public long getRegistrationCount(DocumentReference courseDocRef,
       List<ParticipantStatus> ignorList) throws LuceneSearchException;
 
   @NotNull
