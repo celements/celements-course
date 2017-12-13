@@ -69,6 +69,9 @@ public class CourseService implements ICourseServiceRole {
 
   static final String CFGSRC_PARTICIPANT_DOC_NAME_PREFIX = "celements.course.participant.docNamePrefix";
 
+  public static final List<ParticipantStatus> DEFAULT_IGNORE_STATES = Arrays.asList(
+      ParticipantStatus.cancelled, ParticipantStatus.duplicate);
+
   @Requirement("CelCourseClasses")
   private IClassCollectionRole courseClasses;
 
@@ -424,7 +427,7 @@ public class CourseService implements ICourseServiceRole {
       List<ParticipantStatus> ignorList) throws LuceneSearchException {
     long retVal = 0;
     if (ignorList == null) {
-      ignorList = CourseParticipantClass.ignorListForCount;
+      ignorList = DEFAULT_IGNORE_STATES;
     }
     for (DocumentReference registrationDocRef : getRegistrationsForCourse(courseDocRef)) {
       try {
@@ -452,7 +455,7 @@ public class CourseService implements ICourseServiceRole {
     String savedHash = partiObj.getStringValue("validkey");
     if (hashedCode.equals(savedHash)) {
       ParticipantStatus state = ParticipantStatus.valueOf(partiObj.getStringValue("status"));
-      if (!CourseParticipantClass.ignorListForCount.contains(state)) {
+      if (!DEFAULT_IGNORE_STATES.contains(state)) {
         partiObj.setStringValue("status", "confirmed");
       }
       return true;

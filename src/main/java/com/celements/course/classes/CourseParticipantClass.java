@@ -1,6 +1,5 @@
 package com.celements.course.classes;
 
-import java.util.Arrays;
 import java.util.List;
 
 import javax.annotation.concurrent.Immutable;
@@ -20,9 +19,6 @@ public class CourseParticipantClass extends AbstractClassDefinition implements C
 
   public static final String CLASS_NAME = "CourseParticipantClass";
   public static final String CLASS_DEF_HINT = CLASS_SPACE + "." + CLASS_NAME;
-
-  public static final List<ParticipantStatus> ignorListForCount = Arrays.asList(
-      ParticipantStatus.cancelled, ParticipantStatus.duplicate);
 
   public enum ParticipantStatus {
     unconfirmed, confirmed, cancelled, duplicate;
