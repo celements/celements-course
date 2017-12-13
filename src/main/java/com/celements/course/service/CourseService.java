@@ -371,10 +371,10 @@ public class CourseService implements ICourseServiceRole {
       Set<ParticipantStatus> status = fetcher.iter().transformAndConcat(new FieldGetterFunction<>(
           xObjFieldAccessor, CourseParticipantClass.FIELD_STATUS)).toSet();
       if (status.contains(ParticipantStatus.confirmed)) {
-        if (status.contains(ParticipantStatus.unconfirmed)) {
-          regState = RegistrationState.PARTIALCONFIRMED;
-        } else {
+        if (!status.contains(ParticipantStatus.unconfirmed)) {
           regState = RegistrationState.CONFIRMED;
+        } else {
+          regState = RegistrationState.PARTIALCONFIRMED;
         }
       } else if (status.contains(ParticipantStatus.unconfirmed)) {
         regState = RegistrationState.UNCONFIRMED;
