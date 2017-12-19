@@ -55,7 +55,7 @@ public interface ICourseServiceRole {
 
   @NotNull
   public long getRegistrationCount(DocumentReference courseDocRef,
-      List<ParticipantStatus> ignorList) throws LuceneSearchException;
+      List<ParticipantStatus> ignoreParticipantStates) throws LuceneSearchException;
 
   @NotNull
   public boolean sendConfirmationMail(@NotNull DocumentReference regDocRef, int participantObjNb);

@@ -424,17 +424,17 @@ public class CourseService implements ICourseServiceRole {
   }
 
   private long getRegistrationCount(DocumentReference courseDocRef, ParticipantStatus state,
-      List<ParticipantStatus> ignorList) throws LuceneSearchException {
+      List<ParticipantStatus> ignoreParticipantStates) throws LuceneSearchException {
     long retVal = 0;
-    if (ignorList == null) {
-      ignorList = DEFAULT_IGNORE_STATES;
+    if (ignoreParticipantStates == null) {
+      ignoreParticipantStates = DEFAULT_IGNORE_STATES;
     }
     for (DocumentReference registrationDocRef : getRegistrationsForCourse(courseDocRef)) {
       try {
         List<ParticipantStatus> values = (state != null ? Arrays.asList(state) : null);
         if (state == null) {
           values = new ArrayList<ParticipantStatus>(EnumSet.allOf(ParticipantStatus.class));
-          values.removeAll(ignorList);
+          values.removeAll(ignoreParticipantStates);
         }
         for (ParticipantStatus val : values) {
           List<ParticipantStatus> tmpValList = (val != null ? Arrays.asList(val) : null);

@@ -650,7 +650,7 @@ public class CourseServiceTest extends AbstractComponentTest {
   }
 
   @Test
-  public void test_getConfirmState_getRegistrationCount_ignorList() throws Exception {
+  public void test_getConfirmState_getRegistrationCount_ignoreParticipantStates() throws Exception {
     XWikiDocument courseDoc = new XWikiDocument(new DocumentReference("xwikidb", "Kurse", "Kurs2"));
     List<XWikiDocument> regDocs = new ArrayList<>();
     XWikiDocument regDoc1 = expectDoc(new DocumentReference("xwikidb", "Registrations", "Reg1"));

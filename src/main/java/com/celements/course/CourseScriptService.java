@@ -187,13 +187,13 @@ public class CourseScriptService implements ScriptService {
   }
 
   public long getRegistrationCount(DocumentReference courseDocRef,
-      List<ParticipantStatus> ignoreList) {
+      List<ParticipantStatus> ignoreParticipantStates) {
     long retVal = 0;
     try {
-      retVal = courseService.getRegistrationCount(courseDocRef, ignoreList);
+      retVal = courseService.getRegistrationCount(courseDocRef, ignoreParticipantStates);
     } catch (LuceneSearchException exp) {
-      LOGGER.info("Failed to get Results for courseDocRef '{}' and ignorList '{}'", courseDocRef,
-          ignoreList, exp);
+      LOGGER.info("Failed to get Results for courseDocRef '{}' and ignoreParticipantStates '{}'",
+          courseDocRef, ignoreParticipantStates, exp);
     }
     return retVal;
   }
