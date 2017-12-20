@@ -55,6 +55,7 @@ import com.google.common.base.MoreObjects;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableSet;
 import com.xpn.xwiki.XWikiContext;
 import com.xpn.xwiki.XWikiException;
 import com.xpn.xwiki.doc.XWikiDocument;
@@ -431,18 +432,18 @@ public class CourseService implements ICourseServiceRole {
     }
     for (DocumentReference registrationDocRef : getRegistrationsForCourse(courseDocRef)) {
       try {
-        List<ParticipantStatus> values = (state != null ? Arrays.asList(state) : null);
+        Set<ParticipantStatus> values = null;
         if (state == null) {
-          values = new ArrayList<ParticipantStatus>(EnumSet.allOf(ParticipantStatus.class));
+          values = EnumSet.allOf(ParticipantStatus.class);
           values.removeAll(ignoreParticipantStates);
+        } else {
+          values = ImmutableSet.of(state);
         }
+        // TODO: this loop will maybe removed after CELDEV-610
         for (ParticipantStatus val : values) {
-          List<ParticipantStatus> tmpValList = (val != null ? Arrays.asList(val) : null);
           retVal += XWikiObjectFetcher.on(modelAccess.getDocument(registrationDocRef)).filter(
-              CourseParticipantClass.FIELD_STATUS, tmpValList).list().size();
-
+              CourseParticipantClass.FIELD_STATUS, Arrays.asList(val)).count();
         }
-
       } catch (DocumentNotExistsException exp) {
         LOGGER.info("Failed to get registrationDocRef '{}'", registrationDocRef, exp);
       }
