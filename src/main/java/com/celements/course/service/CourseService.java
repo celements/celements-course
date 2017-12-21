@@ -54,6 +54,7 @@ import com.google.common.base.MoreObjects;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.xpn.xwiki.XWikiContext;
@@ -70,7 +71,7 @@ public class CourseService implements ICourseServiceRole {
 
   static final String CFGSRC_PARTICIPANT_DOC_NAME_PREFIX = "celements.course.participant.docNamePrefix";
 
-  public static final List<ParticipantStatus> DEFAULT_IGNORE_STATES = Arrays.asList(
+  private static final List<ParticipantStatus> DEFAULT_IGNORE_STATES = Arrays.asList(
       ParticipantStatus.cancelled, ParticipantStatus.duplicate);
 
   @Requirement("CelCourseClasses")
@@ -452,9 +453,12 @@ public class CourseService implements ICourseServiceRole {
     String hashedCode = passwordHashString(activationCode);
     String savedHash = partiObj.getStringValue("validkey");
     if (hashedCode.equals(savedHash)) {
-      ParticipantStatus state = ParticipantStatus.valueOf(partiObj.getStringValue("status"));
-      if (!DEFAULT_IGNORE_STATES.contains(state)) {
-        partiObj.setStringValue("status", "confirmed");
+      Optional<ParticipantStatus> state = FluentIterable.from(xObjFieldAccessor.getValue(partiObj,
+          CourseParticipantClass.FIELD_STATUS).get()).first();
+
+      if (state.isPresent() && !DEFAULT_IGNORE_STATES.contains(state.get())) {
+        xObjFieldAccessor.setValue(partiObj, CourseParticipantClass.FIELD_STATUS, ImmutableList.of(
+            ParticipantStatus.confirmed));
       }
       return true;
     }

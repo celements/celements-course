@@ -41,6 +41,7 @@ import com.celements.mailsender.IMailSenderRole;
 import com.celements.model.access.ModelAccessStrategy;
 import com.celements.model.access.exception.DocumentLoadException;
 import com.celements.model.classes.ClassDefinition;
+import com.celements.model.classes.fields.ClassField;
 import com.celements.model.util.ModelUtils;
 import com.celements.nextfreedoc.INextFreeDocRole;
 import com.celements.rendering.RenderCommand;
@@ -51,6 +52,7 @@ import com.xpn.xwiki.XWiki;
 import com.xpn.xwiki.XWikiException;
 import com.xpn.xwiki.doc.XWikiDocument;
 import com.xpn.xwiki.objects.BaseObject;
+import com.xpn.xwiki.objects.classes.BaseClass;
 import com.xpn.xwiki.plugin.lucene.LucenePlugin;
 import com.xpn.xwiki.plugin.lucene.SearchResult;
 import com.xpn.xwiki.plugin.lucene.SearchResults;
@@ -78,6 +80,7 @@ public class CourseServiceTest extends AbstractComponentTest {
     db = "db";
     docRef = new DocumentReference(db, "CourseSpace", "CourseX");
     doc = new XWikiDocument(docRef);
+    expectClass(Utils.getComponent(ClassDefinition.class, CourseParticipantClass.CLASS_DEF_HINT));
   }
 
   @Test
@@ -759,6 +762,14 @@ public class CourseServiceTest extends AbstractComponentTest {
 
   private ModelUtils getModelUtils() {
     return Utils.getComponent(ModelUtils.class);
+  }
+
+  private static BaseClass expectClass(ClassDefinition classDef) throws XWikiException {
+    BaseClass bClass = createBaseClassMock(classDef.getDocRef());
+    for (ClassField<?> field : classDef.getFields()) {
+      expect(bClass.get(field.getName())).andReturn(field.getXField()).anyTimes();
+    }
+    return bClass;
   }
 
 }
