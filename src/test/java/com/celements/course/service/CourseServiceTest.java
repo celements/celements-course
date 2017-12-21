@@ -33,6 +33,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.model.reference.SpaceReference;
+import org.xwiki.model.reference.WikiReference;
 
 import com.celements.common.test.AbstractComponentTest;
 import com.celements.course.classes.CourseParticipantClass;
@@ -80,7 +81,8 @@ public class CourseServiceTest extends AbstractComponentTest {
     db = "db";
     docRef = new DocumentReference(db, "CourseSpace", "CourseX");
     doc = new XWikiDocument(docRef);
-    expectClass(Utils.getComponent(ClassDefinition.class, CourseParticipantClass.CLASS_DEF_HINT));
+    expectClass(Utils.getComponent(ClassDefinition.class, CourseParticipantClass.CLASS_DEF_HINT),
+        new WikiReference(db));
   }
 
   @Test
@@ -250,7 +252,7 @@ public class CourseServiceTest extends AbstractComponentTest {
 
   @Test
   public void test_validateParticipant_no_object() throws Exception {
-    XWikiDocument regDoc = expectDoc(new DocumentReference("db", "Kurse", "Kurs2"));
+    XWikiDocument regDoc = expectDoc(new DocumentReference(db, "Kurse", "Kurs2"));
     String email = "test@test.com";
 
     replayDefault();
@@ -261,7 +263,7 @@ public class CourseServiceTest extends AbstractComponentTest {
 
   @Test
   public void test_validateParticipant_wrong_key() throws Exception {
-    XWikiDocument regDoc = expectDoc(new DocumentReference("db", "Kurse", "Kurs2"));
+    XWikiDocument regDoc = expectDoc(new DocumentReference(db, "Kurse", "Kurs2"));
     String email = "test@test.com";
     addParticipant(regDoc, email, false);
 
@@ -275,7 +277,7 @@ public class CourseServiceTest extends AbstractComponentTest {
 
   @Test
   public void test_validateParticipant() throws Exception {
-    XWikiDocument regDoc = expectDoc(new DocumentReference("db", "Kurse", "Kurs2"));
+    XWikiDocument regDoc = expectDoc(new DocumentReference(db, "Kurse", "Kurs2"));
     String email = "test@test.com";
     addParticipant(regDoc, email, true);
     getMock(ModelAccessStrategy.class).saveDocument(same(regDoc), anyObject(String.class), eq(
@@ -293,7 +295,7 @@ public class CourseServiceTest extends AbstractComponentTest {
 
   @Test
   public void test_validateParticipant_multiple_sameEmail() throws Exception {
-    XWikiDocument regDoc = expectDoc(new DocumentReference("db", "Kurse", "Kurs2"));
+    XWikiDocument regDoc = expectDoc(new DocumentReference(db, "Kurse", "Kurs2"));
     String email = "test@test.com";
     addParticipant(regDoc, email, true);
     addParticipant(regDoc, email, true);
@@ -312,7 +314,7 @@ public class CourseServiceTest extends AbstractComponentTest {
 
   @Test
   public void test_validateParticipant_multiple_otherEmail() throws Exception {
-    XWikiDocument regDoc = expectDoc(new DocumentReference("db", "Kurse", "Kurs2"));
+    XWikiDocument regDoc = expectDoc(new DocumentReference(db, "Kurse", "Kurs2"));
     String email = "test@test.com";
     addParticipant(regDoc, email, true);
     addParticipant(regDoc, "test2@test.com", true);
@@ -331,7 +333,7 @@ public class CourseServiceTest extends AbstractComponentTest {
 
   @Test
   public void test_validateParticipant_multiple_withNoEmail() throws Exception {
-    XWikiDocument regDoc = expectDoc(new DocumentReference("db", "Kurse", "Kurs2"));
+    XWikiDocument regDoc = expectDoc(new DocumentReference(db, "Kurse", "Kurs2"));
     String email = "test@test.com";
     addParticipant(regDoc, email, true);
     addParticipant(regDoc, null, true);
@@ -368,7 +370,7 @@ public class CourseServiceTest extends AbstractComponentTest {
 
   @Test
   public void test_getConfirmState_confirmed() throws Exception {
-    XWikiDocument regDoc = expectDoc(new DocumentReference("db", "Kurse", "Kurs2"));
+    XWikiDocument regDoc = expectDoc(new DocumentReference(db, "Kurse", "Kurs2"));
     addParticipant(regDoc, ParticipantStatus.confirmed);
     addParticipant(regDoc, ParticipantStatus.confirmed);
     addParticipant(regDoc, ParticipantStatus.cancelled);
@@ -382,7 +384,7 @@ public class CourseServiceTest extends AbstractComponentTest {
 
   @Test
   public void test_getConfirmState_unconfirmed() throws Exception {
-    XWikiDocument regDoc = expectDoc(new DocumentReference("db", "Kurse", "Kurs2"));
+    XWikiDocument regDoc = expectDoc(new DocumentReference(db, "Kurse", "Kurs2"));
 
     addParticipant(regDoc, ParticipantStatus.unconfirmed);
     addParticipant(regDoc, ParticipantStatus.unconfirmed);
@@ -397,7 +399,7 @@ public class CourseServiceTest extends AbstractComponentTest {
 
   @Test
   public void test_getConfirmState_partialConfirmed1() throws Exception {
-    XWikiDocument regDoc = expectDoc(new DocumentReference("db", "Kurse", "Kurs2"));
+    XWikiDocument regDoc = expectDoc(new DocumentReference(db, "Kurse", "Kurs2"));
     addParticipant(regDoc, ParticipantStatus.confirmed);
     addParticipant(regDoc, ParticipantStatus.unconfirmed);
     addParticipant(regDoc, ParticipantStatus.cancelled);
@@ -411,7 +413,7 @@ public class CourseServiceTest extends AbstractComponentTest {
 
   @Test
   public void test_getConfirmState_partialConfirmed2() throws Exception {
-    XWikiDocument regDoc = expectDoc(new DocumentReference("db", "Kurse", "Kurs2"));
+    XWikiDocument regDoc = expectDoc(new DocumentReference(db, "Kurse", "Kurs2"));
     addParticipant(regDoc, ParticipantStatus.unconfirmed);
     addParticipant(regDoc, ParticipantStatus.confirmed);
     addParticipant(regDoc, ParticipantStatus.cancelled);
@@ -425,7 +427,7 @@ public class CourseServiceTest extends AbstractComponentTest {
 
   @Test
   public void test_getConfirmState_cancelled() throws Exception {
-    XWikiDocument regDoc = expectDoc(new DocumentReference("db", "Kurse", "Kurs2"));
+    XWikiDocument regDoc = expectDoc(new DocumentReference(db, "Kurse", "Kurs2"));
     addParticipant(regDoc, ParticipantStatus.cancelled);
     addParticipant(regDoc, ParticipantStatus.duplicate);
 
@@ -437,7 +439,7 @@ public class CourseServiceTest extends AbstractComponentTest {
 
   @Test
   public void test_getConfirmState_duplicate() throws Exception {
-    XWikiDocument regDoc = expectDoc(new DocumentReference("db", "Kurse", "Kurs2"));
+    XWikiDocument regDoc = expectDoc(new DocumentReference(db, "Kurse", "Kurs2"));
     addParticipant(regDoc, ParticipantStatus.duplicate);
     addParticipant(regDoc, ParticipantStatus.duplicate);
 
@@ -449,7 +451,7 @@ public class CourseServiceTest extends AbstractComponentTest {
 
   @Test
   public void test_getConfirmState_noParticipant() throws Exception {
-    XWikiDocument regDoc = expectDoc(new DocumentReference("db", "Kurse", "Kurs2"));
+    XWikiDocument regDoc = expectDoc(new DocumentReference(db, "Kurse", "Kurs2"));
     replayDefault();
     assertSame(RegistrationState.UNDEFINED, courseService.getConfirmState(
         regDoc.getDocumentReference()));
@@ -458,7 +460,7 @@ public class CourseServiceTest extends AbstractComponentTest {
 
   @Test
   public void test_getConfirmState_stateAbsent() throws Exception {
-    XWikiDocument regDoc = expectDoc(new DocumentReference("db", "Kurse", "Kurs2"));
+    XWikiDocument regDoc = expectDoc(new DocumentReference(db, "Kurse", "Kurs2"));
     addParticipant(regDoc, null);
 
     replayDefault();
@@ -469,17 +471,17 @@ public class CourseServiceTest extends AbstractComponentTest {
 
   @Test
   public void test_getConfirmState_getRegistrationCount_allConfirmed() throws Exception {
-    XWikiDocument courseDoc = new XWikiDocument(new DocumentReference("xwikidb", "Kurse", "Kurs2"));
+    XWikiDocument courseDoc = new XWikiDocument(new DocumentReference(db, "Kurse", "Kurs2"));
     List<XWikiDocument> regDocs = new ArrayList<>();
-    XWikiDocument regDoc1 = expectDoc(new DocumentReference("xwikidb", "Registrations", "Reg1"));
+    XWikiDocument regDoc1 = expectDoc(new DocumentReference(db, "Registrations", "Reg1"));
     addParticipant(regDoc1, ParticipantStatus.confirmed);
     addParticipant(regDoc1, ParticipantStatus.confirmed);
     regDocs.add(regDoc1);
-    XWikiDocument regDoc2 = expectDoc(new DocumentReference("xwikidb", "Registrations", "Reg2"));
+    XWikiDocument regDoc2 = expectDoc(new DocumentReference(db, "Registrations", "Reg2"));
     addParticipant(regDoc2, ParticipantStatus.confirmed);
     addParticipant(regDoc2, ParticipantStatus.confirmed);
     regDocs.add(regDoc2);
-    XWikiDocument regDoc3 = expectDoc(new DocumentReference("xwikidb", "Registrations", "Reg3"));
+    XWikiDocument regDoc3 = expectDoc(new DocumentReference(db, "Registrations", "Reg3"));
     addParticipant(regDoc3, ParticipantStatus.confirmed);
     addParticipant(regDoc3, ParticipantStatus.confirmed);
     regDocs.add(regDoc3);
@@ -493,17 +495,17 @@ public class CourseServiceTest extends AbstractComponentTest {
 
   @Test
   public void test_getConfirmState_getRegistrationCount_withDuplicate() throws Exception {
-    XWikiDocument courseDoc = new XWikiDocument(new DocumentReference("xwikidb", "Kurse", "Kurs2"));
+    XWikiDocument courseDoc = new XWikiDocument(new DocumentReference(db, "Kurse", "Kurs2"));
     List<XWikiDocument> regDocs = new ArrayList<>();
-    XWikiDocument regDoc1 = expectDoc(new DocumentReference("xwikidb", "Registrations", "Reg1"));
+    XWikiDocument regDoc1 = expectDoc(new DocumentReference(db, "Registrations", "Reg1"));
     addParticipant(regDoc1, ParticipantStatus.confirmed);
     addParticipant(regDoc1, ParticipantStatus.duplicate);
     regDocs.add(regDoc1);
-    XWikiDocument regDoc2 = expectDoc(new DocumentReference("xwikidb", "Registrations", "Reg2"));
+    XWikiDocument regDoc2 = expectDoc(new DocumentReference(db, "Registrations", "Reg2"));
     addParticipant(regDoc2, ParticipantStatus.confirmed);
     addParticipant(regDoc2, ParticipantStatus.duplicate);
     regDocs.add(regDoc2);
-    XWikiDocument regDoc3 = expectDoc(new DocumentReference("xwikidb", "Registrations", "Reg3"));
+    XWikiDocument regDoc3 = expectDoc(new DocumentReference(db, "Registrations", "Reg3"));
     addParticipant(regDoc3, ParticipantStatus.confirmed);
     addParticipant(regDoc3, ParticipantStatus.confirmed);
     regDocs.add(regDoc3);
@@ -517,17 +519,17 @@ public class CourseServiceTest extends AbstractComponentTest {
 
   @Test
   public void test_getConfirmState_getRegistrationCount_withCancelled() throws Exception {
-    XWikiDocument courseDoc = new XWikiDocument(new DocumentReference("xwikidb", "Kurse", "Kurs2"));
+    XWikiDocument courseDoc = new XWikiDocument(new DocumentReference(db, "Kurse", "Kurs2"));
     List<XWikiDocument> regDocs = new ArrayList<>();
-    XWikiDocument regDoc1 = expectDoc(new DocumentReference("xwikidb", "Registrations", "Reg1"));
+    XWikiDocument regDoc1 = expectDoc(new DocumentReference(db, "Registrations", "Reg1"));
     addParticipant(regDoc1, ParticipantStatus.confirmed);
     addParticipant(regDoc1, ParticipantStatus.cancelled);
     regDocs.add(regDoc1);
-    XWikiDocument regDoc2 = expectDoc(new DocumentReference("xwikidb", "Registrations", "Reg2"));
+    XWikiDocument regDoc2 = expectDoc(new DocumentReference(db, "Registrations", "Reg2"));
     addParticipant(regDoc2, ParticipantStatus.confirmed);
     addParticipant(regDoc2, ParticipantStatus.cancelled);
     regDocs.add(regDoc2);
-    XWikiDocument regDoc3 = expectDoc(new DocumentReference("xwikidb", "Registrations", "Reg3"));
+    XWikiDocument regDoc3 = expectDoc(new DocumentReference(db, "Registrations", "Reg3"));
     addParticipant(regDoc3, ParticipantStatus.confirmed);
     addParticipant(regDoc3, ParticipantStatus.cancelled);
     regDocs.add(regDoc3);
@@ -542,20 +544,20 @@ public class CourseServiceTest extends AbstractComponentTest {
   @Test
   public void test_getConfirmState_getRegistrationCount_allWithCancelledAndDuplicate()
       throws Exception {
-    XWikiDocument courseDoc = new XWikiDocument(new DocumentReference("xwikidb", "Kurse", "Kurs2"));
+    XWikiDocument courseDoc = new XWikiDocument(new DocumentReference(db, "Kurse", "Kurs2"));
     List<XWikiDocument> regDocs = new ArrayList<>();
-    XWikiDocument regDoc1 = expectDoc(new DocumentReference("xwikidb", "Registrations", "Reg1"));
+    XWikiDocument regDoc1 = expectDoc(new DocumentReference(db, "Registrations", "Reg1"));
     addParticipant(regDoc1, ParticipantStatus.confirmed);
     addParticipant(regDoc1, ParticipantStatus.confirmed);
     addParticipant(regDoc1, ParticipantStatus.duplicate);
     addParticipant(regDoc1, ParticipantStatus.cancelled);
     regDocs.add(regDoc1);
-    XWikiDocument regDoc2 = expectDoc(new DocumentReference("xwikidb", "Registrations", "Reg2"));
+    XWikiDocument regDoc2 = expectDoc(new DocumentReference(db, "Registrations", "Reg2"));
     addParticipant(regDoc2, ParticipantStatus.confirmed);
     addParticipant(regDoc2, ParticipantStatus.duplicate);
     addParticipant(regDoc2, ParticipantStatus.cancelled);
     regDocs.add(regDoc2);
-    XWikiDocument regDoc3 = expectDoc(new DocumentReference("xwikidb", "Registrations", "Reg3"));
+    XWikiDocument regDoc3 = expectDoc(new DocumentReference(db, "Registrations", "Reg3"));
     addParticipant(regDoc3, ParticipantStatus.confirmed);
     addParticipant(regDoc3, ParticipantStatus.confirmed);
     addParticipant(regDoc3, ParticipantStatus.duplicate);
@@ -571,17 +573,17 @@ public class CourseServiceTest extends AbstractComponentTest {
 
   @Test
   public void test_getConfirmState_getRegistrationCount_withUnconfirmed() throws Exception {
-    XWikiDocument courseDoc = new XWikiDocument(new DocumentReference("xwikidb", "Kurse", "Kurs2"));
+    XWikiDocument courseDoc = new XWikiDocument(new DocumentReference(db, "Kurse", "Kurs2"));
     List<XWikiDocument> regDocs = new ArrayList<>();
-    XWikiDocument regDoc1 = expectDoc(new DocumentReference("xwikidb", "Registrations", "Reg1"));
+    XWikiDocument regDoc1 = expectDoc(new DocumentReference(db, "Registrations", "Reg1"));
     addParticipant(regDoc1, ParticipantStatus.confirmed);
     addParticipant(regDoc1, ParticipantStatus.unconfirmed);
     regDocs.add(regDoc1);
-    XWikiDocument regDoc2 = expectDoc(new DocumentReference("xwikidb", "Registrations", "Reg2"));
+    XWikiDocument regDoc2 = expectDoc(new DocumentReference(db, "Registrations", "Reg2"));
     addParticipant(regDoc2, ParticipantStatus.confirmed);
     addParticipant(regDoc2, ParticipantStatus.unconfirmed);
     regDocs.add(regDoc2);
-    XWikiDocument regDoc3 = expectDoc(new DocumentReference("xwikidb", "Registrations", "Reg3"));
+    XWikiDocument regDoc3 = expectDoc(new DocumentReference(db, "Registrations", "Reg3"));
     addParticipant(regDoc3, ParticipantStatus.unconfirmed);
     addParticipant(regDoc3, ParticipantStatus.unconfirmed);
     regDocs.add(regDoc3);
@@ -595,17 +597,17 @@ public class CourseServiceTest extends AbstractComponentTest {
 
   @Test
   public void test_getConfirmState_getRegistrationCount_withAllStates() throws Exception {
-    XWikiDocument courseDoc = new XWikiDocument(new DocumentReference("xwikidb", "Kurse", "Kurs2"));
+    XWikiDocument courseDoc = new XWikiDocument(new DocumentReference(db, "Kurse", "Kurs2"));
     List<XWikiDocument> regDocs = new ArrayList<>();
-    XWikiDocument regDoc1 = expectDoc(new DocumentReference("xwikidb", "Registrations", "Reg1"));
+    XWikiDocument regDoc1 = expectDoc(new DocumentReference(db, "Registrations", "Reg1"));
     addParticipant(regDoc1, ParticipantStatus.confirmed);
     addParticipant(regDoc1, ParticipantStatus.unconfirmed);
     regDocs.add(regDoc1);
-    XWikiDocument regDoc2 = expectDoc(new DocumentReference("xwikidb", "Registrations", "Reg2"));
+    XWikiDocument regDoc2 = expectDoc(new DocumentReference(db, "Registrations", "Reg2"));
     addParticipant(regDoc2, ParticipantStatus.confirmed);
     addParticipant(regDoc2, ParticipantStatus.duplicate);
     regDocs.add(regDoc2);
-    XWikiDocument regDoc3 = expectDoc(new DocumentReference("xwikidb", "Registrations", "Reg3"));
+    XWikiDocument regDoc3 = expectDoc(new DocumentReference(db, "Registrations", "Reg3"));
     addParticipant(regDoc3, ParticipantStatus.unconfirmed);
     addParticipant(regDoc3, ParticipantStatus.cancelled);
     regDocs.add(regDoc3);
@@ -618,22 +620,22 @@ public class CourseServiceTest extends AbstractComponentTest {
 
   @Test
   public void test_getConfirmState_getRegistrationCount_withParticipantState() throws Exception {
-    XWikiDocument courseDoc = new XWikiDocument(new DocumentReference("xwikidb", "Kurse", "Kurs2"));
+    XWikiDocument courseDoc = new XWikiDocument(new DocumentReference(db, "Kurse", "Kurs2"));
     List<XWikiDocument> regDocs = new ArrayList<>();
-    XWikiDocument regDoc1 = expectDoc(new DocumentReference("xwikidb", "Registrations", "Reg1"));
+    XWikiDocument regDoc1 = expectDoc(new DocumentReference(db, "Registrations", "Reg1"));
     addParticipant(regDoc1, ParticipantStatus.confirmed);
     addParticipant(regDoc1, ParticipantStatus.unconfirmed);
     addParticipant(regDoc1, ParticipantStatus.unconfirmed);
     addParticipant(regDoc1, ParticipantStatus.duplicate);
     regDocs.add(regDoc1);
-    XWikiDocument regDoc2 = expectDoc(new DocumentReference("xwikidb", "Registrations", "Reg2"));
+    XWikiDocument regDoc2 = expectDoc(new DocumentReference(db, "Registrations", "Reg2"));
     addParticipant(regDoc2, ParticipantStatus.confirmed);
     addParticipant(regDoc2, ParticipantStatus.confirmed);
     addParticipant(regDoc2, ParticipantStatus.duplicate);
     addParticipant(regDoc2, ParticipantStatus.duplicate);
     addParticipant(regDoc2, ParticipantStatus.duplicate);
     regDocs.add(regDoc2);
-    XWikiDocument regDoc3 = expectDoc(new DocumentReference("xwikidb", "Registrations", "Reg3"));
+    XWikiDocument regDoc3 = expectDoc(new DocumentReference(db, "Registrations", "Reg3"));
     addParticipant(regDoc3, ParticipantStatus.unconfirmed);
     addParticipant(regDoc3, ParticipantStatus.cancelled);
     addParticipant(regDoc3, ParticipantStatus.cancelled);
@@ -654,22 +656,22 @@ public class CourseServiceTest extends AbstractComponentTest {
 
   @Test
   public void test_getConfirmState_getRegistrationCount_ignoreParticipantStates() throws Exception {
-    XWikiDocument courseDoc = new XWikiDocument(new DocumentReference("xwikidb", "Kurse", "Kurs2"));
+    XWikiDocument courseDoc = new XWikiDocument(new DocumentReference(db, "Kurse", "Kurs2"));
     List<XWikiDocument> regDocs = new ArrayList<>();
-    XWikiDocument regDoc1 = expectDoc(new DocumentReference("xwikidb", "Registrations", "Reg1"));
+    XWikiDocument regDoc1 = expectDoc(new DocumentReference(db, "Registrations", "Reg1"));
     addParticipant(regDoc1, ParticipantStatus.confirmed);
     addParticipant(regDoc1, ParticipantStatus.unconfirmed);
     addParticipant(regDoc1, ParticipantStatus.unconfirmed);
     addParticipant(regDoc1, ParticipantStatus.duplicate);
     regDocs.add(regDoc1);
-    XWikiDocument regDoc2 = expectDoc(new DocumentReference("xwikidb", "Registrations", "Reg2"));
+    XWikiDocument regDoc2 = expectDoc(new DocumentReference(db, "Registrations", "Reg2"));
     addParticipant(regDoc2, ParticipantStatus.confirmed);
     addParticipant(regDoc2, ParticipantStatus.confirmed);
     addParticipant(regDoc2, ParticipantStatus.duplicate);
     addParticipant(regDoc2, ParticipantStatus.duplicate);
     addParticipant(regDoc2, ParticipantStatus.duplicate);
     regDocs.add(regDoc2);
-    XWikiDocument regDoc3 = expectDoc(new DocumentReference("xwikidb", "Registrations", "Reg3"));
+    XWikiDocument regDoc3 = expectDoc(new DocumentReference(db, "Registrations", "Reg3"));
     addParticipant(regDoc3, ParticipantStatus.unconfirmed);
     addParticipant(regDoc3, ParticipantStatus.cancelled);
     addParticipant(regDoc3, ParticipantStatus.cancelled);
@@ -764,8 +766,9 @@ public class CourseServiceTest extends AbstractComponentTest {
     return Utils.getComponent(ModelUtils.class);
   }
 
-  private static BaseClass expectClass(ClassDefinition classDef) throws XWikiException {
-    BaseClass bClass = createBaseClassMock(classDef.getDocRef());
+  private static BaseClass expectClass(ClassDefinition classDef, WikiReference wikiRef)
+      throws XWikiException {
+    BaseClass bClass = createBaseClassMock(classDef.getDocRef(wikiRef));
     for (ClassField<?> field : classDef.getFields()) {
       expect(bClass.get(field.getName())).andReturn(field.getXField()).anyTimes();
     }

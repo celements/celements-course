@@ -455,7 +455,6 @@ public class CourseService implements ICourseServiceRole {
     if (hashedCode.equals(savedHash)) {
       Optional<ParticipantStatus> state = FluentIterable.from(xObjFieldAccessor.getValue(partiObj,
           CourseParticipantClass.FIELD_STATUS).get()).first();
-
       if (state.isPresent() && !DEFAULT_IGNORE_STATES.contains(state.get())) {
         xObjFieldAccessor.setValue(partiObj, CourseParticipantClass.FIELD_STATUS, ImmutableList.of(
             ParticipantStatus.confirmed));
