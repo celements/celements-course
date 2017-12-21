@@ -4,7 +4,6 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
-import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -55,7 +54,8 @@ import com.google.common.base.MoreObjects;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
-import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 import com.xpn.xwiki.XWikiContext;
 import com.xpn.xwiki.XWikiException;
 import com.xpn.xwiki.doc.XWikiDocument;
@@ -432,18 +432,15 @@ public class CourseService implements ICourseServiceRole {
     }
     for (DocumentReference registrationDocRef : getRegistrationsForCourse(courseDocRef)) {
       try {
-        Set<ParticipantStatus> values = null;
+        List<ParticipantStatus> values;
         if (state == null) {
-          values = EnumSet.allOf(ParticipantStatus.class);
+          values = new ArrayList<>(Arrays.asList(ParticipantStatus.values()));
           values.removeAll(ignoreParticipantStates);
         } else {
-          values = ImmutableSet.of(state);
+          values = ImmutableList.of(state);
         }
-        // TODO: this loop will maybe removed after CELDEV-610
-        for (ParticipantStatus val : values) {
-          retVal += XWikiObjectFetcher.on(modelAccess.getDocument(registrationDocRef)).filter(
-              CourseParticipantClass.FIELD_STATUS, Arrays.asList(val)).count();
-        }
+        retVal += XWikiObjectFetcher.on(modelAccess.getDocument(registrationDocRef)).filter(
+            CourseParticipantClass.FIELD_STATUS, Lists.partition(values, 1)).count();
       } catch (DocumentNotExistsException exp) {
         LOGGER.info("Failed to get registrationDocRef '{}'", registrationDocRef, exp);
       }
