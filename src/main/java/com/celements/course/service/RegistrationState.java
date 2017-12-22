@@ -10,7 +10,8 @@ public enum RegistrationState {
   CONFIRMED,
   PARTIALCONFIRMED,
   UNCONFIRMED,
-  CANCELLED;
+  CANCELLED,
+  DUPLICATE;
 
   @NotNull
   public static Optional<RegistrationState> convertStringToEnum(@NotNull String name) {

@@ -54,6 +54,9 @@ import com.google.common.base.MoreObjects;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
+import com.google.common.collect.FluentIterable;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 import com.xpn.xwiki.XWikiContext;
 import com.xpn.xwiki.XWikiException;
 import com.xpn.xwiki.doc.XWikiDocument;
@@ -67,6 +70,9 @@ public class CourseService implements ICourseServiceRole {
   private static Logger LOGGER = LoggerFactory.getLogger(CourseService.class);
 
   static final String CFGSRC_PARTICIPANT_DOC_NAME_PREFIX = "celements.course.participant.docNamePrefix";
+
+  private static final List<ParticipantStatus> DEFAULT_IGNORE_STATES = Arrays.asList(
+      ParticipantStatus.cancelled, ParticipantStatus.duplicate);
 
   @Requirement("CelCourseClasses")
   private IClassCollectionRole courseClasses;
@@ -376,6 +382,8 @@ public class CourseService implements ICourseServiceRole {
         regState = RegistrationState.UNCONFIRMED;
       } else if (status.contains(ParticipantStatus.cancelled)) {
         regState = RegistrationState.CANCELLED;
+      } else if (status.contains(ParticipantStatus.duplicate)) {
+        regState = RegistrationState.DUPLICATE;
       }
     } catch (DocumentNotExistsException exp) {
       LOGGER.info("Failed to get participants for docRef '{}' ", regDocRef);
@@ -402,21 +410,38 @@ public class CourseService implements ICourseServiceRole {
 
   @Override
   public long getRegistrationCount(DocumentReference courseDocRef) throws LuceneSearchException {
-    return getRegistrationCount(courseDocRef, null);
+    return getRegistrationCount(courseDocRef, null, null);
   }
 
   @Override
-  public long getRegistrationCount(DocumentReference courseDocRef, RegistrationState state)
+  public long getRegistrationCount(DocumentReference courseDocRef, ParticipantStatus state)
       throws LuceneSearchException {
+    return getRegistrationCount(courseDocRef, state, null);
+  }
+
+  @Override
+  public long getRegistrationCount(DocumentReference courseDocRef,
+      List<ParticipantStatus> ignorList) throws LuceneSearchException {
+    return getRegistrationCount(courseDocRef, null, ignorList);
+  }
+
+  private long getRegistrationCount(DocumentReference courseDocRef, ParticipantStatus state,
+      List<ParticipantStatus> ignoreParticipantStates) throws LuceneSearchException {
     long retVal = 0;
+    if (ignoreParticipantStates == null) {
+      ignoreParticipantStates = DEFAULT_IGNORE_STATES;
+    }
     for (DocumentReference registrationDocRef : getRegistrationsForCourse(courseDocRef)) {
       try {
-        // TODO Should accept ParticipantStatus, not RegistrationState. fix in [CELDEV-581]
-        String key = (state != null ? CourseParticipantClass.FIELD_STATUS.getName() : null);
-        List<String> values = (state != null ? Arrays.asList(state.name(),
-            state.name().toLowerCase()) : null);
-        retVal += modelAccess.getXObjects(registrationDocRef, participantClassDef.getDocRef(), key,
-            values).size();
+        List<ParticipantStatus> values;
+        if (state == null) {
+          values = new ArrayList<>(Arrays.asList(ParticipantStatus.values()));
+          values.removeAll(ignoreParticipantStates);
+        } else {
+          values = ImmutableList.of(state);
+        }
+        retVal += XWikiObjectFetcher.on(modelAccess.getDocument(registrationDocRef)).filter(
+            CourseParticipantClass.FIELD_STATUS, Lists.partition(values, 1)).count();
       } catch (DocumentNotExistsException exp) {
         LOGGER.info("Failed to get registrationDocRef '{}'", registrationDocRef, exp);
       }
@@ -428,7 +453,12 @@ public class CourseService implements ICourseServiceRole {
     String hashedCode = passwordHashString(activationCode);
     String savedHash = partiObj.getStringValue("validkey");
     if (hashedCode.equals(savedHash)) {
-      partiObj.setStringValue("status", "confirmed");
+      Optional<ParticipantStatus> state = FluentIterable.from(xObjFieldAccessor.getValue(partiObj,
+          CourseParticipantClass.FIELD_STATUS).get()).first();
+      if (state.isPresent() && !DEFAULT_IGNORE_STATES.contains(state.get())) {
+        xObjFieldAccessor.setValue(partiObj, CourseParticipantClass.FIELD_STATUS, ImmutableList.of(
+            ParticipantStatus.confirmed));
+      }
       return true;
     }
     return false;
