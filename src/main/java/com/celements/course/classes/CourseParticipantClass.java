@@ -23,7 +23,8 @@ public class CourseParticipantClass extends AbstractClassDefinition implements C
   public enum ParticipantStatus {
     unconfirmed,
     confirmed,
-    cancelled;
+    cancelled,
+    duplicate;
   }
 
   public static final ClassField<String> FIELD_COURSE_ID = new StringField.Builder(CLASS_DEF_HINT,
