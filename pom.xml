@@ -30,7 +30,7 @@
   </parent>
   <modelVersion>4.0.0</modelVersion>
   <artifactId>celements-course</artifactId>
-  <version>1.17-SNAPSHOT</version>
+  <version>1.19-SNAPSHOT</version>
   <description>Celements Course</description>
   <dependencies>
     <!-- Add here all your dependencies -->
@@ -43,7 +43,7 @@
     <dependency>
       <groupId>com.celements</groupId>
       <artifactId>celements-core</artifactId>
-      <version>1.163</version>
+      <version>1.170</version>
       <scope>provided</scope>
     </dependency>
     <dependency>

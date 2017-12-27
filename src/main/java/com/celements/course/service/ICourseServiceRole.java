@@ -34,7 +34,7 @@ public interface ICourseServiceRole {
       String activationCode);
 
   @NotNull
-  public CourseConfirmState getConfirmState(@NotNull DocumentReference regDocRef);
+  public RegistrationState getConfirmState(@NotNull DocumentReference regDocRef);
 
   @NotNull
   public List<DocumentReference> getRegistrationsForCourse(@NotNull SpaceReference regSpaceRef,
@@ -50,6 +50,9 @@ public interface ICourseServiceRole {
 
   @NotNull
   public long getRegistrationCount(@NotNull DocumentReference courseDocRef,
-      @Nullable CourseConfirmState state) throws LuceneSearchException;
+      @Nullable RegistrationState state) throws LuceneSearchException;
+
+  @NotNull
+  public boolean sendConfirmationMail(@NotNull DocumentReference regDocRef, int participantObjNb);
 
 }

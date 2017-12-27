@@ -29,7 +29,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xwiki.component.annotation.Component;
 import org.xwiki.component.annotation.Requirement;
-import org.xwiki.context.Execution;
 import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.model.reference.EntityReferenceResolver;
 import org.xwiki.model.reference.SpaceReference;
@@ -37,14 +36,16 @@ import org.xwiki.script.service.ScriptService;
 
 import com.celements.common.classes.IClassCollectionRole;
 import com.celements.course.classcollections.CourseClasses;
-import com.celements.course.service.CourseConfirmState;
+import com.celements.course.service.RegistrationState;
 import com.celements.course.service.ICourseServiceRole;
 import com.celements.model.access.IModelAccessFacade;
+import com.celements.model.context.ModelContext;
 import com.celements.model.util.ModelUtils;
+import com.celements.rights.access.EAccessLevel;
+import com.celements.rights.access.IRightsAccessFacadeRole;
 import com.celements.search.lucene.LuceneSearchException;
 import com.google.common.base.Optional;
 import com.google.common.base.Strings;
-import com.xpn.xwiki.XWikiContext;
 
 @Component("celcourse")
 public class CourseScriptService implements ScriptService {
@@ -64,21 +65,20 @@ public class CourseScriptService implements ScriptService {
   private IModelAccessFacade modelAccess;
 
   @Requirement
+  private IRightsAccessFacadeRole rightsService;
+
+  @Requirement
   private ModelUtils modelUtils;
 
   @Requirement
-  Execution execution;
-
-  private XWikiContext getContext() {
-    return (XWikiContext) execution.getContext().getProperty("xwikicontext");
-  }
+  private ModelContext modelContext;
 
   private CourseClasses getCourseClasses() {
     return (CourseClasses) courseClasses;
   }
 
   public DocumentReference getCourseClassRef() {
-    return getCourseClasses().getCourseClassRef(getContext().getDatabase());
+    return getCourseClasses().getCourseClassRef(modelContext.getWikiRef().getName());
   }
 
   public String getCourseClass() {
@@ -86,7 +86,7 @@ public class CourseScriptService implements ScriptService {
   }
 
   public DocumentReference getCourseParticipantClassRef() {
-    return getCourseClasses().getCourseParticipantClassRef(getContext().getDatabase());
+    return getCourseClasses().getCourseParticipantClassRef(modelContext.getWikiRef().getName());
   }
 
   public String getCourseParticipantClass() {
@@ -94,7 +94,7 @@ public class CourseScriptService implements ScriptService {
   }
 
   public DocumentReference getCourseTypeClassRef() {
-    return getCourseClasses().getCourseTypeClassRef(getContext().getDatabase());
+    return getCourseClasses().getCourseTypeClassRef(modelContext.getWikiRef().getName());
   }
 
   public String getCourseTypeClass() {
@@ -110,7 +110,7 @@ public class CourseScriptService implements ScriptService {
   }
 
   public boolean validateParticipant(String regFN, String emailAdr, String activationCode) {
-    if (!Strings.isNullOrEmpty(regFN)) {
+    if (!Strings.isNullOrEmpty(regFN) && !Strings.isNullOrEmpty(emailAdr)) {
       return courseService.validateParticipant(modelUtils.resolveRef(regFN,
           DocumentReference.class), emailAdr, activationCode);
     }
@@ -124,8 +124,8 @@ public class CourseScriptService implements ScriptService {
    *
    * @return true if registration was successful
    */
-  public boolean registerParticipantFromRequest(boolean sendConfirmationMail) {
-    return courseService.registerParticipantFromRequest(sendConfirmationMail);
+  public boolean registerParticipantFromRequest(boolean sendValidationMail) {
+    return courseService.registerParticipantFromRequest(sendValidationMail);
   }
 
   public DocumentReference createParticipantDocRef(DocumentReference courseDocRef) {
@@ -143,11 +143,11 @@ public class CourseScriptService implements ScriptService {
   }
 
   @NotNull
-  public CourseConfirmState getConfirmeState(@Nullable DocumentReference regDocRef) {
+  public RegistrationState getConfirmeState(@Nullable DocumentReference regDocRef) {
     if (regDocRef != null) {
       return courseService.getConfirmState(regDocRef);
     }
-    return CourseConfirmState.UNDEFINED;
+    return RegistrationState.UNDEFINED;
   }
 
   /**
@@ -174,7 +174,7 @@ public class CourseScriptService implements ScriptService {
     return retVal;
   }
 
-  public long getRegistrationCount(DocumentReference courseDocRef, CourseConfirmState state) {
+  public long getRegistrationCount(DocumentReference courseDocRef, RegistrationState state) {
     long retVal = 0;
     try {
       retVal = courseService.getRegistrationCount(courseDocRef, state);
@@ -198,8 +198,15 @@ public class CourseScriptService implements ScriptService {
     return retVal;
   }
 
-  public CourseConfirmState getCourseConfirmState(String state) {
-    return CourseConfirmState.valueOf(state);
+  public boolean sendConfirmationMail(DocumentReference regDocRef, int participantObjNb) {
+    if ((regDocRef != null) && rightsService.hasAccessLevel(regDocRef, EAccessLevel.EDIT)) {
+      return courseService.sendConfirmationMail(regDocRef, participantObjNb);
+    }
+    return false;
+  }
+
+  public RegistrationState getCourseConfirmState(String state) {
+    return RegistrationState.valueOf(state);
   }
 
 }
