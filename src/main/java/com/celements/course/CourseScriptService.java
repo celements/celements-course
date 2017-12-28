@@ -36,8 +36,9 @@ import org.xwiki.script.service.ScriptService;
 
 import com.celements.common.classes.IClassCollectionRole;
 import com.celements.course.classcollections.CourseClasses;
-import com.celements.course.service.RegistrationState;
+import com.celements.course.classes.CourseParticipantClass.ParticipantStatus;
 import com.celements.course.service.ICourseServiceRole;
+import com.celements.course.service.RegistrationState;
 import com.celements.model.access.IModelAccessFacade;
 import com.celements.model.context.ModelContext;
 import com.celements.model.util.ModelUtils;
@@ -174,13 +175,25 @@ public class CourseScriptService implements ScriptService {
     return retVal;
   }
 
-  public long getRegistrationCount(DocumentReference courseDocRef, RegistrationState state) {
+  public long getRegistrationCount(DocumentReference courseDocRef, ParticipantStatus state) {
     long retVal = 0;
     try {
       retVal = courseService.getRegistrationCount(courseDocRef, state);
     } catch (LuceneSearchException exp) {
       LOGGER.info("Failed to get Results for courseDocRef '{}' and state '{}'", courseDocRef, state,
           exp);
+    }
+    return retVal;
+  }
+
+  public long getRegistrationCount(DocumentReference courseDocRef,
+      List<ParticipantStatus> ignoreParticipantStates) {
+    long retVal = 0;
+    try {
+      retVal = courseService.getRegistrationCount(courseDocRef, ignoreParticipantStates);
+    } catch (LuceneSearchException exp) {
+      LOGGER.info("Failed to get Results for courseDocRef '{}' and ignoreParticipantStates '{}'",
+          courseDocRef, ignoreParticipantStates, exp);
     }
     return retVal;
   }
@@ -205,8 +218,8 @@ public class CourseScriptService implements ScriptService {
     return false;
   }
 
-  public RegistrationState getCourseConfirmState(String state) {
-    return RegistrationState.valueOf(state);
+  public ParticipantStatus getCourseConfirmState(String state) {
+    return ParticipantStatus.valueOf(state);
   }
 
 }
