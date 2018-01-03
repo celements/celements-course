@@ -222,7 +222,7 @@ public class CourseClasses extends AbstractClassCollection {
     needsUpdate = addDateField(bclass, "dob", "Date of birth (dd.MM.yyyy)", "dd.MM.yyyy", 20, 0,
         null, null);
     needsUpdate |= bclass.addStaticListField("status", "Status", 1, false,
-        "unconfirmed|confirmed|cancelled", "select", ",|");
+        "unconfirmed|confirmed|cancelled|duplicate", "select", ",|");
     needsUpdate |= bclass.addStaticListField("payed", "Payed", 1, false,
         "unpayed|payed|partially paid", "select", ",|");
     needsUpdate |= bclass.addDateField("payedDate", "Payed Date", "dd.MM.yyyy", 0);
