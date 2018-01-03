@@ -250,7 +250,6 @@ public class CourseClasses extends AbstractClassCollection {
       element.setObject(bclass);
       element.setName(name);
       element.setPrettyName(prettyName);
-      element.setSize(30);
       element.setValidationRegExp(validationRegExp);
       element.setValidationMessage(validationMessage);
       element.setSize(size);
