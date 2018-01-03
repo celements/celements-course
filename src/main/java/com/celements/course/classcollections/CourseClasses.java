@@ -29,6 +29,7 @@ import com.xpn.xwiki.XWiki;
 import com.xpn.xwiki.XWikiException;
 import com.xpn.xwiki.doc.XWikiDocument;
 import com.xpn.xwiki.objects.classes.BaseClass;
+import com.xpn.xwiki.objects.classes.StringClass;
 
 @Component("CelCourseClasses")
 public class CourseClasses extends AbstractClassCollection {
@@ -211,7 +212,8 @@ public class CourseClasses extends AbstractClassCollection {
     bclass.setDocumentReference(classRef);
 
     needsUpdate |= bclass.addTextField("eventid", "Course ID", 30);
-    needsUpdate |= bclass.addTextField("title", "Title", 30);
+    needsUpdate |= addTextField(bclass, "title", "Title", "/^.{0,8}$/",
+        "cel_course_validation_titleToLong", 30);
     needsUpdate |= bclass.addTextField("firstname", "Firstname", 30);
     needsUpdate |= bclass.addTextField("lastname", "Lastname", 30);
     needsUpdate |= bclass.addTextField("address", "Address", 30);
@@ -239,6 +241,22 @@ public class CourseClasses extends AbstractClassCollection {
 
     setContentAndSaveClassDocument(doc, needsUpdate);
     return bclass;
+  }
+
+  private boolean addTextField(BaseClass bclass, String name, String prettyName,
+      String validationRegExp, String validationMessage, int size) {
+    if (bclass.get(name) == null) {
+      StringClass element = new StringClass();
+      element.setObject(bclass);
+      element.setName(name);
+      element.setPrettyName(prettyName);
+      element.setValidationRegExp(validationRegExp);
+      element.setValidationMessage(validationMessage);
+      element.setSize(size);
+      bclass.addField(name, element);
+      return true;
+    }
+    return false;
   }
 
   private String getRegexDate(boolean allowEmpty, boolean withTime) {
