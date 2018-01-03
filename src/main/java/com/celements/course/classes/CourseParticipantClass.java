@@ -28,7 +28,8 @@ public class CourseParticipantClass extends AbstractClassDefinition implements C
       "eventid").prettyName("Course ID").size(30).build();
 
   public static final ClassField<String> FIELD_TITLE = new StringField.Builder(CLASS_DEF_HINT,
-      "title").prettyName("Title").size(30).build();
+      "title").prettyName("Title").size(30).validationRegExp("/^.{0,8}$/").validationMessage(
+          "cel_course_validation_titleToLong").build();
 
   public static final ClassField<String> FIELD_FIRST_NAME = new StringField.Builder(CLASS_DEF_HINT,
       "firstname").prettyName("Firstname").size(30).build();
