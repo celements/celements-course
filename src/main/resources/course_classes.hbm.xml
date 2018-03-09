@@ -4,7 +4,7 @@
 <hibernate-mapping>
 
 <class entity-name="CourseClasses.CourseLevelClass" table="celcourse_level">
-  <id name="id" type="integer" unsaved-value="undefined">
+  <id name="id" type="long" unsaved-value="undefined">
     <column name="CLC_ID" not-null="true" />
     <generator class="assigned" />
   </id>
@@ -26,7 +26,7 @@
 </class>
 
 <class entity-name="CourseClasses.CourseTypeClass" table="celcourse_type">
-  <id name="id" type="integer" unsaved-value="undefined">
+  <id name="id" type="long" unsaved-value="undefined">
     <column name="CTC_ID" not-null="true" />
     <generator class="assigned" />
   </id>
@@ -48,7 +48,7 @@
 </class>
 
 <class entity-name="CourseClasses.CourseClass" table="celcourse_course">
-  <id name="id" type="integer" unsaved-value="undefined">
+  <id name="id" type="long" unsaved-value="undefined">
     <column name="CRS_ID" not-null="true" />
     <generator class="assigned" />
   </id>
@@ -79,7 +79,7 @@
 </class>
 
 <class entity-name="CourseClasses.CourseParticipantClass" table="celcourse_participant">
-  <id name="id" type="integer" unsaved-value="undefined">
+  <id name="id" type="long" unsaved-value="undefined">
     <column name="CPC_ID" not-null="true" />
     <generator class="assigned" />
   </id>
