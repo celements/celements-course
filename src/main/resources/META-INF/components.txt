@@ -5,3 +5,4 @@ com.celements.course.service.CourseService
 com.celements.course.classes.CourseClassPackage
 com.celements.course.classes.CourseParticipantClass
 com.celements.course.classcollections.migrator.AddCourseParticipantTitleValidationMigrator
+com.celements.course.classcollections.migrator.AddDuplicateToCourseParticipantClassMigrator
