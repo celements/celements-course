@@ -47,8 +47,6 @@ public class AddDuplicateToCourseParticipantClassMigratorTest extends AbstractCo
     DocumentReference docRef = new DocumentReference(context.getDatabase(), "CourseClasses",
         "CourseParticipantClass");
     expect(modelAccess.getDocument(eq(docRef))).andReturn(docMock);
-    expect(docMock.getDocumentReference()).andReturn(docRef);
-    expect(xwiki.exists(eq(docRef), same(context))).andReturn(true);
 
     BaseClass bClass = new BaseClass();
     bClass.addStaticListField("status", "Status", "unconfirmed|confirmed|cancelled");

@@ -6,6 +6,7 @@ import org.xwiki.component.annotation.Component;
 import org.xwiki.component.annotation.Requirement;
 
 import com.celements.course.classes.CourseParticipantClass;
+import com.celements.course.classes.CourseParticipantClass.ParticipantStatus;
 import com.celements.migrations.SubSystemHibernateMigrationManager;
 import com.celements.migrator.AbstractCelementsHibernateMigrator;
 import com.celements.model.access.IModelAccessFacade;
@@ -13,6 +14,7 @@ import com.celements.model.access.exception.DocumentNotExistsException;
 import com.celements.model.access.exception.DocumentSaveException;
 import com.celements.model.classes.ClassDefinition;
 import com.celements.model.context.ModelContext;
+import com.google.common.base.Joiner;
 import com.xpn.xwiki.XWikiContext;
 import com.xpn.xwiki.XWikiException;
 import com.xpn.xwiki.doc.XWikiDocument;
@@ -48,12 +50,12 @@ public class AddDuplicateToCourseParticipantClassMigrator extends
 
   /**
    * getVersion is using days since 1.1.2010 until the day of committing this
-   * migration 03.01.2018 -> 3000
+   * migration 27.03.2018 -> 3007
    * https://www.convertunits.com/dates/from/Jan+1,+2010/to/Mar+20,+2018
    */
   @Override
   public XWikiDBVersion getVersion() {
-    return new XWikiDBVersion(3000);
+    return new XWikiDBVersion(3007);
   }
 
   @Override
@@ -61,14 +63,12 @@ public class AddDuplicateToCourseParticipantClassMigrator extends
       throws XWikiException {
     try {
       XWikiDocument doc = modelAccess.getDocument(courseParticipantClass.getDocRef());
-      if (context.getWiki().exists(doc.getDocumentReference(), context)) {
-        BaseClass bClass = doc.getXClass();
-        ListClass status = (ListClass) bClass.get("status");
-        status.setStringValue("values", "unconfirmed|confirmed|cancelled|duplicate");
-        modelAccess.saveDocument(doc);
-      }
+      BaseClass bClass = doc.getXClass();
+      ListClass status = (ListClass) bClass.get("status");
+      status.setStringValue("values", Joiner.on("|").join(ParticipantStatus.values()));
+      modelAccess.saveDocument(doc);
     } catch (DocumentNotExistsException | DocumentSaveException exp) {
-      LOGGER.error("CourseClasses {} does not exist", courseParticipantClass.getDocRef(), exp);
+      LOGGER.debug("CourseClasses {} does not exist", courseParticipantClass.getDocRef(), exp);
     }
   }
 }
