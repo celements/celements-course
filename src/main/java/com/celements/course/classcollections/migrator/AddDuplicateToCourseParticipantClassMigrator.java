@@ -67,8 +67,11 @@ public class AddDuplicateToCourseParticipantClassMigrator extends
       ListClass status = (ListClass) bClass.get("status");
       status.setStringValue("values", Joiner.on("|").join(ParticipantStatus.values()));
       modelAccess.saveDocument(doc);
-    } catch (DocumentNotExistsException | DocumentSaveException exp) {
+    } catch (DocumentNotExistsException exp) {
       LOGGER.debug("CourseClasses {} does not exist", courseParticipantClass.getDocRef(), exp);
+    } catch (DocumentSaveException exp) {
+      LOGGER.error("Document with docRef {} could not be saved", courseParticipantClass.getDocRef(),
+          exp);
     }
   }
 }
