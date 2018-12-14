@@ -121,7 +121,8 @@ public class CourseClasses extends AbstractClassCollection {
 
     BaseClass bclass = doc.getXClass();
     bclass.setDocumentReference(classRef);
-    needsUpdate |= bclass.addTextField("typeName", "Course Type Name", 30);
+    needsUpdate |= addTextField(bclass, "typeName", "Course Type Name", "/.{1,255}/",
+        "CourseClass.CourseTypeClass_typeName_notEmpty", 30);
     needsUpdate |= bclass.addTextField("shortName", "Course Type Short Name", 30);
     needsUpdate |= bclass.addTextField("prefix", "Prefix", 30);
     needsUpdate |= bclass.addTextField("type_img_path", "Type Image Path", 30);
