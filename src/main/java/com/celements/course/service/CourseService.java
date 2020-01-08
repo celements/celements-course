@@ -7,6 +7,7 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 import org.apache.commons.lang.StringUtils;
@@ -51,7 +52,6 @@ import com.celements.web.plugin.cmd.ConvertToPlainTextException;
 import com.celements.web.plugin.cmd.PlainTextCommand;
 import com.google.common.base.Joiner;
 import com.google.common.base.MoreObjects;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.FluentIterable;
@@ -117,7 +117,7 @@ public class CourseService implements ICourseServiceRole {
     DocumentReference typeDocRef = null;
     try {
       Optional<BaseObject> courseObj = XWikiObjectFetcher.on(modelAccess.getDocument(
-          courseDocRef)).filter(getCourseClassRef()).first();
+          courseDocRef)).filter(getCourseClassRef()).first().toJavaUtil();
       if (courseObj.isPresent()) {
         String typeFN = courseObj.get().getStringValue("type");
         if (StringUtils.isNotBlank(typeFN)) {
@@ -135,7 +135,7 @@ public class CourseService implements ICourseServiceRole {
     String typeName = "";
     try {
       Optional<BaseObject> typeObj = XWikiObjectFetcher.on(modelAccess.getDocument(
-          courseTypeDocRef)).filter(getCourseTypeClassRef()).first();
+          courseTypeDocRef)).filter(getCourseTypeClassRef()).first().toJavaUtil();
       if (typeObj.isPresent()) {
         typeName = typeObj.get().getStringValue("typeName");
       }
@@ -189,7 +189,7 @@ public class CourseService implements ICourseServiceRole {
       templRef = modelUtils.resolveRef(template, DocumentReference.class);
       templRef = modelAccess.exists(templRef) ? templRef : null;
     }
-    return Optional.fromNullable(templRef);
+    return Optional.ofNullable(templRef);
   }
 
   void setMandatoryRegSpaceDocs(XWikiDocument regDoc) {
@@ -454,7 +454,7 @@ public class CourseService implements ICourseServiceRole {
     String savedHash = partiObj.getStringValue("validkey");
     if (hashedCode.equals(savedHash)) {
       Optional<ParticipantStatus> state = FluentIterable.from(xObjFieldAccessor.getValue(partiObj,
-          CourseParticipantClass.FIELD_STATUS).get()).first();
+          CourseParticipantClass.FIELD_STATUS).get()).first().toJavaUtil();
       if (state.isPresent() && !DEFAULT_IGNORE_STATES.contains(state.get())) {
         xObjFieldAccessor.setValue(partiObj, CourseParticipantClass.FIELD_STATUS, ImmutableList.of(
             ParticipantStatus.confirmed));
@@ -477,7 +477,7 @@ public class CourseService implements ICourseServiceRole {
     boolean sendSuccess = false;
     try {
       Optional<BaseObject> partiObj = XWikiObjectFetcher.on(modelAccess.getDocument(
-          regDocRef)).filter(participantObjNb).first();
+          regDocRef)).filter(participantObjNb).first().toJavaUtil();
       if (partiObj.isPresent()) {
         sendSuccess = sendConfirmationMail(partiObj.get(), "");
       }
