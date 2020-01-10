@@ -116,8 +116,14 @@
   <property name="status" type="string">
     <column name="CPC_STATUS" length="16"/>
   </property>
+  <property name="participance_category" type="string">
+    <column name="CPC_PARTICIPANCE_CATEGORY" length="128"/>
+  </property>
   <property name="payed" type="string">
     <column name="CPC_PAYED" length="16"/>
+  </property>
+  <property name="payment_method" type="string">
+    <column name="CPC_PAYMENT_METHOD" length="128"/>
   </property>
   <property name="payedDate" type="timestamp">
     <column name="CPC_PAYED_DATE" />

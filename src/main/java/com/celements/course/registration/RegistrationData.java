@@ -20,6 +20,8 @@ public class RegistrationData {
   private String comment;
   private String validationKey;
   private String mainEmail;
+  private String paymentMethod;
+  private String participanceCategory;
   private DocumentReference regDocRef;
 
   public RegistrationData() {
@@ -50,6 +52,22 @@ public class RegistrationData {
 
   public void setMainEmail(String email) {
     this.mainEmail = email;
+  }
+
+  public String getPaymentMethod() {
+    return paymentMethod;
+  }
+
+  public void setPaymentMethod(String paymentMethod) {
+    this.paymentMethod = paymentMethod;
+  }
+
+  public String getParticipanceCategory() {
+    return participanceCategory;
+  }
+
+  public void setParticipanceCategory(String participanceCategory) {
+    this.participanceCategory = participanceCategory;
   }
 
   public String getValidationKey() {
@@ -85,6 +103,8 @@ public class RegistrationData {
   public void setData(XWikiRequest req) {
     setEventid(req.get("eventid"));
     setComment(req.get("comment"));
+    setPaymentMethod(req.get("payment_method"));
+    setParticipanceCategory(req.get("participance_category"));
     persons = new ArrayList<>();
     for (int i = 0; getEndCondition(req.getParameterValues("title"), i); i++) {
       getSetPerson(persons, i).setTitle(req.getParameterValues("title")[i]);
@@ -139,7 +159,8 @@ public class RegistrationData {
   @Override
   public String toString() {
     return "RegistrationData [eventid=" + eventid + ", comment=" + comment + ", mainEmail="
-        + getMainEmail() + ", regDocRef=" + regDocRef + ", persons=" + persons + "]";
+        + getMainEmail() + ", regDocRef=" + regDocRef + ", persons=" + persons + ", paymentMethod="
+        + paymentMethod + ", participanceCategory=" + participanceCategory + "]";
   }
 
 }

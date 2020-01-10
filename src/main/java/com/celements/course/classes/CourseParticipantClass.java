@@ -1,6 +1,7 @@
 package com.celements.course.classes;
 
 import java.util.List;
+import java.util.function.UnaryOperator;
 
 import javax.annotation.concurrent.Immutable;
 import javax.inject.Singleton;
@@ -11,6 +12,7 @@ import com.celements.model.classes.AbstractClassDefinition;
 import com.celements.model.classes.fields.ClassField;
 import com.celements.model.classes.fields.StringField;
 import com.celements.model.classes.fields.list.EnumListField;
+import com.celements.model.classes.fields.list.single.DBSingleListField;
 
 @Immutable
 @Singleton
@@ -23,6 +25,10 @@ public class CourseParticipantClass extends AbstractClassDefinition implements C
   public enum ParticipantStatus {
     unconfirmed, confirmed, cancelled, duplicate;
   }
+
+  public static final UnaryOperator<String> DOC_IN_SPACE_DB_LIST_HQL = space -> "SELECT "
+      + "doc.fullName, doc.title FROM XWikiDocument doc WHERE doc.space='" + space
+      + "' ORDER BY doc.title ASC";
 
   public static final ClassField<String> FIELD_COURSE_ID = new StringField.Builder(CLASS_DEF_HINT,
       "eventid").prettyName("Course ID").size(30).build();
@@ -55,6 +61,14 @@ public class CourseParticipantClass extends AbstractClassDefinition implements C
   public static final ClassField<List<ParticipantStatus>> FIELD_STATUS = new EnumListField.Builder<>(
       CLASS_DEF_HINT, "status", ParticipantStatus.class).prettyName("Status").separator(
           "|").build();
+
+  public static final ClassField<String> FIELD_PAYMENT_METHOD = new DBSingleListField.Builder(
+      CLASS_DEF_HINT, "payment_method").sql(DOC_IN_SPACE_DB_LIST_HQL.apply("PaymentMethods"))
+          .build();
+
+  public static final ClassField<String> FIELD_PARTICIPANCE_CATEGORY = new DBSingleListField.Builder(
+      CLASS_DEF_HINT, "participance_category").sql(DOC_IN_SPACE_DB_LIST_HQL.apply(
+          "ParticipanceCategories")).build();
 
   // TODO ClassField definitions incomplete
   // [CELDEV-577] Refactor CourseClasses to ClassDefinitions
