@@ -63,7 +63,7 @@ public class CourseParticipantClass extends AbstractClassDefinition implements C
           "|").build();
 
   public static final ClassField<String> FIELD_PAYMENT_METHOD = new DBSingleListField.Builder(
-      CLASS_DEF_HINT, "payment_method").sql(DOC_IN_SPACE_DB_LIST_HQL.apply("PaymetMethods"))
+      CLASS_DEF_HINT, "payment_method").sql(DOC_IN_SPACE_DB_LIST_HQL.apply("PaymentMethods"))
           .build();
 
   public static final ClassField<String> FIELD_PARTICIPANCE_CATEGORY = new DBSingleListField.Builder(
