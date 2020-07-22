@@ -31,6 +31,7 @@ import com.xpn.xwiki.doc.XWikiDocument;
 import com.xpn.xwiki.objects.classes.BaseClass;
 import com.xpn.xwiki.objects.classes.StringClass;
 
+@Deprecated
 @Component("CelCourseClasses")
 public class CourseClasses extends AbstractClassCollection {
 
@@ -62,10 +63,7 @@ public class CourseClasses extends AbstractClassCollection {
 
   @Override
   protected void initClasses() throws XWikiException {
-    getCourseLevelClass();
-    getCourseTypeClass();
-    getCourseClass();
-    getCourseParticipantClass();
+    LOGGER.warn("class collection 'celCourse' is deprecated and should be disabled");
   }
 
   public DocumentReference getCourseLevelClassRef(String wikiName) {
