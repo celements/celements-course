@@ -1,77 +1,129 @@
 package com.celements.course.classes;
 
-import java.util.List;
-import java.util.function.UnaryOperator;
+import java.util.Date;
 
 import javax.annotation.concurrent.Immutable;
 import javax.inject.Singleton;
 
 import org.xwiki.component.annotation.Component;
+import org.xwiki.model.reference.ClassReference;
 
+import com.celements.marshalling.EnumMarshaller;
 import com.celements.model.classes.AbstractClassDefinition;
 import com.celements.model.classes.fields.ClassField;
+import com.celements.model.classes.fields.DateField;
+import com.celements.model.classes.fields.LargeStringField;
+import com.celements.model.classes.fields.PasswordField;
+import com.celements.model.classes.fields.PasswordField.StorageType;
 import com.celements.model.classes.fields.StringField;
-import com.celements.model.classes.fields.list.EnumListField;
+import com.celements.model.classes.fields.list.DisplayType;
 import com.celements.model.classes.fields.list.single.DBSingleListField;
+import com.celements.model.classes.fields.list.single.EnumSingleListField;
+import com.celements.model.classes.fields.number.IntField;
 
 @Immutable
 @Singleton
 @Component(CourseParticipantClass.CLASS_DEF_HINT)
 public class CourseParticipantClass extends AbstractClassDefinition implements CelCourseClass {
 
-  public static final String CLASS_NAME = "CourseParticipantClass";
-  public static final String CLASS_DEF_HINT = CLASS_SPACE + "." + CLASS_NAME;
+  public static final String DOC_NAME = "CourseParticipantClass";
+  public static final String CLASS_DEF_HINT = SPACE_NAME + "." + DOC_NAME;
+  public static final ClassReference CLASS_REF = new ClassReference(SPACE_NAME, DOC_NAME);
 
   public enum ParticipantStatus {
-    unconfirmed, confirmed, cancelled, duplicate;
+
+    UNCONFIRMED("unconfirmed"), CONFIRMED("confirmed"), CANCELLED("cancelled"), DUPLICATE(
+        "duplicate");
+
+    public final String id;
+
+    private ParticipantStatus(String id) {
+      this.id = id;
+    }
   }
 
-  public static final UnaryOperator<String> DOC_IN_SPACE_DB_LIST_HQL = space -> "SELECT "
-      + "doc.fullName, doc.title FROM XWikiDocument doc WHERE doc.space='" + space
-      + "' ORDER BY doc.title ASC";
+  public enum PaymentStatus {
 
-  public static final ClassField<String> FIELD_COURSE_ID = new StringField.Builder(CLASS_DEF_HINT,
-      "eventid").prettyName("Course ID").size(30).build();
+    UNPAYED("unpayed"), PAYED("payed"), PARTIAL("partially paid");
 
-  public static final ClassField<String> FIELD_TITLE = new StringField.Builder(CLASS_DEF_HINT,
-      "title").prettyName("Title").size(30).validationRegExp("/^.{0,8}$/").validationMessage(
-          "cel_course_validation_titleToLong").build();
+    public final String id;
 
-  public static final ClassField<String> FIELD_FIRST_NAME = new StringField.Builder(CLASS_DEF_HINT,
-      "firstname").prettyName("Firstname").size(30).build();
+    private PaymentStatus(String id) {
+      this.id = id;
+    }
+  }
 
-  public static final ClassField<String> FIELD_LAST_NAME = new StringField.Builder(CLASS_DEF_HINT,
-      "lastname").prettyName("Lastname").size(30).build();
+  public static final ClassField<String> FIELD_COURSE_ID = new StringField.Builder(
+      CLASS_REF, "eventid").prettyName("Course ID").build();
 
-  public static final ClassField<String> FIELD_ADDRESS = new StringField.Builder(CLASS_DEF_HINT,
-      "address").prettyName("Address").size(30).build();
+  public static final ClassField<String> FIELD_TITLE = new StringField.Builder(
+      CLASS_REF, "title").validationRegExp("/^.{0,8}$/")
+          .validationMessage("cel_course_validation_titleToLong").build();
 
-  public static final ClassField<String> FIELD_ZIP = new StringField.Builder(CLASS_DEF_HINT,
-      "zip").prettyName("Zip").size(30).build();
+  public static final ClassField<String> FIELD_FIRST_NAME = new StringField.Builder(
+      CLASS_REF, "firstname").build();
 
-  public static final ClassField<String> FIELD_CITY = new StringField.Builder(CLASS_DEF_HINT,
-      "city").prettyName("City").size(30).build();
+  public static final ClassField<String> FIELD_LAST_NAME = new StringField.Builder(
+      CLASS_REF, "lastname").build();
 
-  public static final ClassField<String> FIELD_PHONE = new StringField.Builder(CLASS_DEF_HINT,
-      "phone").prettyName("Phone").size(30).build();
+  public static final ClassField<String> FIELD_ADDRESS = new StringField.Builder(
+      CLASS_REF, "address").build();
 
-  public static final ClassField<String> FIELD_EMAIL = new StringField.Builder(CLASS_DEF_HINT,
-      "email").prettyName("Email").size(30).build();
+  public static final ClassField<String> FIELD_ZIP = new StringField.Builder(
+      CLASS_REF, "zip").build();
 
-  public static final ClassField<List<ParticipantStatus>> FIELD_STATUS = new EnumListField.Builder<>(
-      CLASS_DEF_HINT, "status", ParticipantStatus.class).prettyName("Status").separator(
-          "|").build();
+  public static final ClassField<String> FIELD_CITY = new StringField.Builder(
+      CLASS_REF, "city").build();
 
-  public static final ClassField<String> FIELD_PAYMENT_METHOD = new DBSingleListField.Builder(
-      CLASS_DEF_HINT, "payment_method").sql(DOC_IN_SPACE_DB_LIST_HQL.apply("PaymentMethods"))
+  public static final ClassField<String> FIELD_PHONE = new StringField.Builder(
+      CLASS_REF, "phone").build();
+
+  public static final ClassField<String> FIELD_EMAIL = new StringField.Builder(
+      CLASS_REF, "email").build();
+
+  public static final ClassField<Date> FIELD_DOB = new DateField.Builder(
+      CLASS_REF, "dob").prettyName("Date of birth (dd.MM.yyyy)").dateFormat("dd.MM.yyyy").build();
+
+  public static final ClassField<ParticipantStatus> FIELD_STATUS = new EnumSingleListField.Builder<>(
+      CLASS_REF, "status", new EnumMarshaller<>(ParticipantStatus.class, enm -> enm.id))
+          .displayType(DisplayType.select).build();
+
+  public static final ClassField<PaymentStatus> FIELD_PAYED = new EnumSingleListField.Builder<>(
+      CLASS_REF, "payed", new EnumMarshaller<>(PaymentStatus.class, enm -> enm.id))
+          .displayType(DisplayType.select).build();
+
+  public static final ClassField<String> FIELD_PARTIAL_PAYED_REASON = new StringField.Builder(
+      CLASS_REF, "partial_payed_reason").build();
+
+  public static final ClassField<Integer> FIELD_PAYED_AMOUNT = new IntField.Builder(
+      CLASS_REF, "payed_amount").build();
+
+  public static final ClassField<Date> FIELD_PAYED_DATE = new DateField.Builder(
+      CLASS_REF, "payedDate").prettyName("Payed Date (dd.MM.yyyy)").dateFormat("dd.MM.yyyy")
           .build();
 
-  public static final ClassField<String> FIELD_PARTICIPANCE_CATEGORY = new DBSingleListField.Builder(
-      CLASS_DEF_HINT, "participance_category").sql(DOC_IN_SPACE_DB_LIST_HQL.apply(
-          "ParticipanceCategories")).build();
+  public static final ClassField<String> FIELD_PAYMENT_METHOD = new DBSingleListField.Builder(
+      CLASS_REF, "payment_method").sql(HQL_DOC_IN_SPACE.apply("PaymentMethods")).build();
 
-  // TODO ClassField definitions incomplete
-  // [CELDEV-577] Refactor CourseClasses to ClassDefinitions
+  public static final ClassField<String> FIELD_PARTICIPANCE_CATEGORY = new DBSingleListField.Builder(
+      CLASS_REF, "participance_category").sql(HQL_DOC_IN_SPACE.apply("ParticipanceCategories"))
+          .build();
+
+  public static final ClassField<String> FIELD_COMMENT = new LargeStringField.Builder(
+      CLASS_REF, "comment").build();
+
+  public static final ClassField<String> FIELD_VALIDATION_KEY = new PasswordField.Builder(
+      CLASS_REF, "validkey").storageType(StorageType.Hash).prettyName("Validation Key").build();
+
+  public static final ClassField<Date> FIELD_TIMESTAMP = new DateField.Builder(
+      CLASS_REF, "timestamp").build();
+
+  public static final ClassField<String> FIELD_CLIENT = new StringField.Builder(
+      CLASS_REF, "client").prettyName("Client Info").build();
+
+  public CourseParticipantClass() {
+    super(CLASS_REF);
+  }
 
   @Override
   public String getName() {
@@ -81,15 +133,5 @@ public class CourseParticipantClass extends AbstractClassDefinition implements C
   @Override
   public boolean isInternalMapping() {
     return true;
-  }
-
-  @Override
-  protected String getClassSpaceName() {
-    return CLASS_SPACE;
-  }
-
-  @Override
-  protected String getClassDocName() {
-    return CLASS_NAME;
   }
 }
