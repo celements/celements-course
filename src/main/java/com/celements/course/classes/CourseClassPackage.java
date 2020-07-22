@@ -1,21 +1,26 @@
 package com.celements.course.classes;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Supplier;
 
 import org.xwiki.component.annotation.Component;
 import org.xwiki.component.annotation.Requirement;
 
-import com.celements.model.classes.AbstractClassPackage;
+import com.celements.model.classes.AbstractLegacyClassPackage;
 import com.celements.model.classes.ClassDefinition;
+import com.google.common.base.Suppliers;
+import com.google.common.collect.ImmutableList;
 
 @Component(CourseClassPackage.NAME)
-public class CourseClassPackage extends AbstractClassPackage {
+public class CourseClassPackage extends AbstractLegacyClassPackage {
 
   public static final String NAME = "course";
 
   @Requirement
-  private List<CelCourseClass> classDefs;
+  private List<CelCourseClass> classDefsMutable;
+
+  private final Supplier<ImmutableList<CelCourseClass>> classDefs = Suppliers
+      .memoize(() -> ImmutableList.copyOf(classDefsMutable));
 
   @Override
   public String getName() {
@@ -23,16 +28,13 @@ public class CourseClassPackage extends AbstractClassPackage {
   }
 
   @Override
-  public List<? extends ClassDefinition> getClassDefinitions() {
-    return new ArrayList<>(classDefs);
+  public String getLegacyName() {
+    return "celCourse";
   }
 
-  // TODO [CELDEV-577] Refactor CourseClasses to ClassDefinitions
-  // extend AbstractLegacyClassPackage and uncomment override
-  //
-  // @Override
-  // public String getLegacyName() {
-  // return "celCourse";
-  // }
+  @Override
+  public List<? extends ClassDefinition> getClassDefinitions() {
+    return classDefs.get();
+  }
 
 }
