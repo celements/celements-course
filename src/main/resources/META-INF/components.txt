@@ -3,6 +3,9 @@ com.celements.course.CourseScriptService
 com.celements.course.classcollections.migrator.AddDateValidationMigrator
 com.celements.course.service.CourseService
 com.celements.course.classes.CourseClassPackage
+com.celements.course.classes.CourseClass
+com.celements.course.classes.CourseTypeClass
+com.celements.course.classes.CourseLevelClass
 com.celements.course.classes.CourseParticipantClass
 com.celements.course.classcollections.migrator.AddCourseParticipantTitleValidationMigrator
 com.celements.course.classcollections.migrator.AddDuplicateToCourseParticipantClassMigrator
