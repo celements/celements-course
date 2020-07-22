@@ -32,19 +32,13 @@ public class CourseParticipantClass extends AbstractClassDefinition implements C
 
   public enum ParticipantStatus {
 
-    UNCONFIRMED("unconfirmed"), CONFIRMED("confirmed"), CANCELLED("cancelled"), DUPLICATE(
-        "duplicate");
+    unconfirmed, confirmed, cancelled, duplicate;
 
-    public final String id;
-
-    private ParticipantStatus(String id) {
-      this.id = id;
-    }
   }
 
   public enum PaymentStatus {
 
-    UNPAYED("unpayed"), PAYED("payed"), PARTIAL("partially paid");
+    unpayed("unpayed"), payed("payed"), partial("partially paid");
 
     public final String id;
 
@@ -85,8 +79,7 @@ public class CourseParticipantClass extends AbstractClassDefinition implements C
       CLASS_REF, "dob").prettyName("Date of birth (dd.MM.yyyy)").dateFormat("dd.MM.yyyy").build();
 
   public static final ClassField<ParticipantStatus> FIELD_STATUS = new EnumSingleListField.Builder<>(
-      CLASS_REF, "status", new EnumMarshaller<>(ParticipantStatus.class, enm -> enm.id))
-          .displayType(DisplayType.select).build();
+      CLASS_REF, "status", ParticipantStatus.class).displayType(DisplayType.select).build();
 
   public static final ClassField<PaymentStatus> FIELD_PAYED = new EnumSingleListField.Builder<>(
       CLASS_REF, "payed", new EnumMarshaller<>(PaymentStatus.class, enm -> enm.id))
