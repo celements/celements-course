@@ -1,5 +1,7 @@
 package com.celements.course.service;
 
+import static com.google.common.collect.ImmutableSet.*;
+
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -35,7 +37,6 @@ import com.celements.model.access.exception.DocumentSaveException;
 import com.celements.model.classes.ClassDefinition;
 import com.celements.model.context.ModelContext;
 import com.celements.model.field.FieldAccessor;
-import com.celements.model.field.FieldGetterFunction;
 import com.celements.model.field.XObjectFieldAccessor;
 import com.celements.model.object.xwiki.XWikiObjectEditor;
 import com.celements.model.object.xwiki.XWikiObjectFetcher;
@@ -54,9 +55,7 @@ import com.google.common.base.Joiner;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
 import com.xpn.xwiki.XWikiContext;
 import com.xpn.xwiki.XWikiException;
 import com.xpn.xwiki.doc.XWikiDocument;
@@ -370,8 +369,8 @@ public class CourseService implements ICourseServiceRole {
     try {
       XWikiDocument regDoc = modelAccess.getDocument(regDocRef);
       XWikiObjectFetcher fetcher = XWikiObjectFetcher.on(regDoc).filter(participantClassDef);
-      Set<ParticipantStatus> status = fetcher.iter().transformAndConcat(new FieldGetterFunction<>(
-          xObjFieldAccessor, CourseParticipantClass.FIELD_STATUS)).toSet();
+      Set<ParticipantStatus> status = fetcher.fetchField(CourseParticipantClass.FIELD_STATUS)
+          .stream().collect(toImmutableSet());
       if (status.contains(ParticipantStatus.confirmed)) {
         if (!status.contains(ParticipantStatus.unconfirmed)) {
           regState = RegistrationState.CONFIRMED;
@@ -441,7 +440,7 @@ public class CourseService implements ICourseServiceRole {
           values = ImmutableList.of(state);
         }
         retVal += XWikiObjectFetcher.on(modelAccess.getDocument(registrationDocRef)).filter(
-            CourseParticipantClass.FIELD_STATUS, Lists.partition(values, 1)).count();
+            CourseParticipantClass.FIELD_STATUS, values).count();
       } catch (DocumentNotExistsException exp) {
         LOGGER.info("Failed to get registrationDocRef '{}'", registrationDocRef, exp);
       }
@@ -453,11 +452,11 @@ public class CourseService implements ICourseServiceRole {
     String hashedCode = passwordHashString(activationCode);
     String savedHash = partiObj.getStringValue("validkey");
     if (hashedCode.equals(savedHash)) {
-      Optional<ParticipantStatus> state = FluentIterable.from(xObjFieldAccessor.getValue(partiObj,
-          CourseParticipantClass.FIELD_STATUS).get()).first().toJavaUtil();
+      Optional<ParticipantStatus> state = xObjFieldAccessor.getValue(partiObj,
+          CourseParticipantClass.FIELD_STATUS).toJavaUtil();
       if (state.isPresent() && !DEFAULT_IGNORE_STATES.contains(state.get())) {
-        xObjFieldAccessor.setValue(partiObj, CourseParticipantClass.FIELD_STATUS, ImmutableList.of(
-            ParticipantStatus.confirmed));
+        xObjFieldAccessor.setValue(partiObj, CourseParticipantClass.FIELD_STATUS,
+            ParticipantStatus.confirmed);
       }
       return true;
     }
