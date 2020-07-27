@@ -12,7 +12,7 @@ public interface CelCourseClass extends ClassDefinition {
   String SPACE_NAME = "CourseClasses";
 
   UnaryOperator<String> HQL_DOC_IN_SPACE = space -> "SELECT DISTINCT doc.fullName, doc.title "
-      + "FROM XWikiDocument doc WHERE doc.space='" + space + "' and doc.name <> 'WebPreferences' "
-      + "ORDER BY doc.title ASC";
+      + "FROM XWikiDocument as doc WHERE doc.space='" + space
+      + "' and doc.name <> 'WebPreferences' ORDER BY doc.title ASC";
 
 }
