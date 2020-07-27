@@ -32,12 +32,12 @@ public class CourseClass extends AbstractClassDefinition implements CelCourseCla
 
   private static final Function<ClassReference, String> HQL_DOC_BY_OBJ = classRef -> {
     String className = classRef.getName().replace("Class", "");
-    String nameField = className.replace("Course", "").toLowerCase() + "Name";
-    return "select distinct doc.fullName, map." + nameField + " "
+    String classId = className.replace("Course", "").toLowerCase(); // level / type
+    return "select distinct doc.fullName, map." + classId + "Name "
         + "from XWikiDocument as doc, BaseObject as obj, " + classRef.serialize() + " as map "
         + "where doc.translation=0 and doc.space='" + className + "' and doc.fullName=obj.name "
         + "and obj.id=map.id and obj.className='" + classRef.serialize() + "' "
-        + "order by map." + nameField;
+        + "order by map." + classId + (classId.equals("level") ? "Pos" : "Name");
   };
 
   public static final ClassField<String> FIELD_TYPE = new DBSingleListField.Builder(
@@ -55,7 +55,7 @@ public class CourseClass extends AbstractClassDefinition implements CelCourseCla
   public static final ClassField<String> FIELD_INFO = new LargeStringField.Builder(
       CLASS_REF, "info").build();
 
-  public static final ClassField<Integer> FIELD_PRICE = new IntField.Builder(
+  public static final ClassField<String> FIELD_PRICE = new StringField.Builder(
       CLASS_REF, "price").build();
 
   public static final ClassField<List<String>> FIELD_TEACHER = new DBListField.Builder(

@@ -109,7 +109,7 @@ public class CourseParticipantClass extends AbstractClassDefinition implements C
       CLASS_REF, "validkey").storageType(StorageType.Hash).prettyName("Validation Key").build();
 
   public static final ClassField<Date> FIELD_TIMESTAMP = new DateField.Builder(
-      CLASS_REF, "timestamp").build();
+      CLASS_REF, "timestamp").emptyIsToday(1).build();
 
   public static final ClassField<String> FIELD_CLIENT = new StringField.Builder(
       CLASS_REF, "client").prettyName("Client Info").build();
