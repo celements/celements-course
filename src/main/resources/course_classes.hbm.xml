@@ -67,8 +67,11 @@
   <property name="seats" type="integer">
     <column name="CRS_SEATS"/>
   </property>
-  <property name="price" type="string">
-    <column name="CRS_PRICE" length="64"/>
+  <property name="price" type="integer">
+    <column name="CRS_PRICE"/>
+  </property>
+  <property name="priceInfo" type="string">
+    <column name="CRS_PRICE_INFO" length="128"/>
   </property>
   <property name="startTimeStamp" type="timestamp">
     <column name="CRS_COURSE_START"/>
