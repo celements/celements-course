@@ -55,8 +55,11 @@ public class CourseClass extends AbstractClassDefinition implements CelCourseCla
   public static final ClassField<String> FIELD_INFO = new LargeStringField.Builder(
       CLASS_REF, "info").build();
 
-  public static final ClassField<String> FIELD_PRICE = new StringField.Builder(
+  public static final ClassField<Integer> FIELD_PRICE = new IntField.Builder(
       CLASS_REF, "price").build();
+
+  public static final ClassField<String> FIELD_PRICE_INFO = new StringField.Builder(
+      CLASS_REF, "priceInfo").build();
 
   public static final ClassField<List<String>> FIELD_TEACHER = new DBListField.Builder(
       CLASS_REF, "teacher").multiSelect(true).sql(HQL_DOC_IN_SPACE.apply("Teachers")).build();
