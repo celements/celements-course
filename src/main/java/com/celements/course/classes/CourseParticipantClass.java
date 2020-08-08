@@ -95,8 +95,10 @@ public class CourseParticipantClass extends AbstractClassDefinition implements C
       CLASS_REF, "payedDate").prettyName("Payed Date (dd.MM.yyyy)").dateFormat("dd.MM.yyyy")
           .build();
 
+  public static final String SPACE_PAYMENT_METHOD = "PaymentMethods";
+
   public static final ClassField<String> FIELD_PAYMENT_METHOD = new DBSingleListField.Builder(
-      CLASS_REF, "payment_method").sql(HQL_DOC_IN_SPACE.apply("PaymentMethods")).build();
+      CLASS_REF, "payment_method").sql(HQL_DOC_IN_SPACE.apply(SPACE_PAYMENT_METHOD)).build();
 
   public static final ClassField<String> FIELD_PARTICIPANCE_CATEGORY = new DBSingleListField.Builder(
       CLASS_REF, "participance_category").sql(HQL_DOC_IN_SPACE.apply("ParticipanceCategories"))
