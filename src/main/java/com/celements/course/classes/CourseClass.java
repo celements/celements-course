@@ -56,7 +56,10 @@ public class CourseClass extends AbstractClassDefinition implements CelCourseCla
       CLASS_REF, "info").build();
 
   public static final ClassField<Integer> FIELD_PRICE = new IntField.Builder(
-      CLASS_REF, "price").build();
+      CLASS_REF, "price")
+          .validationRegExp("/^0*[0-9]{1,9}$/")
+          .validationMessage("cel_course_validation_price")
+          .build();
 
   public static final ClassField<String> FIELD_PRICE_INFO = new StringField.Builder(
       CLASS_REF, "priceInfo").build();
