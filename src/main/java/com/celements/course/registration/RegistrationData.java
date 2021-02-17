@@ -23,6 +23,7 @@ public class RegistrationData {
   private String paymentMethod;
   private String participanceCategory;
   private DocumentReference regDocRef;
+  private int price;
 
   public RegistrationData() {
   }
@@ -68,6 +69,14 @@ public class RegistrationData {
 
   public void setParticipanceCategory(String participanceCategory) {
     this.participanceCategory = participanceCategory;
+  }
+
+  public int getPrice() {
+    return price;
+  }
+
+  public void setPrice(int price) {
+    this.price = price;
   }
 
   public String getValidationKey() {
