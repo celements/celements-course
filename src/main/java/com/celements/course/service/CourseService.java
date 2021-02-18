@@ -16,6 +16,7 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -495,7 +496,7 @@ public class CourseService implements ICourseServiceRole {
       Stream<ImmutableObjectReference> objRefs) {
     Map<DocumentReference, Set<Integer>> groupedByDoc = objRefs
         .filter(objRef -> objRef.getClassReference().equals(CourseParticipantClass.CLASS_REF))
-        .collect(groupingBy(ImmutableObjectReference::getDocumentReference,
+        .collect(groupingBy(ImmutableObjectReference::getDocumentReference, LinkedHashMap::new,
             mapping(ImmutableObjectReference::getNumber, toSet())));
     List<ImmutableObjectReference> copiedParticipantObjRefs = transformEntries(
         groupedByDoc, this::fetchParticipantObjs).values().stream()
