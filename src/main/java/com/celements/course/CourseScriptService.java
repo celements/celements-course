@@ -23,6 +23,7 @@ import static com.celements.rights.access.EAccessLevel.*;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import javax.annotation.Nullable;
 import javax.validation.constraints.NotNull;
@@ -231,6 +232,7 @@ public class CourseScriptService implements ScriptService {
       List<ImmutableObjectReference> objRefs) {
     if (rightsService.hasAccessLevel(targetCourseDocRef, EDIT) && (objRefs != null)) {
       return courseService.copyParticipants(targetCourseDocRef, objRefs.stream()
+          .filter(Objects::nonNull)
           .filter(objRef -> rightsService.hasAccessLevel(objRef.getDocumentReference(), VIEW)));
     }
     return ImmutableList.of();
