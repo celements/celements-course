@@ -1,6 +1,9 @@
 package com.celements.course.service;
 
+import static com.google.common.collect.ImmutableList.*;
 import static com.google.common.collect.ImmutableSet.*;
+import static com.google.common.collect.Maps.*;
+import static java.util.stream.Collectors.*;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -9,10 +12,13 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Stream;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.velocity.VelocityContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,9 +27,11 @@ import org.xwiki.component.annotation.Requirement;
 import org.xwiki.configuration.ConfigurationSource;
 import org.xwiki.model.reference.ClassReference;
 import org.xwiki.model.reference.DocumentReference;
+import org.xwiki.model.reference.ImmutableObjectReference;
 import org.xwiki.model.reference.SpaceReference;
 
 import com.celements.common.classes.IClassCollectionRole;
+import com.celements.copydoc.ICopyDocumentRole;
 import com.celements.course.classcollections.CourseClasses;
 import com.celements.course.classes.CourseParticipantClass;
 import com.celements.course.classes.CourseParticipantClass.ParticipantStatus;
@@ -106,6 +114,9 @@ public class CourseService implements ICourseServiceRole {
   @Requirement
   private ILuceneSearchService searchService;
 
+  @Requirement
+  private ICopyDocumentRole copyDocService;
+
   @Deprecated
   private XWikiContext getContext() {
     return modelContext.getXWikiContext();
@@ -161,7 +172,7 @@ public class CourseService implements ICourseServiceRole {
           regDoc.readFromTemplate(templRef.get(), modelContext.getXWikiContext());
         }
         if (createParticipantObjects(regDoc, data)) {
-          setMandatoryRegSpaceDocs(regDoc);
+          prepareRegSpace(regDoc.getDocumentReference().getLastSpaceReference());
           modelAccess.saveDocument(regDoc, "created new registration");
           if (sendValidationMail) {
             sendValidationMails(data);
@@ -191,29 +202,26 @@ public class CourseService implements ICourseServiceRole {
     return Optional.ofNullable(templRef);
   }
 
-  void setMandatoryRegSpaceDocs(XWikiDocument regDoc) {
-    if (regDoc.isNew()) {
-      SpaceReference regSpace = regDoc.getDocumentReference().getLastSpaceReference();
-      DocumentReference webPrefRef = new DocumentReference("WebPreferences", regSpace);
-      if (!modelAccess.exists(webPrefRef)) {
-        XWikiDocument webPrefDoc = modelAccess.getOrCreateDocument(webPrefRef);
-        addAccessRightsEdit(webPrefDoc, "XWiki.XWikiAdminGroup");
-        addAccessRightsEdit(webPrefDoc, "XWiki.CourseEditorGroup");
-        try {
-          modelAccess.saveDocument(webPrefDoc, "createdAndSetContent");
-        } catch (DocumentSaveException dse) {
-          LOGGER.error("Exception saving registration space WebPreferences document.", dse);
-        }
+  void prepareRegSpace(SpaceReference regSpaceRef) {
+    DocumentReference webPrefRef = new DocumentReference("WebPreferences", regSpaceRef);
+    if (!modelAccess.exists(webPrefRef)) {
+      XWikiDocument webPrefDoc = modelAccess.getOrCreateDocument(webPrefRef);
+      addAccessRightsEdit(webPrefDoc, "XWiki.XWikiAdminGroup");
+      addAccessRightsEdit(webPrefDoc, "XWiki.CourseEditorGroup");
+      try {
+        modelAccess.saveDocument(webPrefDoc, "createdAndSetContent");
+      } catch (DocumentSaveException dse) {
+        LOGGER.error("Exception saving registration space WebPreferences document.", dse);
       }
-      DocumentReference webHomeRef = new DocumentReference("WebHome", regSpace);
-      if (!modelAccess.exists(webHomeRef)) {
-        XWikiDocument webHomeDoc = modelAccess.getOrCreateDocument(webHomeRef);
-        webHomeDoc.setContent("#parse('celMacros/getRegistrationListing.vm')");
-        try {
-          modelAccess.saveDocument(webHomeDoc, "createdAndSetContent");
-        } catch (DocumentSaveException dse) {
-          LOGGER.error("Exception saving registration space WebHome document.", dse);
-        }
+    }
+    DocumentReference webHomeRef = new DocumentReference("WebHome", regSpaceRef);
+    if (!modelAccess.exists(webHomeRef)) {
+      XWikiDocument webHomeDoc = modelAccess.getOrCreateDocument(webHomeRef);
+      webHomeDoc.setContent("#parse('celMacros/getRegistrationListing.vm')");
+      try {
+        modelAccess.saveDocument(webHomeDoc, "createdAndSetContent");
+      } catch (DocumentSaveException dse) {
+        LOGGER.error("Exception saving registration space WebHome document.", dse);
       }
     }
   }
@@ -469,6 +477,50 @@ public class CourseService implements ICourseServiceRole {
     fetcher.filter(CourseParticipantClass.FIELD_EMAIL, emailAdr);
     fetcher.filter(CourseParticipantClass.FIELD_STATUS, Arrays.asList(state));
     return fetcher.exists();
+  }
+
+  @Override
+  public List<ImmutableObjectReference> copyParticipants(DocumentReference targetCourseDocRef,
+      Stream<ImmutableObjectReference> objRefs) {
+    Map<DocumentReference, Set<Integer>> groupedByDoc = objRefs
+        .filter(objRef -> objRef.getClassReference().equals(CourseParticipantClass.CLASS_REF))
+        .collect(groupingBy(ImmutableObjectReference::getDocumentReference,
+            mapping(ImmutableObjectReference::getNumber, toSet())));
+    List<ImmutableObjectReference> copiedParticipantObjRefs = transformEntries(
+        groupedByDoc, this::fetchParticipantObjs).values().stream()
+            .flatMap(participantObjs -> copyParticipantObjs(targetCourseDocRef, participantObjs))
+            .collect(toImmutableList());
+    if (!copiedParticipantObjRefs.isEmpty()) {
+      prepareRegSpace(getRegistrationSpace(targetCourseDocRef));
+    }
+    return copiedParticipantObjRefs;
+  }
+
+  private Stream<BaseObject> fetchParticipantObjs(DocumentReference participantDocRef,
+      Set<Integer> objNbs) {
+    XWikiDocument participantDoc = modelAccess.getOrCreateDocument(participantDocRef);
+    return objNbs.stream().sorted().flatMap(nb -> XWikiObjectFetcher.on(participantDoc)
+        .filter(participantClassDef).filter(nb).stream());
+  }
+
+  private Stream<ImmutableObjectReference> copyParticipantObjs(DocumentReference courseDocRef,
+      Stream<BaseObject> participantObjsToCopy) {
+    try {
+      XWikiDocument regDoc = modelAccess.createDocument(createParticipantDocRef(courseDocRef));
+      XWikiObjectEditor objEditor = XWikiObjectEditor.on(regDoc).filter(participantClassDef);
+      List<ImmutableObjectReference> copied = participantObjsToCopy
+          .map(obj -> Pair.of(obj, objEditor.createFirst()))
+          .filter(pair -> copyDocService.copyObject(pair.getLeft(), pair.getRight()))
+          .map(pair -> ImmutableObjectReference.from(pair.getRight()))
+          .collect(toImmutableList());
+      if (!copied.isEmpty()) {
+        modelAccess.saveDocument(regDoc);
+      }
+      return copied.stream();
+    } catch (DocumentAccessException dae) {
+      LOGGER.error("failed to copy participants to course: " + courseDocRef, dae);
+      return Stream.empty();
+    }
   }
 
   @Override
