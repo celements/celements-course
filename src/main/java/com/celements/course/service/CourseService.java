@@ -521,9 +521,10 @@ public class CourseService implements ICourseServiceRole {
     if (!participantObjsToCopy.isEmpty() && modelAccess.exists(courseDocRef)) {
       try {
         XWikiDocument regDoc = createRegistrationDoc(courseDocRef);
-        XWikiObjectEditor objEditor = XWikiObjectEditor.on(regDoc).filter(participantClassDef);
+        XWikiObjectEditor partiObjEditor = XWikiObjectEditor.on(regDoc).filter(participantClassDef);
+        partiObjEditor.delete(); // delete objects potentially on template
         List<ImmutableObjectReference> copied = participantObjsToCopy.stream()
-            .map(obj -> Pair.of(obj, objEditor.createFirst()))
+            .map(obj -> Pair.of(obj, partiObjEditor.createFirst()))
             .filter(pair -> copyDocService.copyObject(pair.getLeft(), pair.getRight()))
             .map(Pair::getRight)
             .map(restoreParticipantObj(courseDocRef))
