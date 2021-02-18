@@ -1,5 +1,6 @@
 package com.celements.course.service;
 
+import static com.celements.common.lambda.LambdaExceptionUtil.*;
 import static com.celements.course.classes.CourseParticipantClass.*;
 import static com.celements.model.util.ReferenceSerializationMode.*;
 import static com.google.common.base.Predicates.*;
@@ -172,15 +173,11 @@ public class CourseService implements ICourseServiceRole {
     if (!Strings.isNullOrEmpty(data.getEventid()) && !Strings.isNullOrEmpty(data.getMainEmail())) {
       DocumentReference courseDocRef = modelUtils.resolveRef(data.getEventid(),
           DocumentReference.class);
-      data.setRegDocRef(createParticipantDocRef(courseDocRef));
       try {
         data.setPrice(XWikiObjectFetcher.on(modelAccess.getDocument(courseDocRef))
             .fetchField(CourseClass.FIELD_PRICE).stream().findFirst().orElse(0));
-        XWikiDocument regDoc = modelAccess.createDocument(data.getRegDocRef());
-        Optional<DocumentReference> templRef = getTemplRef();
-        if (templRef.isPresent()) {
-          regDoc.readFromTemplate(templRef.get(), modelContext.getXWikiContext());
-        }
+        XWikiDocument regDoc = createRegistrationDoc(courseDocRef);
+        data.setRegDocRef(regDoc.getDocumentReference());
         if (createParticipantObjects(regDoc, data)) {
           prepareRegSpace(regDoc.getDocumentReference().getLastSpaceReference());
           modelAccess.saveDocument(regDoc, "created new registration");
@@ -201,15 +198,20 @@ public class CourseService implements ICourseServiceRole {
     return false;
   }
 
-  private Optional<DocumentReference> getTemplRef() {
-    DocumentReference templRef = null;
-    String template = modelContext.getRequest().isPresent() ? Strings.nullToEmpty(
-        modelContext.getRequest().get().getParameter("template")).trim() : "";
-    if (!template.isEmpty()) {
-      templRef = modelUtils.resolveRef(template, DocumentReference.class);
-      templRef = modelAccess.exists(templRef) ? templRef : null;
-    }
-    return Optional.ofNullable(templRef);
+  private XWikiDocument createRegistrationDoc(DocumentReference courseDocRef)
+      throws DocumentAccessException {
+    XWikiDocument regDoc = modelAccess.createDocument(createParticipantDocRef(courseDocRef));
+    modelContext.getRequestParameter("template").toJavaUtil()
+        .map(template -> modelUtils.resolveRef(template, DocumentReference.class))
+        .filter(modelAccess::exists)
+        .ifPresent(rethrowConsumer(templateDocRef -> {
+          try {
+            regDoc.readFromTemplate(templateDocRef, modelContext.getXWikiContext());
+          } catch (XWikiException exc) {
+            throw new DocumentAccessException(templateDocRef, exc);
+          }
+        }));
+    return regDoc;
   }
 
   void prepareRegSpace(SpaceReference regSpaceRef) {
@@ -518,7 +520,7 @@ public class CourseService implements ICourseServiceRole {
       List<BaseObject> participantObjsToCopy) {
     if (!participantObjsToCopy.isEmpty() && modelAccess.exists(courseDocRef)) {
       try {
-        XWikiDocument regDoc = modelAccess.createDocument(createParticipantDocRef(courseDocRef));
+        XWikiDocument regDoc = createRegistrationDoc(courseDocRef);
         XWikiObjectEditor objEditor = XWikiObjectEditor.on(regDoc).filter(participantClassDef);
         List<ImmutableObjectReference> copied = participantObjsToCopy.stream()
             .map(obj -> Pair.of(obj, objEditor.createFirst()))
@@ -529,6 +531,8 @@ public class CourseService implements ICourseServiceRole {
             .collect(toImmutableList());
         if (!copied.isEmpty()) {
           modelAccess.saveDocument(regDoc);
+          LOGGER.info("copyParticipantObjs - created registration [{}] from [{}]",
+              regDoc.getDocumentReference(), courseDocRef);
         }
         return copied.stream();
       } catch (DocumentAccessException dae) {
