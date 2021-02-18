@@ -25,8 +25,10 @@ import org.xwiki.model.reference.SpaceReference;
 
 import com.celements.common.classes.IClassCollectionRole;
 import com.celements.course.classcollections.CourseClasses;
+import com.celements.course.classes.CourseClass;
 import com.celements.course.classes.CourseParticipantClass;
 import com.celements.course.classes.CourseParticipantClass.ParticipantStatus;
+import com.celements.course.classes.CourseParticipantClass.PaymentStatus;
 import com.celements.course.registration.Person;
 import com.celements.course.registration.RegistrationData;
 import com.celements.mailsender.IMailSenderRole;
@@ -155,6 +157,8 @@ public class CourseService implements ICourseServiceRole {
           DocumentReference.class);
       data.setRegDocRef(createParticipantDocRef(courseDocRef));
       try {
+        data.setPrice(XWikiObjectFetcher.on(modelAccess.getDocument(courseDocRef))
+            .fetchField(CourseClass.FIELD_PRICE).stream().findFirst().orElse(0));
         XWikiDocument regDoc = modelAccess.createDocument(data.getRegDocRef());
         Optional<DocumentReference> templRef = getTemplRef();
         if (templRef.isPresent()) {
@@ -234,23 +238,25 @@ public class CourseService implements ICourseServiceRole {
       if (!person.isEmpty()) {
         BaseObject obj = XWikiObjectEditor.on(regDoc).filter(participantClassDef).filter(
             nb).createFirstIfNotExists();
-        obj.setStringValue("eventid", data.getEventid());
-        obj.setStringValue("title", person.getTitle());
-        obj.setStringValue("firstname", person.getGivenName());
-        obj.setStringValue("lastname", person.getSurname());
-        obj.setStringValue("address", person.getAddress());
-        obj.setStringValue("zip", person.getZip());
-        obj.setStringValue("city", person.getCity());
-        obj.setStringValue("phone", person.getPhone());
-        obj.setStringValue("email", person.getEmail());
-        obj.setDateValue("dob", person.getDateOfBirth());
-        obj.setStringValue("status", person.getStatus());
-        obj.setStringValue("payed", "unpayed");
-        obj.setLargeStringValue("comment", data.getComment());
+        obj.setStringValue(CourseParticipantClass.FIELD_COURSE_ID.getName(), data.getEventid());
+        obj.setStringValue(CourseParticipantClass.FIELD_TITLE.getName(), person.getTitle());
+        obj.setStringValue(CourseParticipantClass.FIELD_FIRST_NAME.getName(), person.getGivenName());
+        obj.setStringValue(CourseParticipantClass.FIELD_LAST_NAME.getName(), person.getSurname());
+        obj.setStringValue(CourseParticipantClass.FIELD_ADDRESS.getName(), person.getAddress());
+        obj.setStringValue(CourseParticipantClass.FIELD_ZIP.getName(), person.getZip());
+        obj.setStringValue(CourseParticipantClass.FIELD_CITY.getName(), person.getCity());
+        obj.setStringValue(CourseParticipantClass.FIELD_PHONE.getName(), person.getPhone());
+        obj.setStringValue(CourseParticipantClass.FIELD_EMAIL.getName(), person.getEmail());
+        obj.setDateValue(CourseParticipantClass.FIELD_DOB.getName(), person.getDateOfBirth());
+        obj.setStringValue(CourseParticipantClass.FIELD_STATUS.getName(), person.getStatus());
+        obj.setStringValue(CourseParticipantClass.FIELD_PAYED.getName(), PaymentStatus.unpayed.name());
+        obj.setIntValue(CourseParticipantClass.FIELD_PAYED_AMOUNT.getName(), data.getPrice());
+        obj.setLargeStringValue(CourseParticipantClass.FIELD_COMMENT.getName(), data.getComment());
         // using set since there is no setPassword method
-        obj.set("validkey", data.getValidationKey(), getContext());
-        obj.setDateValue("timestamp", new Date());
-        obj.setStringValue("client", getClientInfo());
+        obj.set(CourseParticipantClass.FIELD_VALIDATION_KEY.getName(), data.getValidationKey(),
+            getContext());
+        obj.setDateValue(CourseParticipantClass.FIELD_TIMESTAMP.getName(), new Date());
+        obj.setStringValue(CourseParticipantClass.FIELD_CLIENT.getName(), getClientInfo());
         participantAdded = true;
       } else {
         LOGGER.info("createParticipantObjects: incomplete person '{}'", person);
