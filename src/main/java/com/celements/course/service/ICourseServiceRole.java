@@ -22,7 +22,7 @@ public interface ICourseServiceRole {
 
   String getCourseTypeName(DocumentReference courseTypeDocRef);
 
-  boolean registerParticipantFromRequest(boolean sendConfirmationMail);
+  boolean registerParticipantFromRequest(boolean sendValidationMail);
 
   @NotNull
   DocumentReference createParticipantDocRef(@NotNull DocumentReference courseDocRef);

@@ -3,13 +3,16 @@ package com.celements.course.registration;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Optional;
 
 import javax.annotation.concurrent.NotThreadSafe;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.celements.course.classes.CourseParticipantClass.ParticipantStatus;
 import com.celements.course.service.ICourseServiceRole;
+import com.google.common.base.Enums;
 import com.google.common.base.Strings;
 import com.xpn.xwiki.web.Utils;
 
@@ -123,11 +126,8 @@ public class Person {
     this.dateOfBirth = dateOfBirth;
   }
 
-  public String getStatus() {
-    if (!Strings.isNullOrEmpty(status)) {
-      return status;
-    }
-    return "unconfirmed";
+  public Optional<ParticipantStatus> getStatus() {
+    return Enums.getIfPresent(ParticipantStatus.class, status).toJavaUtil();
   }
 
   public void setStatus(String status) {
