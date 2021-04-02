@@ -571,8 +571,8 @@ public class CourseService implements ICourseServiceRole {
   @Override
   public boolean sendConfirmationMail(DocumentReference regDocRef, int participantObjNb) {
     XWikiDocument regDoc = modelAccess.getOrCreateDocument(regDocRef);
-    boolean sendSuccess = XWikiObjectFetcher.on(regDoc).filter(participantObjNb).stream().findFirst()
-        .map(this::sendConfirmationMail).orElse(false);
+    boolean sendSuccess = XWikiObjectFetcher.on(regDoc).filter(participantObjNb).stream()
+        .findFirst().map(this::sendConfirmationMail).orElse(false);
     if(sendSuccess)  {
       try {
         XWikiObjectEditor.on(regDoc).filter(participantObjNb)
