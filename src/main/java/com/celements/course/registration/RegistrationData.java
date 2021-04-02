@@ -1,12 +1,14 @@
 package com.celements.course.registration;
 
+import static com.google.common.base.Predicates.*;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 import javax.annotation.concurrent.NotThreadSafe;
 
-import org.apache.commons.lang.RandomStringUtils;
 import org.xwiki.model.reference.DocumentReference;
 
 import com.google.common.base.Strings;
@@ -79,11 +81,8 @@ public class RegistrationData {
     this.price = price;
   }
 
-  public String getValidationKey() {
-    if (Strings.isNullOrEmpty(validationKey)) {
-      validationKey = RandomStringUtils.randomAlphanumeric(24);
-    }
-    return validationKey;
+  public Optional<String> getValidationKey() {
+    return Optional.ofNullable(validationKey).filter(not(String::isEmpty));
   }
 
   public void setValidationKey(String validationKey) {
