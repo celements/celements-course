@@ -12,6 +12,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
+import javax.validation.constraints.NotNull;
+
 import org.apache.commons.lang.StringUtils;
 import org.apache.velocity.VelocityContext;
 import org.slf4j.Logger;
@@ -481,14 +483,24 @@ public class CourseService implements ICourseServiceRole {
   public boolean sendConfirmationMail(DocumentReference regDocRef, int participantObjNb) {
     boolean sendSuccess = false;
     try {
-      Optional<BaseObject> partiObj = XWikiObjectFetcher.on(modelAccess.getDocument(
-          regDocRef)).filter(participantObjNb).first().toJavaUtil();
+      @NotNull
+      XWikiDocument regDoc = modelAccess.getDocument(regDocRef);
+      Optional<BaseObject> partiObj = XWikiObjectFetcher.on(regDoc).filter(participantObjNb)
+          .stream().findFirst();
       if (partiObj.isPresent()) {
         sendSuccess = sendConfirmationMail(partiObj.get(), "");
+        if(sendSuccess)  {
+          XWikiObjectEditor.on(regDoc).filter(participantObjNb)
+              .editField(CourseParticipantClass.FIELD_STATUS).first(ParticipantStatus.confirmed);
+          modelAccess.saveDocument(regDoc, "set confirmed after confirmation mail was sent");
+        }
       }
     } catch (DocumentNotExistsException | XWikiException exp) {
       LOGGER.warn("sendConfirmationMail: failed for [{}], [{}], [{}]", regDocRef, participantObjNb,
           exp);
+    } catch (DocumentSaveException sde) {
+      LOGGER.warn("setting status to confirmed after sending confirmation failed for doc {}",
+          regDocRef);
     }
     return sendSuccess;
   }

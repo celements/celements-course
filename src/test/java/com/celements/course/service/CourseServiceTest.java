@@ -355,6 +355,37 @@ public class CourseServiceTest extends AbstractComponentTest {
     verifyDefault();
   }
 
+  @Test
+  public void test_sendConfirmationMail_failed_noemail() throws Exception {
+    XWikiDocument regDoc = expectDoc(new DocumentReference(db, "Kurse", "Kurs2"));
+    addParticipant(regDoc, null, true);
+    addParticipant(regDoc, "test@test.com", true);
+    expectDoc(courseService.getConfirmationEmailDocRef());
+
+    replayDefault();
+    assertFalse(courseService.sendConfirmationMail(regDoc.getDocumentReference(), 0));
+    verifyDefault();
+  }
+
+  @Test
+  public void test_sendConfirmationMail() throws Exception {
+    XWikiDocument regDoc = expectDoc(new DocumentReference(db, "Kurse", "Kurs2"));
+    String email = "test@test.com";
+    addParticipant(regDoc, null, true);
+    addParticipant(regDoc, email, true);
+    expectEmail(email, 1);
+    getMock(ModelAccessStrategy.class).saveDocument(same(regDoc), anyObject(String.class), eq(
+        false));
+    expectLastCall().once();
+
+    replayDefault();
+    assertTrue(courseService.sendConfirmationMail(regDoc.getDocumentReference(), 1));
+    assertEquals(ParticipantStatus.confirmed.toString(), regDoc.getXObject(getParticipantClassDef(
+        ).getClassReference().getDocRef(regDoc.getDocumentReference().getWikiReference()), 1
+        ).getStringValue(CourseParticipantClass.FIELD_STATUS.getName()));
+    verifyDefault();
+  }
+
   @SuppressWarnings("unchecked")
   private void expectEmail(String email, int count) throws Exception {
     XWikiDocument emailDoc = expectDoc(courseService.getConfirmationEmailDocRef());
