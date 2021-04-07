@@ -580,8 +580,8 @@ public class CourseService implements ICourseServiceRole {
             .editField(CourseParticipantClass.FIELD_STATUS).first(ParticipantStatus.confirmed);
         if(changed) {
           modelAccess.saveDocument(regDoc, "set confirmed after confirmation mail was sent");
+          return true;
         }
-        return true;
       }
     } catch (DocumentSaveException sde) {
       LOGGER.warn("setting status to confirmed after sending confirmation failed for doc {}",
