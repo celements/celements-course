@@ -569,21 +569,32 @@ public class CourseService implements ICourseServiceRole {
   }
 
   @Override
-  public boolean sendConfirmationMail(DocumentReference regDocRef, int participantObjNb) {
-    XWikiDocument regDoc = modelAccess.getOrCreateDocument(regDocRef);
-    boolean sendSuccess = XWikiObjectFetcher.on(regDoc).filter(participantObjNb).stream()
-        .findFirst().map(this::sendConfirmationMail).orElse(false);
-    if(sendSuccess)  {
-      try {
-        XWikiObjectEditor.on(regDoc).filter(participantObjNb)
+  public boolean setStatusConfirmedFromUnconfirmed(DocumentReference regDocRef,
+      int participantObjNb) {
+    try {
+      XWikiDocument regDoc = modelAccess.getOrCreateDocument(regDocRef);
+      if(XWikiObjectFetcher.on(regDoc).filter(participantObjNb)
+          .filter(CourseParticipantClass.FIELD_STATUS, ParticipantStatus.unconfirmed).stream()
+          .findFirst().isPresent()) {
+        boolean changed = XWikiObjectEditor.on(regDoc).filter(participantObjNb)
             .editField(CourseParticipantClass.FIELD_STATUS).first(ParticipantStatus.confirmed);
-        modelAccess.saveDocument(regDoc, "set confirmed after confirmation mail was sent");
-      } catch (DocumentSaveException sde) {
-        LOGGER.warn("setting status to confirmed after sending confirmation failed for doc {}",
-            regDocRef);
+        if(changed) {
+          modelAccess.saveDocument(regDoc, "set confirmed after confirmation mail was sent");
+        }
+        return true;
       }
+    } catch (DocumentSaveException sde) {
+      LOGGER.warn("setting status to confirmed after sending confirmation failed for doc {}",
+          regDocRef);
     }
-    return sendSuccess;
+    return false;
+  }
+
+  @Override
+  public boolean sendConfirmationMail(DocumentReference regDocRef, int participantObjNb) {
+    return XWikiObjectFetcher.on(modelAccess.getOrCreateDocument(regDocRef))
+        .filter(participantObjNb).stream().findFirst().map(this::sendConfirmationMail)
+        .orElse(false);
   }
 
   private boolean sendConfirmationMail(BaseObject partiObj) {

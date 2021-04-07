@@ -224,6 +224,14 @@ public class CourseScriptService implements ScriptService {
     return false;
   }
 
+  public boolean setStatusConfirmedFromUnconfirmed(DocumentReference regDocRef,
+      int participantObjNb) {
+    if ((regDocRef != null) && rightsService.hasAccessLevel(regDocRef, EAccessLevel.EDIT)) {
+      return courseService.setStatusConfirmedFromUnconfirmed(regDocRef, participantObjNb);
+    }
+    return false;
+  }
+
   public ParticipantStatus getCourseConfirmState(String state) {
     return ParticipantStatus.valueOf(state);
   }

@@ -368,20 +368,32 @@ public class CourseServiceTest extends AbstractComponentTest {
   }
 
   @Test
-  public void test_sendConfirmationMail() throws Exception {
+  public void test_setStatusConfirmedFromUnconfirmed() throws Exception {
     XWikiDocument regDoc = expectDoc(new DocumentReference(db, "Kurse", "Kurs2"));
-    String email = "test@test.com";
     addParticipant(regDoc, null, true);
-    addParticipant(regDoc, email, true);
-    expectEmail(email, 1);
+    addParticipant(regDoc, "test@test.com", true);
     getMock(ModelAccessStrategy.class).saveDocument(same(regDoc), anyObject(String.class), eq(
         false));
     expectLastCall().once();
 
     replayDefault();
-    assertTrue(courseService.sendConfirmationMail(regDoc.getDocumentReference(), 1));
+    assertTrue(courseService.setStatusConfirmedFromUnconfirmed(regDoc.getDocumentReference(), 1));
     assertEquals(ParticipantStatus.confirmed.toString(), regDoc.getXObject(getParticipantClassDef(
         ).getClassReference().getDocRef(regDoc.getDocumentReference().getWikiReference()), 1
+        ).getStringValue(CourseParticipantClass.FIELD_STATUS.getName()));
+    verifyDefault();
+  }
+
+  @Test
+  public void test_setStatusConfirmedFromUnconfirmed_failWrongInitialStatus() throws Exception {
+    XWikiDocument regDoc = expectDoc(new DocumentReference(db, "Kurse", "Kurs2"));
+    addParticipant(regDoc, "test@test.com", true).setStringValue(
+        CourseParticipantClass.FIELD_STATUS.getName(), ParticipantStatus.duplicate.toString());
+
+    replayDefault();
+    assertFalse(courseService.setStatusConfirmedFromUnconfirmed(regDoc.getDocumentReference(), 0));
+    assertEquals(ParticipantStatus.duplicate.toString(), regDoc.getXObject(getParticipantClassDef(
+        ).getClassReference().getDocRef(regDoc.getDocumentReference().getWikiReference()), 0
         ).getStringValue(CourseParticipantClass.FIELD_STATUS.getName()));
     verifyDefault();
   }
