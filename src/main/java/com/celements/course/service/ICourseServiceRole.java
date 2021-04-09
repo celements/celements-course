@@ -67,4 +67,6 @@ public interface ICourseServiceRole {
 
   boolean sendConfirmationMail(@NotNull DocumentReference regDocRef, int participantObjNb);
 
+  boolean setStatusConfirmedFromUnconfirmed(@NotNull DocumentReference regDocRef, int participantObjNb);
+
 }
