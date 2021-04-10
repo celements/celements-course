@@ -48,12 +48,14 @@ import com.celements.model.access.exception.DocumentLoadException;
 import com.celements.model.access.exception.DocumentNotExistsException;
 import com.celements.model.classes.ClassDefinition;
 import com.celements.model.classes.fields.ClassField;
+import com.celements.model.object.xwiki.XWikiObjectFetcher;
 import com.celements.model.util.ModelUtils;
 import com.celements.nextfreedoc.INextFreeDocRole;
 import com.celements.rendering.RenderCommand;
 import com.celements.search.lucene.query.LuceneDocType;
 import com.celements.search.lucene.query.LuceneQuery;
 import com.celements.web.plugin.cmd.CelMailConfiguration;
+import com.google.common.collect.ImmutableList;
 import com.xpn.xwiki.XWiki;
 import com.xpn.xwiki.XWikiException;
 import com.xpn.xwiki.doc.XWikiDocument;
@@ -350,6 +352,50 @@ public class CourseServiceTest extends AbstractComponentTest {
     assertSame(RegistrationState.CONFIRMED, courseService.getConfirmState(
         regDoc.getDocumentReference()));
     verifyDefault();
+  }
+
+  @Test
+  public void test_sendConfirmationMail_failed_noemail() throws Exception {
+    XWikiDocument regDoc = new XWikiDocument(new DocumentReference(db, "Kurse", "Kurs2"));
+    expect(getMock(IModelAccessFacade.class).getOrCreateDocument(eq(regDoc.getDocumentReference())))
+        .andReturn(regDoc).once();
+    addParticipant(regDoc, null, true);
+    addParticipant(regDoc, "test@test.com", true);
+    expectDoc(courseService.getConfirmationEmailDocRef());
+
+    replayDefault();
+    assertFalse(courseService.sendConfirmationMail(regDoc.getDocumentReference(), 0));
+    verifyDefault();
+  }
+
+  @Test
+  public void test_setStatusConfirmedFromUnconfirmed() throws Exception {
+    XWikiDocument regDoc = new XWikiDocument(new DocumentReference(db, "Kurse", "Kurs2"));
+    expect(getMock(IModelAccessFacade.class).getOrCreateDocument(eq(regDoc.getDocumentReference())))
+        .andReturn(regDoc).once();
+    addParticipant(regDoc, null, true);
+    addParticipant(regDoc, "test@test.com", true);
+    getMock(IModelAccessFacade.class).saveDocument(same(regDoc), anyObject(String.class));
+
+    replayDefault();
+    assertTrue(courseService.setStatusConfirmedFromUnconfirmed(regDoc.getDocumentReference(), 1));
+    verifyDefault();
+    assertEquals(ImmutableList.of(ParticipantStatus.unconfirmed, ParticipantStatus.confirmed),
+        XWikiObjectFetcher.on(regDoc).fetchField(CourseParticipantClass.FIELD_STATUS).list());
+  }
+
+  @Test
+  public void test_setStatusConfirmedFromUnconfirmed_failWrongInitialStatus() throws Exception {
+    XWikiDocument regDoc = new XWikiDocument(new DocumentReference(db, "Kurse", "Kurs2"));
+    expect(getMock(IModelAccessFacade.class).getOrCreateDocument(eq(regDoc.getDocumentReference())))
+        .andReturn(regDoc).once();
+    addParticipant(regDoc, "test@test.com", true).setStringValue(
+        CourseParticipantClass.FIELD_STATUS.getName(), ParticipantStatus.duplicate.toString());
+    replayDefault();
+    assertFalse(courseService.setStatusConfirmedFromUnconfirmed(regDoc.getDocumentReference(), 0));
+    verifyDefault();
+    assertEquals(ParticipantStatus.duplicate, XWikiObjectFetcher.on(regDoc)
+        .fetchField(CourseParticipantClass.FIELD_STATUS).stream().findFirst().orElse(null));
   }
 
   @SuppressWarnings("unchecked")
