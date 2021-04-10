@@ -339,11 +339,9 @@ public class CourseService implements ICourseServiceRole {
 
   private boolean validateParticipant(XWikiDocument regDoc, String emailAdr, String activationCode)
       throws DocumentSaveException, DocumentNotExistsException, XWikiException {
-    List<BaseObject> editablePartiObjs = Stream.concat(XWikiObjectEditor.on(regDoc).filter(
-        FIELD_EMAIL, emailAdr).fetch().stream(), XWikiObjectEditor.on(regDoc)
-            .filterAbsent(
-                FIELD_EMAIL)
-            .fetch().stream())
+    List<BaseObject> editablePartiObjs = Stream.concat(
+        XWikiObjectEditor.on(regDoc).filter(FIELD_EMAIL, emailAdr).fetch().stream(),
+        XWikiObjectEditor.on(regDoc).filterAbsent(FIELD_EMAIL).fetch().stream())
         .collect(toList());
     boolean isValidated = validateOrRemoveParticipants(editablePartiObjs, activationCode);
     if (!editablePartiObjs.isEmpty()) {
