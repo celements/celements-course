@@ -19,8 +19,11 @@
  */
 package com.celements.course;
 
+import static com.celements.rights.access.EAccessLevel.*;
+
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import javax.annotation.Nullable;
 import javax.validation.constraints.NotNull;
@@ -31,11 +34,13 @@ import org.xwiki.component.annotation.Component;
 import org.xwiki.component.annotation.Requirement;
 import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.model.reference.EntityReferenceResolver;
+import org.xwiki.model.reference.ImmutableObjectReference;
 import org.xwiki.model.reference.SpaceReference;
 import org.xwiki.script.service.ScriptService;
 
 import com.celements.common.classes.IClassCollectionRole;
 import com.celements.course.classcollections.CourseClasses;
+import com.celements.course.classes.CourseParticipantClass;
 import com.celements.course.classes.CourseParticipantClass.ParticipantStatus;
 import com.celements.course.service.ICourseServiceRole;
 import com.celements.course.service.RegistrationState;
@@ -47,6 +52,7 @@ import com.celements.rights.access.IRightsAccessFacadeRole;
 import com.celements.search.lucene.LuceneSearchException;
 import com.google.common.base.Optional;
 import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableList;
 
 @Component("celcourse")
 public class CourseScriptService implements ScriptService {
@@ -218,8 +224,33 @@ public class CourseScriptService implements ScriptService {
     return false;
   }
 
+  public boolean setStatusConfirmedFromUnconfirmed(DocumentReference regDocRef,
+      int participantObjNb) {
+    if ((regDocRef != null) && rightsService.hasAccessLevel(regDocRef, EAccessLevel.EDIT)) {
+      return courseService.setStatusConfirmedFromUnconfirmed(regDocRef, participantObjNb);
+    }
+    return false;
+  }
+
   public ParticipantStatus getCourseConfirmState(String state) {
     return ParticipantStatus.valueOf(state);
+  }
+
+  public List<ImmutableObjectReference> copyParticipants(DocumentReference targetCourseDocRef,
+      List<ImmutableObjectReference> objRefs) {
+    if (rightsService.hasAccessLevel(targetCourseDocRef, EDIT) && (objRefs != null)) {
+      return courseService.copyParticipants(targetCourseDocRef, objRefs.stream()
+          .filter(Objects::nonNull)
+          .filter(objRef -> rightsService.hasAccessLevel(objRef.getDocumentReference(), VIEW)));
+    }
+    return ImmutableList.of();
+  }
+
+  public ImmutableObjectReference createParticipantObjRef(DocumentReference docRef, int objNb) {
+    if ((docRef != null) && (objNb >= 0)) {
+      return new ImmutableObjectReference(docRef, CourseParticipantClass.CLASS_REF, objNb);
+    }
+    return null;
   }
 
 }
