@@ -38,19 +38,24 @@ import org.xwiki.model.reference.WikiReference;
 
 import com.celements.common.test.AbstractComponentTest;
 import com.celements.configuration.CelementsFromWikiConfigurationSource;
+import com.celements.course.classes.CourseClass;
 import com.celements.course.classes.CourseParticipantClass;
 import com.celements.course.classes.CourseParticipantClass.ParticipantStatus;
+import com.celements.course.classes.CourseTypeClass;
 import com.celements.mailsender.IMailSenderRole;
-import com.celements.model.access.ModelAccessStrategy;
+import com.celements.model.access.IModelAccessFacade;
 import com.celements.model.access.exception.DocumentLoadException;
+import com.celements.model.access.exception.DocumentNotExistsException;
 import com.celements.model.classes.ClassDefinition;
 import com.celements.model.classes.fields.ClassField;
+import com.celements.model.object.xwiki.XWikiObjectFetcher;
 import com.celements.model.util.ModelUtils;
 import com.celements.nextfreedoc.INextFreeDocRole;
 import com.celements.rendering.RenderCommand;
 import com.celements.search.lucene.query.LuceneDocType;
 import com.celements.search.lucene.query.LuceneQuery;
 import com.celements.web.plugin.cmd.CelMailConfiguration;
+import com.google.common.collect.ImmutableList;
 import com.xpn.xwiki.XWiki;
 import com.xpn.xwiki.XWikiException;
 import com.xpn.xwiki.doc.XWikiDocument;
@@ -78,8 +83,7 @@ public class CourseServiceTest extends AbstractComponentTest {
     registerComponentMock(ConfigurationSource.class, "all", getConfigurationSource());
     registerComponentMock(ConfigurationSource.class, CelementsFromWikiConfigurationSource.NAME,
         getConfigurationSource());
-    registerComponentMocks(INextFreeDocRole.class, ModelAccessStrategy.class,
-        IMailSenderRole.class);
+    registerComponentMocks(INextFreeDocRole.class, IModelAccessFacade.class, IMailSenderRole.class);
     getContext().put("vcontext", new VelocityContext());
     courseService = (CourseService) Utils.getComponent(ICourseServiceRole.class);
     courseService.injected_RenderCommand = createMockAndAddToDefault(RenderCommand.class);
@@ -101,7 +105,7 @@ public class CourseServiceTest extends AbstractComponentTest {
     DocumentReference typeDocRef = new DocumentReference(db, "TypeSpace", "TypeX");
     expectDoc(false);
     BaseObject obj = new BaseObject();
-    obj.setXClassReference(courseService.getCourseClasses().getCourseClassRef(db));
+    obj.setXClassReference(CourseClass.CLASS_REF);
     obj.setStringValue("type", getModelUtils().serializeRef(typeDocRef));
     doc.addXObject(obj);
 
@@ -115,7 +119,7 @@ public class CourseServiceTest extends AbstractComponentTest {
   public void testGetCourseTypeForCourse_noType() throws Exception {
     expectDoc(false);
     BaseObject obj = new BaseObject();
-    obj.setXClassReference(courseService.getCourseClasses().getCourseClassRef(db));
+    obj.setXClassReference(CourseClass.CLASS_REF);
     doc.addXObject(obj);
 
     replayDefault();
@@ -151,7 +155,7 @@ public class CourseServiceTest extends AbstractComponentTest {
     String name = "asdf";
     expectDoc(false);
     BaseObject typeObj = new BaseObject();
-    typeObj.setXClassReference(courseService.getCourseClasses().getCourseTypeClassRef(db));
+    typeObj.setXClassReference(CourseTypeClass.CLASS_REF);
     typeObj.setStringValue("typeName", name);
     doc.addXObject(typeObj);
 
@@ -165,7 +169,7 @@ public class CourseServiceTest extends AbstractComponentTest {
   public void testGetCourseTypeName_noName() throws Exception {
     expectDoc(false);
     BaseObject typeObj = new BaseObject();
-    typeObj.setXClassReference(courseService.getCourseClasses().getCourseTypeClassRef(db));
+    typeObj.setXClassReference(CourseTypeClass.CLASS_REF);
     doc.addXObject(typeObj);
 
     replayDefault();
@@ -190,8 +194,7 @@ public class CourseServiceTest extends AbstractComponentTest {
     try {
       courseService.getCourseTypeName(docRef);
       fail("expecting XWE");
-    } catch (DocumentLoadException exc) {
-    }
+    } catch (DocumentLoadException exc) {}
     verifyDefault();
   }
 
@@ -285,8 +288,7 @@ public class CourseServiceTest extends AbstractComponentTest {
     XWikiDocument regDoc = expectDoc(new DocumentReference(db, "Kurse", "Kurs2"));
     String email = "test@test.com";
     addParticipant(regDoc, email, true);
-    getMock(ModelAccessStrategy.class).saveDocument(same(regDoc), anyObject(String.class), eq(
-        false));
+    getMock(IModelAccessFacade.class).saveDocument(same(regDoc), anyObject(String.class));
     expectLastCall().once();
     expectEmail(email, 1);
 
@@ -304,8 +306,7 @@ public class CourseServiceTest extends AbstractComponentTest {
     String email = "test@test.com";
     addParticipant(regDoc, email, true);
     addParticipant(regDoc, email, true);
-    getMock(ModelAccessStrategy.class).saveDocument(same(regDoc), anyObject(String.class), eq(
-        false));
+    getMock(IModelAccessFacade.class).saveDocument(same(regDoc), anyObject(String.class));
     expectLastCall().once();
     expectEmail(email, 2);
 
@@ -323,8 +324,7 @@ public class CourseServiceTest extends AbstractComponentTest {
     String email = "test@test.com";
     addParticipant(regDoc, email, true);
     addParticipant(regDoc, "test2@test.com", true);
-    getMock(ModelAccessStrategy.class).saveDocument(same(regDoc), anyObject(String.class), eq(
-        false));
+    getMock(IModelAccessFacade.class).saveDocument(same(regDoc), anyObject(String.class));
     expectLastCall().once();
     expectEmail(email, 1);
 
@@ -342,8 +342,7 @@ public class CourseServiceTest extends AbstractComponentTest {
     String email = "test@test.com";
     addParticipant(regDoc, email, true);
     addParticipant(regDoc, null, true);
-    getMock(ModelAccessStrategy.class).saveDocument(same(regDoc), anyObject(String.class), eq(
-        false));
+    getMock(IModelAccessFacade.class).saveDocument(same(regDoc), anyObject(String.class));
     expectLastCall().once();
     expectEmail(email, 2);
 
@@ -357,7 +356,9 @@ public class CourseServiceTest extends AbstractComponentTest {
 
   @Test
   public void test_sendConfirmationMail_failed_noemail() throws Exception {
-    XWikiDocument regDoc = expectDoc(new DocumentReference(db, "Kurse", "Kurs2"));
+    XWikiDocument regDoc = new XWikiDocument(new DocumentReference(db, "Kurse", "Kurs2"));
+    expect(getMock(IModelAccessFacade.class).getOrCreateDocument(eq(regDoc.getDocumentReference())))
+        .andReturn(regDoc).once();
     addParticipant(regDoc, null, true);
     addParticipant(regDoc, "test@test.com", true);
     expectDoc(courseService.getConfirmationEmailDocRef());
@@ -369,33 +370,32 @@ public class CourseServiceTest extends AbstractComponentTest {
 
   @Test
   public void test_setStatusConfirmedFromUnconfirmed() throws Exception {
-    XWikiDocument regDoc = expectDoc(new DocumentReference(db, "Kurse", "Kurs2"));
+    XWikiDocument regDoc = new XWikiDocument(new DocumentReference(db, "Kurse", "Kurs2"));
+    expect(getMock(IModelAccessFacade.class).getOrCreateDocument(eq(regDoc.getDocumentReference())))
+        .andReturn(regDoc).once();
     addParticipant(regDoc, null, true);
     addParticipant(regDoc, "test@test.com", true);
-    getMock(ModelAccessStrategy.class).saveDocument(same(regDoc), anyObject(String.class), eq(
-        false));
-    expectLastCall().once();
+    getMock(IModelAccessFacade.class).saveDocument(same(regDoc), anyObject(String.class));
 
     replayDefault();
     assertTrue(courseService.setStatusConfirmedFromUnconfirmed(regDoc.getDocumentReference(), 1));
-    assertEquals(ParticipantStatus.confirmed.toString(), regDoc.getXObject(getParticipantClassDef(
-        ).getClassReference().getDocRef(regDoc.getDocumentReference().getWikiReference()), 1
-        ).getStringValue(CourseParticipantClass.FIELD_STATUS.getName()));
     verifyDefault();
+    assertEquals(ImmutableList.of(ParticipantStatus.unconfirmed, ParticipantStatus.confirmed),
+        XWikiObjectFetcher.on(regDoc).fetchField(CourseParticipantClass.FIELD_STATUS).list());
   }
 
   @Test
   public void test_setStatusConfirmedFromUnconfirmed_failWrongInitialStatus() throws Exception {
-    XWikiDocument regDoc = expectDoc(new DocumentReference(db, "Kurse", "Kurs2"));
+    XWikiDocument regDoc = new XWikiDocument(new DocumentReference(db, "Kurse", "Kurs2"));
+    expect(getMock(IModelAccessFacade.class).getOrCreateDocument(eq(regDoc.getDocumentReference())))
+        .andReturn(regDoc).once();
     addParticipant(regDoc, "test@test.com", true).setStringValue(
         CourseParticipantClass.FIELD_STATUS.getName(), ParticipantStatus.duplicate.toString());
-
     replayDefault();
     assertFalse(courseService.setStatusConfirmedFromUnconfirmed(regDoc.getDocumentReference(), 0));
-    assertEquals(ParticipantStatus.duplicate.toString(), regDoc.getXObject(getParticipantClassDef(
-        ).getClassReference().getDocRef(regDoc.getDocumentReference().getWikiReference()), 0
-        ).getStringValue(CourseParticipantClass.FIELD_STATUS.getName()));
     verifyDefault();
+    assertEquals(ParticipantStatus.duplicate, XWikiObjectFetcher.on(regDoc)
+        .fetchField(CourseParticipantClass.FIELD_STATUS).stream().findFirst().orElse(null));
   }
 
   @SuppressWarnings("unchecked")
@@ -410,10 +410,12 @@ public class CourseServiceTest extends AbstractComponentTest {
         "view"))).andReturn(content).times(count);
     expect(getMock(IMailSenderRole.class).sendMail(eq(sender), isNull(String.class), eq(email),
         isNull(String.class), isNull(String.class), eq(""), eq(content), eq(content), isNull(
-            List.class), isNull(Map.class))).andReturn(0).times(count);
+            List.class),
+        isNull(Map.class))).andReturn(0).times(count);
     expect(getMock(IMailSenderRole.class).sendMail(eq(sender), isNull(String.class), eq(sender),
         isNull(String.class), isNull(String.class), eq(""), eq(content), eq(content), isNull(
-            List.class), isNull(Map.class))).andReturn(0).times(count);
+            List.class),
+        isNull(Map.class))).andReturn(0).times(count);
   }
 
   @Test
@@ -775,7 +777,7 @@ public class CourseServiceTest extends AbstractComponentTest {
   private BaseObject addParticipant(XWikiDocument regDoc, ParticipantStatus state, String email,
       boolean valid) {
     BaseObject partiObj = new BaseObject();
-    partiObj.setXClassReference(getParticipantClassDef().getClassReference().getDocRef(
+    partiObj.setXClassReference(CourseParticipantClass.CLASS_REF.getDocRef(
         regDoc.getDocumentReference().getWikiReference()));
     partiObj.setStringValue("status", (state != null ? state.name().toLowerCase() : null));
     partiObj.setStringValue("email", email);
@@ -786,27 +788,20 @@ public class CourseServiceTest extends AbstractComponentTest {
     return partiObj;
   }
 
-  private ClassDefinition getParticipantClassDef() {
-    return Utils.getComponent(ClassDefinition.class, CourseParticipantClass.CLASS_DEF_HINT);
-  }
-
-  private XWikiDocument expectDoc(DocumentReference docRef) throws XWikiException {
+  private XWikiDocument expectDoc(DocumentReference docRef) throws DocumentNotExistsException {
     XWikiDocument doc = new XWikiDocument(docRef);
-    expect(getMock(ModelAccessStrategy.class).exists(eq(docRef), eq(""))).andReturn(
-        true).atLeastOnce();
-    expect(getMock(ModelAccessStrategy.class).getDocument(eq(docRef), eq(""))).andReturn(
-        doc).atLeastOnce();
+    expect(getMock(IModelAccessFacade.class).getDocument(eq(docRef))).andReturn(doc)
+        .atLeastOnce();
     return doc;
   }
 
-  private void expectDoc(boolean throwExc) throws XWikiException {
-    expect(getMock(ModelAccessStrategy.class).exists(eq(docRef), eq(""))).andReturn(true).once();
+  private void expectDoc(boolean throwExc) throws DocumentNotExistsException {
     if (throwExc) {
-      expect(getMock(ModelAccessStrategy.class).getDocument(eq(docRef), eq(""))).andThrow(
-          new DocumentLoadException(docRef)).once();
+      expect(getMock(IModelAccessFacade.class).getDocument(eq(docRef)))
+          .andThrow(new DocumentLoadException(docRef)).once();
     } else {
-      expect(getMock(ModelAccessStrategy.class).getDocument(eq(docRef), eq(""))).andReturn(
-          doc).once();
+      expect(getMock(IModelAccessFacade.class).getDocument(eq(docRef)))
+          .andReturn(doc).once();
     }
   }
 

@@ -3,7 +3,6 @@ package com.celements.course.registration;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.Optional;
 
 import javax.annotation.concurrent.NotThreadSafe;
 
@@ -126,8 +125,9 @@ public class Person {
     this.dateOfBirth = dateOfBirth;
   }
 
-  public Optional<ParticipantStatus> getStatus() {
-    return Enums.getIfPresent(ParticipantStatus.class, status).toJavaUtil();
+  public ParticipantStatus getStatus() {
+    return Enums.getIfPresent(ParticipantStatus.class, status)
+        .or(ParticipantStatus.unconfirmed);
   }
 
   public void setStatus(String status) {
