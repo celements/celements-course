@@ -3,14 +3,13 @@ package com.celements.course.service;
 import static com.celements.common.lambda.LambdaExceptionUtil.*;
 import static com.celements.course.classes.CourseParticipantClass.*;
 import static com.celements.model.util.ReferenceSerializationMode.*;
+import static com.celements.rights.access.EAccessLevel.*;
 import static com.google.common.base.Predicates.*;
 import static com.google.common.collect.ImmutableList.*;
-import static com.google.common.collect.ImmutableSet.*;
 import static com.google.common.collect.Maps.*;
 import static java.util.stream.Collectors.*;
 
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
@@ -19,13 +18,11 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
 import org.apache.commons.lang.RandomStringUtils;
-import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.velocity.VelocityContext;
 import org.slf4j.Logger;
@@ -33,18 +30,16 @@ import org.slf4j.LoggerFactory;
 import org.xwiki.component.annotation.Component;
 import org.xwiki.component.annotation.Requirement;
 import org.xwiki.configuration.ConfigurationSource;
-import org.xwiki.model.reference.ClassReference;
 import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.model.reference.ImmutableObjectReference;
 import org.xwiki.model.reference.SpaceReference;
 
-import com.celements.common.classes.IClassCollectionRole;
 import com.celements.copydoc.ICopyDocumentRole;
-import com.celements.course.classcollections.CourseClasses;
 import com.celements.course.classes.CourseClass;
 import com.celements.course.classes.CourseParticipantClass;
 import com.celements.course.classes.CourseParticipantClass.ParticipantStatus;
 import com.celements.course.classes.CourseParticipantClass.PaymentStatus;
+import com.celements.course.classes.CourseTypeClass;
 import com.celements.course.registration.Person;
 import com.celements.course.registration.RegistrationData;
 import com.celements.mailsender.IMailSenderRole;
@@ -52,7 +47,6 @@ import com.celements.model.access.IModelAccessFacade;
 import com.celements.model.access.exception.DocumentAccessException;
 import com.celements.model.access.exception.DocumentNotExistsException;
 import com.celements.model.access.exception.DocumentSaveException;
-import com.celements.model.classes.ClassDefinition;
 import com.celements.model.context.ModelContext;
 import com.celements.model.field.FieldAccessor;
 import com.celements.model.field.XObjectFieldAccessor;
@@ -75,31 +69,22 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.xpn.xwiki.XWikiContext;
 import com.xpn.xwiki.XWikiException;
 import com.xpn.xwiki.doc.XWikiDocument;
 import com.xpn.xwiki.objects.BaseObject;
 import com.xpn.xwiki.objects.classes.PasswordClass;
+import com.xpn.xwiki.user.api.XWikiUser;
 import com.xpn.xwiki.web.XWikiRequest;
 
 @Component
 public class CourseService implements ICourseServiceRole {
 
-  private static Logger LOGGER = LoggerFactory.getLogger(CourseService.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger(CourseService.class);
 
   static final String CFGSRC_PARTICIPANT_DOC_NAME_PREFIX = "celements.course.participant.docNamePrefix";
 
   private static final Set<ParticipantStatus> DEFAULT_IGNORE_STATES = ImmutableSet.of(
       ParticipantStatus.cancelled, ParticipantStatus.duplicate);
-
-  @Requirement("CelCourseClasses")
-  private IClassCollectionRole courseClasses;
-
-  @Requirement(CourseParticipantClass.CLASS_DEF_HINT)
-  private ClassDefinition participantClassDef;
-
-  @Requirement(XWikiGlobalRightsClass.CLASS_DEF_HINT)
-  private ClassDefinition globalRightsClass;
 
   @Requirement
   private IModelAccessFacade modelAccess;
@@ -108,7 +93,7 @@ public class CourseService implements ICourseServiceRole {
   private FieldAccessor<BaseObject> xObjFieldAccessor;
 
   @Requirement
-  private ModelContext modelContext;
+  private ModelContext context;
 
   @Requirement
   private ModelUtils modelUtils;
@@ -128,23 +113,15 @@ public class CourseService implements ICourseServiceRole {
   @Requirement
   private ICopyDocumentRole copyDocService;
 
-  @Deprecated
-  private XWikiContext getContext() {
-    return modelContext.getXWikiContext();
-  }
-
   @Override
   public DocumentReference getCourseTypeForCourse(DocumentReference courseDocRef) {
     DocumentReference typeDocRef = null;
     try {
-      Optional<BaseObject> courseObj = XWikiObjectFetcher.on(modelAccess.getDocument(
-          courseDocRef)).filter(getCourseClassRef()).first().toJavaUtil();
-      if (courseObj.isPresent()) {
-        String typeFN = courseObj.get().getStringValue("type");
-        if (StringUtils.isNotBlank(typeFN)) {
-          typeDocRef = modelUtils.resolveRef(typeFN, DocumentReference.class, courseDocRef);
-        }
-      }
+      typeDocRef = XWikiObjectFetcher.on(modelAccess.getDocument(courseDocRef))
+          .fetchField(CourseClass.FIELD_TYPE)
+          .stream().findFirst()
+          .map(typeFN -> modelUtils.resolveRef(typeFN, DocumentReference.class, courseDocRef))
+          .orElse(null);
     } catch (DocumentNotExistsException dnee) {
       LOGGER.error("getCourseTypeForCourse: Course document {} does not exist", courseDocRef, dnee);
     }
@@ -155,11 +132,10 @@ public class CourseService implements ICourseServiceRole {
   public String getCourseTypeName(DocumentReference courseTypeDocRef) {
     String typeName = "";
     try {
-      Optional<BaseObject> typeObj = XWikiObjectFetcher.on(modelAccess.getDocument(
-          courseTypeDocRef)).filter(getCourseTypeClassRef()).first().toJavaUtil();
-      if (typeObj.isPresent()) {
-        typeName = typeObj.get().getStringValue("typeName");
-      }
+      typeName = XWikiObjectFetcher.on(modelAccess.getDocument(courseTypeDocRef))
+          .fetchField(CourseTypeClass.FIELD_NAME)
+          .stream().findFirst()
+          .orElse("");
     } catch (DocumentNotExistsException dnee) {
       LOGGER.error("getCourseTypeName: Course document {} does not exist", courseTypeDocRef, dnee);
     }
@@ -168,7 +144,7 @@ public class CourseService implements ICourseServiceRole {
 
   @Override
   public boolean registerParticipantFromRequest(boolean sendValidationMail) {
-    XWikiRequest req = getContext().getRequest();
+    XWikiRequest req = context.getRequest().get();
     LOGGER.trace("registerParticipantFromRequest: request '{}': {}", req.hashCode(), req);
     RegistrationData data = new RegistrationData();
     data.setData(req);
@@ -204,15 +180,16 @@ public class CourseService implements ICourseServiceRole {
       throws DocumentAccessException {
     modelAccess.getDocument(courseDocRef);
     XWikiDocument regDoc = modelAccess.createDocument(createParticipantDocRef(courseDocRef));
-    modelContext.getRequestParameter("template").toJavaUtil().map(template -> modelUtils.resolveRef(
-        template, DocumentReference.class)).filter(modelAccess::exists).ifPresent(rethrowConsumer(
-            templateDocRef -> {
-              try {
-                regDoc.readFromTemplate(templateDocRef, modelContext.getXWikiContext());
-              } catch (XWikiException exc) {
-                throw new DocumentAccessException(templateDocRef, exc);
-              }
-            }));
+    context.getRequestParameter("template").toJavaUtil()
+        .map(template -> modelUtils.resolveRef(template, DocumentReference.class))
+        .filter(modelAccess::exists)
+        .ifPresent(rethrowConsumer(templateDocRef -> {
+          try {
+            regDoc.readFromTemplate(templateDocRef, context.getXWikiContext());
+          } catch (XWikiException exc) {
+            throw new DocumentAccessException(templateDocRef, exc);
+          }
+        }));
     return regDoc;
   }
 
@@ -240,12 +217,13 @@ public class CourseService implements ICourseServiceRole {
     }
   }
 
-  void addAccessRightsEdit(XWikiDocument webPrefDoc, String groupName) {
-    BaseObject rightsObj = XWikiObjectEditor.on(webPrefDoc).filter(globalRightsClass).createFirst();
-    modelAccess.setProperty(rightsObj, "groups", groupName);
-    modelAccess.setProperty(rightsObj, "levels", "view,edit,delete,undelete");
-    modelAccess.setProperty(rightsObj, "users", "");
-    modelAccess.setProperty(rightsObj, "allow", 1);
+  BaseObject addAccessRightsEdit(XWikiDocument webPrefDoc, String groupName) {
+    return XWikiObjectEditor.on(webPrefDoc)
+        .filter(XWikiGlobalRightsClass.FIELD_GROUPS, ImmutableList.of(groupName))
+        .filter(XWikiGlobalRightsClass.FIELD_LEVELS, ImmutableList.of(VIEW, EDIT, DELETE, UNDELETE))
+        .filter(XWikiGlobalRightsClass.FIELD_USERS, ImmutableList.<XWikiUser>of())
+        .filter(XWikiGlobalRightsClass.FIELD_ALLOW, true)
+        .createFirst();
   }
 
   private boolean createParticipantObjects(XWikiDocument regDoc, RegistrationData data) {
@@ -254,28 +232,28 @@ public class CourseService implements ICourseServiceRole {
     for (int nb = 0; nb < persons.size(); nb++) {
       Person person = persons.get(nb);
       if (!person.isEmpty()) {
-        BaseObject obj = XWikiObjectEditor.on(regDoc).filter(participantClassDef).filter(
-            nb).createFirstIfNotExists();
-        xObjFieldAccessor.setValue(obj, FIELD_COURSE_ID, data.getEventid());
-        xObjFieldAccessor.setValue(obj, FIELD_TITLE, person.getTitle());
-        xObjFieldAccessor.setValue(obj, FIELD_FIRST_NAME, person.getGivenName());
-        xObjFieldAccessor.setValue(obj, FIELD_LAST_NAME, person.getSurname());
-        xObjFieldAccessor.setValue(obj, FIELD_ADDRESS, person.getAddress());
-        xObjFieldAccessor.setValue(obj, FIELD_ZIP, person.getZip());
-        xObjFieldAccessor.setValue(obj, FIELD_CITY, person.getCity());
-        xObjFieldAccessor.setValue(obj, FIELD_PHONE, person.getPhone());
-        xObjFieldAccessor.setValue(obj, FIELD_EMAIL, person.getEmail());
-        xObjFieldAccessor.setValue(obj, FIELD_DOB, person.getDateOfBirth());
-        xObjFieldAccessor.setValue(obj, FIELD_STATUS, person.getStatus().orElse(
-            ParticipantStatus.unconfirmed));
-        xObjFieldAccessor.setValue(obj, FIELD_PAYED, PaymentStatus.unpayed);
-        xObjFieldAccessor.setValue(obj, FIELD_PAYED_AMOUNT, data.getPrice());
-        xObjFieldAccessor.setValue(obj, FIELD_COMMENT, data.getComment());
+        BaseObject obj = XWikiObjectEditor.on(regDoc)
+            .filter(CourseParticipantClass.CLASS_REF).filter(nb)
+            .createFirstIfNotExists();
+        xObjFieldAccessor.set(obj, FIELD_COURSE_ID, data.getEventid());
+        xObjFieldAccessor.set(obj, FIELD_TITLE, person.getTitle());
+        xObjFieldAccessor.set(obj, FIELD_FIRST_NAME, person.getGivenName());
+        xObjFieldAccessor.set(obj, FIELD_LAST_NAME, person.getSurname());
+        xObjFieldAccessor.set(obj, FIELD_ADDRESS, person.getAddress());
+        xObjFieldAccessor.set(obj, FIELD_ZIP, person.getZip());
+        xObjFieldAccessor.set(obj, FIELD_CITY, person.getCity());
+        xObjFieldAccessor.set(obj, FIELD_PHONE, person.getPhone());
+        xObjFieldAccessor.set(obj, FIELD_EMAIL, person.getEmail());
+        xObjFieldAccessor.set(obj, FIELD_DOB, person.getDateOfBirth());
+        xObjFieldAccessor.set(obj, FIELD_STATUS, person.getStatus());
+        xObjFieldAccessor.set(obj, FIELD_PAYED, PaymentStatus.unpayed);
+        xObjFieldAccessor.set(obj, FIELD_PAYED_AMOUNT, data.getPrice());
+        xObjFieldAccessor.set(obj, FIELD_COMMENT, data.getComment());
         // using set since there is no setPassword method
-        xObjFieldAccessor.setValue(obj, FIELD_VALIDATION_KEY, data.getValidationKey().orElseGet(
-            this::generateNewValidationKey));
-        xObjFieldAccessor.setValue(obj, FIELD_TIMESTAMP, new Date());
-        xObjFieldAccessor.setValue(obj, FIELD_CLIENT, getClientInfo());
+        xObjFieldAccessor.set(obj, FIELD_VALIDATION_KEY, data.getValidationKey()
+            .orElseGet(this::generateNewValidationKey));
+        xObjFieldAccessor.set(obj, FIELD_TIMESTAMP, new Date());
+        xObjFieldAccessor.set(obj, FIELD_CLIENT, getClientInfo());
         participantAdded = true;
       } else {
         LOGGER.info("createParticipantObjects: incomplete person '{}'", person);
@@ -293,7 +271,7 @@ public class CourseService implements ICourseServiceRole {
     HashSet<String> sentEmails = new HashSet<>();
     getVeloContext().put("registrationData", data);
     XWikiDocument emailContentDoc = modelAccess.getDocument(new DocumentReference(
-        modelContext.getWikiRef().getName(), "MailContent", "NeueAnmeldung"));
+        context.getWikiRef().getName(), "MailContent", "NeueAnmeldung"));
     for (Person person : data.getPersons()) {
       if (!person.isEmpty() && sentEmails.add(person.getEmail())) {
         sendMail(null, person, emailContentDoc, false);
@@ -310,7 +288,8 @@ public class CourseService implements ICourseServiceRole {
     StringBuilder clientInfo = new StringBuilder();
     clientInfo.append(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date()));
     clientInfo.append(" @ ");
-    clientInfo.append(getContext().getRequest().getHttpServletRequest().getHeader("user-agent"));
+    clientInfo.append(context.getRequest().get().getHttpServletRequest()
+        .getHeader("user-agent"));
     return clientInfo.toString();
   }
 
@@ -360,9 +339,10 @@ public class CourseService implements ICourseServiceRole {
 
   private boolean validateParticipant(XWikiDocument regDoc, String emailAdr, String activationCode)
       throws DocumentSaveException, DocumentNotExistsException, XWikiException {
-    List<BaseObject> editablePartiObjs = Stream.concat(XWikiObjectEditor.on(regDoc).filter(
-        FIELD_EMAIL, emailAdr).fetch().stream(), XWikiObjectEditor.on(regDoc).filterAbsent(
-            FIELD_EMAIL).fetch().stream()).collect(toList());
+    List<BaseObject> editablePartiObjs = Stream.concat(
+        XWikiObjectEditor.on(regDoc).filter(FIELD_EMAIL, emailAdr).fetch().stream(),
+        XWikiObjectEditor.on(regDoc).filterAbsent(FIELD_EMAIL).fetch().stream())
+        .collect(toList());
     boolean isValidated = validateOrRemoveParticipants(editablePartiObjs, activationCode);
     if (!editablePartiObjs.isEmpty()) {
       modelAccess.saveDocument(regDoc, "email address validated by link");
@@ -395,9 +375,9 @@ public class CourseService implements ICourseServiceRole {
     RegistrationState regState = null;
     try {
       XWikiDocument regDoc = modelAccess.getDocument(regDocRef);
-      XWikiObjectFetcher fetcher = XWikiObjectFetcher.on(regDoc).filter(participantClassDef);
-      Set<ParticipantStatus> status = fetcher.fetchField(FIELD_STATUS).stream().collect(
-          toImmutableSet());
+      Set<ParticipantStatus> status = XWikiObjectFetcher.on(regDoc)
+          .fetchField(CourseParticipantClass.FIELD_STATUS)
+          .set();
       if (status.contains(ParticipantStatus.confirmed)) {
         if (!status.contains(ParticipantStatus.unconfirmed)) {
           regState = RegistrationState.CONFIRMED;
@@ -422,8 +402,7 @@ public class CourseService implements ICourseServiceRole {
       List<String> sortFields) throws LuceneSearchException {
     LuceneQuery query = searchService.createQuery();
     query.add(searchService.createSpaceRestriction(regSpaceRef));
-    query.add(searchService.createObjectRestriction(
-        participantClassDef.getClassReference().getDocRef()));
+    query.add(searchService.createObjectRestriction(CourseParticipantClass.CLASS_REF));
     LuceneSearchResult result = searchService.search(query, sortFields, null);
     return result.getResults(DocumentReference.class);
   }
@@ -461,8 +440,9 @@ public class CourseService implements ICourseServiceRole {
       try {
         List<ParticipantStatus> values;
         if (state == null) {
-          values = new ArrayList<>(Arrays.asList(ParticipantStatus.values()));
-          values.removeAll(ignoreParticipantStates);
+          values = Stream.of(ParticipantStatus.values())
+              .filter(not(ignoreParticipantStates::contains))
+              .collect(ImmutableList.toImmutableList());
         } else {
           values = ImmutableList.of(state);
         }
@@ -479,9 +459,10 @@ public class CourseService implements ICourseServiceRole {
     String hashedCode = passwordHashString(activationCode);
     String savedHash = partiObj.getStringValue("validkey");
     if (hashedCode.equals(savedHash)) {
-      xObjFieldAccessor.getValue(partiObj, FIELD_STATUS).toJavaUtil().filter(not(
-          DEFAULT_IGNORE_STATES::contains)).ifPresent(state -> xObjFieldAccessor.setValue(partiObj,
-              FIELD_STATUS, ParticipantStatus.confirmed));
+      xObjFieldAccessor.get(partiObj, FIELD_STATUS)
+          .filter(not(DEFAULT_IGNORE_STATES::contains))
+          .ifPresent(state -> xObjFieldAccessor.set(partiObj, FIELD_STATUS,
+              ParticipantStatus.confirmed));
       return true;
     }
     return false;
@@ -489,10 +470,10 @@ public class CourseService implements ICourseServiceRole {
 
   private boolean isParticipantInState(XWikiDocument regDoc, String emailAdr,
       ParticipantStatus state) {
-    XWikiObjectFetcher fetcher = XWikiObjectFetcher.on(regDoc).filter(participantClassDef);
-    fetcher.filter(FIELD_EMAIL, emailAdr);
-    fetcher.filter(FIELD_STATUS, Arrays.asList(state));
-    return fetcher.exists();
+    return XWikiObjectFetcher.on(regDoc)
+        .filter(FIELD_EMAIL, emailAdr)
+        .filter(FIELD_STATUS, Arrays.asList(state))
+        .exists();
   }
 
   @Override
@@ -515,8 +496,10 @@ public class CourseService implements ICourseServiceRole {
   private List<BaseObject> fetchParticipantObjs(DocumentReference participantDocRef,
       Set<Integer> objNbs) {
     XWikiDocument participantDoc = modelAccess.getOrCreateDocument(participantDocRef);
-    return objNbs.stream().sorted().flatMap(nb -> XWikiObjectFetcher.on(participantDoc).filter(
-        participantClassDef).filter(nb).stream()).collect(toImmutableList());
+    return objNbs.stream().sorted()
+        .flatMap(nb -> XWikiObjectFetcher.on(participantDoc)
+            .filter(CourseParticipantClass.CLASS_REF).filter(nb).stream())
+        .collect(toImmutableList());
   }
 
   private Stream<BaseObject> copyParticipantObjs(DocumentReference courseDocRef,
@@ -524,12 +507,15 @@ public class CourseService implements ICourseServiceRole {
     if (!participantObjsToCopy.isEmpty() && modelAccess.exists(courseDocRef)) {
       try {
         XWikiDocument regDoc = createRegistrationDoc(courseDocRef);
-        List<BaseObject> copied = participantObjsToCopy.stream().map(obj -> Pair.of(obj,
-            XWikiObjectEditor.on(regDoc).filter(participantClassDef).filter(
-                obj.getNumber()).createFirstIfNotExists())).filter(
-                    pair -> copyDocService.copyObject(pair.getLeft(), pair.getRight())).map(
-                        Pair::getRight).map(restoreParticipantObj(courseDocRef)).collect(
-                            toImmutableList());
+        List<BaseObject> copied = participantObjsToCopy.stream()
+            .map(obj -> Pair.of(obj, XWikiObjectEditor.on(regDoc)
+                .filter(CourseParticipantClass.CLASS_REF)
+                .filter(obj.getNumber())
+                .createFirstIfNotExists()))
+            .filter(pair -> copyDocService.copyObject(pair.getLeft(), pair.getRight()))
+            .map(Pair::getRight)
+            .map(restoreParticipantObj(courseDocRef))
+            .collect(toImmutableList());
         if (!copied.isEmpty()) {
           modelAccess.saveDocument(regDoc);
           LOGGER.info("copyParticipantObjs - created registration [{}] from [{}]",
@@ -547,16 +533,16 @@ public class CourseService implements ICourseServiceRole {
       throws DocumentNotExistsException {
     XWikiDocument courseDoc = modelAccess.getDocument(courseDocRef);
     return participantObj -> {
-      xObjFieldAccessor.setValue(participantObj, FIELD_COURSE_ID, modelUtils.serializeRef(
-          courseDocRef, COMPACT_WIKI));
-      xObjFieldAccessor.setValue(participantObj, FIELD_TIMESTAMP, new Date());
-      xObjFieldAccessor.setValue(participantObj, FIELD_STATUS, ParticipantStatus.confirmed);
-      xObjFieldAccessor.setValue(participantObj, FIELD_PAYED, PaymentStatus.unpayed);
-      xObjFieldAccessor.setValue(participantObj, FIELD_PARTIAL_PAYED_REASON, null);
-      xObjFieldAccessor.setValue(participantObj, FIELD_PAYED_DATE, null);
-      xObjFieldAccessor.setValue(participantObj, FIELD_PAYED_AMOUNT, XWikiObjectFetcher.on(
-          courseDoc).fetchField(CourseClass.FIELD_PRICE).stream().findFirst().orElse(0));
-      xObjFieldAccessor.setValue(participantObj, FIELD_VALIDATION_KEY, generateNewValidationKey());
+      xObjFieldAccessor.set(participantObj, FIELD_COURSE_ID,
+          modelUtils.serializeRef(courseDocRef, COMPACT_WIKI));
+      xObjFieldAccessor.set(participantObj, FIELD_TIMESTAMP, new Date());
+      xObjFieldAccessor.set(participantObj, FIELD_STATUS, ParticipantStatus.confirmed);
+      xObjFieldAccessor.set(participantObj, FIELD_PAYED, PaymentStatus.unpayed);
+      xObjFieldAccessor.set(participantObj, FIELD_PARTIAL_PAYED_REASON, null);
+      xObjFieldAccessor.set(participantObj, FIELD_PAYED_DATE, null);
+      xObjFieldAccessor.set(participantObj, FIELD_PAYED_AMOUNT, XWikiObjectFetcher
+          .on(courseDoc).fetchField(CourseClass.FIELD_PRICE).stream().findFirst().orElse(0));
+      xObjFieldAccessor.set(participantObj, FIELD_VALIDATION_KEY, generateNewValidationKey());
       return participantObj;
     };
   }
@@ -567,8 +553,7 @@ public class CourseService implements ICourseServiceRole {
     try {
       XWikiDocument regDoc = modelAccess.getOrCreateDocument(regDocRef);
       if (XWikiObjectFetcher.on(regDoc).filter(participantObjNb).filter(
-          CourseParticipantClass.FIELD_STATUS,
-          ParticipantStatus.unconfirmed).stream().findFirst().isPresent()) {
+          CourseParticipantClass.FIELD_STATUS, ParticipantStatus.unconfirmed).exists()) {
         boolean changed = XWikiObjectEditor.on(regDoc).filter(participantObjNb).editField(
             CourseParticipantClass.FIELD_STATUS).first(ParticipantStatus.confirmed);
         if (changed) {
@@ -585,8 +570,12 @@ public class CourseService implements ICourseServiceRole {
 
   @Override
   public boolean sendConfirmationMail(DocumentReference regDocRef, int participantObjNb) {
-    return XWikiObjectFetcher.on(modelAccess.getOrCreateDocument(regDocRef)).filter(
-        participantObjNb).stream().findFirst().map(this::sendConfirmationMail).orElse(false);
+    return XWikiObjectFetcher.on(modelAccess.getOrCreateDocument(regDocRef))
+        .filter(CourseParticipantClass.CLASS_REF)
+        .filter(participantObjNb)
+        .stream().findFirst()
+        .map(this::sendConfirmationMail)
+        .orElse(false);
   }
 
   private boolean sendConfirmationMail(BaseObject partiObj) {
@@ -609,7 +598,7 @@ public class CourseService implements ICourseServiceRole {
   }
 
   DocumentReference getConfirmationEmailDocRef() {
-    return new DocumentReference(modelContext.getWikiRef().getName(), "MailContent",
+    return new DocumentReference(context.getWikiRef().getName(), "MailContent",
         "AnmeldungBestaetigt");
   }
 
@@ -622,7 +611,7 @@ public class CourseService implements ICourseServiceRole {
     person.setZip(bObj.getStringValue("zip"));
     person.setCity(bObj.getStringValue("city"));
     person.setPhone(bObj.getStringValue("phone"));
-    person.setEmail(modelAccess.getFieldValue(bObj, FIELD_EMAIL).or(fallbackEmail));
+    person.setEmail(xObjFieldAccessor.get(bObj, FIELD_EMAIL).orElse(fallbackEmail));
     person.setDateOfBirth(bObj.getDateValue("dob"));
     person.setStatus(bObj.getStringValue("status"));
     return person;
@@ -662,21 +651,7 @@ public class CourseService implements ICourseServiceRole {
   }
 
   private VelocityContext getVeloContext() {
-    return (VelocityContext) getContext().get("vcontext");
-  }
-
-  private ClassReference getCourseTypeClassRef() {
-    return new ClassReference(getCourseClasses().getCourseTypeClassRef(
-        modelContext.getWikiRef().getName()));
-  }
-
-  private ClassReference getCourseClassRef() {
-    return new ClassReference(getCourseClasses().getCourseClassRef(
-        modelContext.getWikiRef().getName()));
-  }
-
-  CourseClasses getCourseClasses() {
-    return (CourseClasses) courseClasses;
+    return (VelocityContext) context.getXWikiContext().get("vcontext");
   }
 
 }
