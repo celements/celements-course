@@ -9,6 +9,7 @@ import java.util.Optional;
 
 import javax.annotation.concurrent.NotThreadSafe;
 
+import org.apache.commons.lang3.RandomStringUtils;
 import org.xwiki.model.reference.DocumentReference;
 
 import com.google.common.base.Strings;
@@ -27,8 +28,7 @@ public class RegistrationData {
   private DocumentReference regDocRef;
   private int price;
 
-  public RegistrationData() {
-  }
+  public RegistrationData() {}
 
   public String getEventid() {
     return eventid;
@@ -47,7 +47,7 @@ public class RegistrationData {
   }
 
   public String getMainEmail() {
-    if (Strings.isNullOrEmpty(mainEmail) && (getPersons().size() > 0)) {
+    if (Strings.isNullOrEmpty(mainEmail) && !getPersons().isEmpty()) {
       mainEmail = getPersons().get(0).getEmail();
     }
     return mainEmail;
@@ -82,6 +82,9 @@ public class RegistrationData {
   }
 
   public Optional<String> getValidationKey() {
+    if (Strings.isNullOrEmpty(validationKey)) {
+      validationKey = RandomStringUtils.randomAlphanumeric(24);
+    }
     return Optional.ofNullable(validationKey).filter(not(String::isEmpty));
   }
 
