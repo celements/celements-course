@@ -126,7 +126,7 @@ public class Person {
   }
 
   public ParticipantStatus getStatus() {
-    return Enums.getIfPresent(ParticipantStatus.class, status)
+    return Enums.getIfPresent(ParticipantStatus.class, Strings.nullToEmpty(status))
         .or(ParticipantStatus.unconfirmed);
   }
 
