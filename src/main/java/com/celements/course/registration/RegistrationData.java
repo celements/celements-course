@@ -1,20 +1,23 @@
 package com.celements.course.registration;
 
-import static com.google.common.base.Predicates.*;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 
 import javax.annotation.concurrent.NotThreadSafe;
+import javax.validation.constraints.NotNull;
 
-import org.apache.commons.lang3.RandomStringUtils;
+import org.apache.commons.lang.RandomStringUtils;
 import org.xwiki.model.reference.DocumentReference;
 
 import com.google.common.base.Strings;
 import com.xpn.xwiki.web.XWikiRequest;
 
+/**
+ * RegistrationData objects are used in script service.
+ *
+ * @author fabian
+ */
 @NotThreadSafe
 public class RegistrationData {
 
@@ -81,11 +84,21 @@ public class RegistrationData {
     this.price = price;
   }
 
-  public Optional<String> getValidationKey() {
+  public static final String generateNewValidationKey() {
+    return RandomStringUtils.randomAlphanumeric(24);
+  }
+
+  /**
+   * getValidationKey is called from velocity scripts
+   *
+   * @return validation key
+   */
+  @NotNull
+  public String getValidationKey() {
     if (Strings.isNullOrEmpty(validationKey)) {
-      validationKey = RandomStringUtils.randomAlphanumeric(24);
+      validationKey = generateNewValidationKey();
     }
-    return Optional.ofNullable(validationKey).filter(not(String::isEmpty));
+    return validationKey;
   }
 
   public void setValidationKey(String validationKey) {
@@ -163,8 +176,7 @@ public class RegistrationData {
     if (personList.size() <= i) {
       personList.add(new Person());
     }
-    Person person = personList.get(i);
-    return person;
+    return personList.get(i);
   }
 
   @Override

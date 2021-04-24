@@ -2,8 +2,6 @@ package com.celements.course.registration;
 
 import static org.junit.Assert.*;
 
-import java.util.Optional;
-
 import org.junit.Before;
 import org.junit.Test;
 
@@ -20,10 +18,10 @@ public class RegistrationDataTest extends AbstractComponentTest {
 
   @Test
   public void testGetValidationKey() {
-    Optional<String> validKey = regData.getValidationKey();
-    assertTrue(validKey.isPresent());
-    assertEquals(24, validKey.get().length());
-    assertEquals("remains the same", validKey.get(), regData.getValidationKey().get());
+    String validKey = regData.getValidationKey();
+    assertNotNull(validKey);
+    assertEquals(24, validKey.length());
+    assertEquals("remains the same", validKey, regData.getValidationKey());
   }
 
 }
