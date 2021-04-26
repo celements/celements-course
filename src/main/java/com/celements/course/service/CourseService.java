@@ -355,8 +355,11 @@ public class CourseService implements ICourseServiceRole {
   private boolean validateParticipant(XWikiDocument regDoc, String emailAdr, String activationCode)
       throws DocumentSaveException, DocumentNotExistsException, XWikiException {
     List<BaseObject> editablePartiObjs = Stream.concat(XWikiObjectEditor.on(regDoc).filter(
-        FIELD_EMAIL, emailAdr).fetch().stream(), XWikiObjectEditor.on(regDoc).filterAbsent(
-            FIELD_EMAIL).fetch().stream()).collect(toList());
+        FIELD_EMAIL, emailAdr).fetch().stream(), XWikiObjectEditor.on(regDoc)
+            .filterAbsent(
+                FIELD_EMAIL)
+            .fetch().stream())
+        .collect(toList());
     boolean isValidated = validateOrRemoveParticipants(editablePartiObjs, activationCode);
     if (!editablePartiObjs.isEmpty()) {
       modelAccess.saveDocument(regDoc, "email address validated by link");
@@ -474,8 +477,9 @@ public class CourseService implements ICourseServiceRole {
     String savedHash = partiObj.getStringValue("validkey");
     if (hashedCode.equals(savedHash)) {
       xObjFieldAccessor.getValue(partiObj, FIELD_STATUS).toJavaUtil().filter(not(
-          DEFAULT_IGNORE_STATES::contains)).ifPresent(state -> xObjFieldAccessor.setValue(partiObj,
-              FIELD_STATUS, ParticipantStatus.confirmed));
+          DEFAULT_IGNORE_STATES::contains)).ifPresent(
+              state -> xObjFieldAccessor.setValue(partiObj,
+                  FIELD_STATUS, ParticipantStatus.confirmed));
       return true;
     }
     return false;
@@ -520,10 +524,13 @@ public class CourseService implements ICourseServiceRole {
         XWikiDocument regDoc = createRegistrationDoc(courseDocRef);
         List<BaseObject> copied = participantObjsToCopy.stream().map(obj -> Pair.of(obj,
             XWikiObjectEditor.on(regDoc).filter(participantClassDef).filter(
-                obj.getNumber()).createFirstIfNotExists())).filter(
-                    pair -> copyDocService.copyObject(pair.getLeft(), pair.getRight())).map(
-                        Pair::getRight).map(restoreParticipantObj(courseDocRef)).collect(
-                            toImmutableList());
+                obj.getNumber()).createFirstIfNotExists()))
+            .filter(
+                pair -> copyDocService.copyObject(pair.getLeft(), pair.getRight()))
+            .map(
+                Pair::getRight)
+            .map(restoreParticipantObj(courseDocRef)).collect(
+                toImmutableList());
         if (!copied.isEmpty()) {
           modelAccess.saveDocument(regDoc);
           LOGGER.info("copyParticipantObjs - created registration [{}] from [{}]",
@@ -551,7 +558,7 @@ public class CourseService implements ICourseServiceRole {
       xObjFieldAccessor.setValue(participantObj, FIELD_PAYED_AMOUNT, XWikiObjectFetcher.on(
           courseDoc).fetchField(CourseClass.FIELD_PRICE).stream().findFirst().orElse(0));
       xObjFieldAccessor.setValue(participantObj, FIELD_VALIDATION_KEY,
-          RegistrationData.generateNewValidationKey());
+          CourseParticipantClass.generateNewValidationKey());
       return participantObj;
     };
   }

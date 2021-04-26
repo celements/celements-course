@@ -5,6 +5,7 @@ import java.util.Date;
 import javax.annotation.concurrent.Immutable;
 import javax.inject.Singleton;
 
+import org.apache.commons.lang.RandomStringUtils;
 import org.xwiki.component.annotation.Component;
 import org.xwiki.model.reference.ClassReference;
 
@@ -128,5 +129,9 @@ public class CourseParticipantClass extends AbstractClassDefinition implements C
   @Override
   public boolean isInternalMapping() {
     return true;
+  }
+
+  public static final String generateNewValidationKey() {
+    return RandomStringUtils.randomAlphanumeric(24);
   }
 }
