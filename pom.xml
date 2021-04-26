@@ -43,13 +43,13 @@
     <dependency>
       <groupId>com.celements</groupId>
       <artifactId>celements-core</artifactId>
-      <version>4.8</version>
+      <version>4.13</version>
       <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>com.celements</groupId>
       <artifactId>celements-search</artifactId>
-      <version>4.6</version>
+      <version>4.7</version>
       <scope>provided</scope>
     </dependency>
     <dependency>

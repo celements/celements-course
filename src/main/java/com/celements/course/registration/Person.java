@@ -127,7 +127,7 @@ public class Person {
   }
 
   public Optional<ParticipantStatus> getStatus() {
-    return Enums.getIfPresent(ParticipantStatus.class, status).toJavaUtil();
+    return Enums.getIfPresent(ParticipantStatus.class, Strings.nullToEmpty(status)).toJavaUtil();
   }
 
   public void setStatus(String status) {
