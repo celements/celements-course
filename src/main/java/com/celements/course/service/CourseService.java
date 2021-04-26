@@ -537,7 +537,7 @@ public class CourseService implements ICourseServiceRole {
       xObjFieldAccessor.set(participantObj, FIELD_PAYED_AMOUNT, XWikiObjectFetcher
           .on(courseDoc).fetchField(CourseClass.FIELD_PRICE).stream().findFirst().orElse(0));
       xObjFieldAccessor.set(participantObj, FIELD_VALIDATION_KEY,
-          RegistrationData.generateNewValidationKey());
+          CourseParticipantClass.generateNewValidationKey());
       return participantObj;
     };
   }
