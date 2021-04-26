@@ -14,9 +14,7 @@ import com.google.common.base.Strings;
 import com.xpn.xwiki.web.XWikiRequest;
 
 /**
- * RegistrationData objects are used in script service.
- *
- * @author fabian
+ * RegistrationData objects are returned in the CourseScriptService.
  */
 @NotThreadSafe
 public class RegistrationData {
