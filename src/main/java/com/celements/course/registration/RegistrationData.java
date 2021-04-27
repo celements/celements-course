@@ -7,16 +7,14 @@ import java.util.List;
 import javax.annotation.concurrent.NotThreadSafe;
 import javax.validation.constraints.NotNull;
 
-import org.apache.commons.lang.RandomStringUtils;
 import org.xwiki.model.reference.DocumentReference;
 
+import com.celements.course.classes.CourseParticipantClass;
 import com.google.common.base.Strings;
 import com.xpn.xwiki.web.XWikiRequest;
 
 /**
- * RegistrationData objects are used in script service.
- *
- * @author fabian
+ * RegistrationData objects are returned in the CourseScriptService.
  */
 @NotThreadSafe
 public class RegistrationData {
@@ -84,10 +82,6 @@ public class RegistrationData {
     this.price = price;
   }
 
-  public static final String generateNewValidationKey() {
-    return RandomStringUtils.randomAlphanumeric(24);
-  }
-
   /**
    * getValidationKey is called from velocity scripts
    *
@@ -96,7 +90,7 @@ public class RegistrationData {
   @NotNull
   public String getValidationKey() {
     if (Strings.isNullOrEmpty(validationKey)) {
-      validationKey = generateNewValidationKey();
+      validationKey = CourseParticipantClass.generateNewValidationKey();
     }
     return validationKey;
   }
