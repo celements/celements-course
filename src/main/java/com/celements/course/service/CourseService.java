@@ -24,7 +24,6 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
-import org.apache.commons.lang.RandomStringUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.velocity.VelocityContext;
@@ -272,8 +271,7 @@ public class CourseService implements ICourseServiceRole {
         xObjFieldAccessor.setValue(obj, FIELD_PAYED_AMOUNT, data.getPrice());
         xObjFieldAccessor.setValue(obj, FIELD_COMMENT, data.getComment());
         // using set since there is no setPassword method
-        xObjFieldAccessor.setValue(obj, FIELD_VALIDATION_KEY, data.getValidationKey().orElseGet(
-            this::generateNewValidationKey));
+        xObjFieldAccessor.setValue(obj, FIELD_VALIDATION_KEY, data.getValidationKey());
         xObjFieldAccessor.setValue(obj, FIELD_TIMESTAMP, new Date());
         xObjFieldAccessor.setValue(obj, FIELD_CLIENT, getClientInfo());
         participantAdded = true;
@@ -282,10 +280,6 @@ public class CourseService implements ICourseServiceRole {
       }
     }
     return participantAdded;
-  }
-
-  private String generateNewValidationKey() {
-    return RandomStringUtils.randomAlphanumeric(24);
   }
 
   private void sendValidationMails(RegistrationData data) throws DocumentNotExistsException,
@@ -556,7 +550,8 @@ public class CourseService implements ICourseServiceRole {
       xObjFieldAccessor.setValue(participantObj, FIELD_PAYED_DATE, null);
       xObjFieldAccessor.setValue(participantObj, FIELD_PAYED_AMOUNT, XWikiObjectFetcher.on(
           courseDoc).fetchField(CourseClass.FIELD_PRICE).stream().findFirst().orElse(0));
-      xObjFieldAccessor.setValue(participantObj, FIELD_VALIDATION_KEY, generateNewValidationKey());
+      xObjFieldAccessor.setValue(participantObj, FIELD_VALIDATION_KEY,
+          CourseParticipantClass.generateNewValidationKey());
       return participantObj;
     };
   }
