@@ -1,19 +1,21 @@
 package com.celements.course.registration;
 
-import static com.google.common.base.Predicates.*;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 
 import javax.annotation.concurrent.NotThreadSafe;
+import javax.validation.constraints.NotNull;
 
 import org.xwiki.model.reference.DocumentReference;
 
+import com.celements.course.classes.CourseParticipantClass;
 import com.google.common.base.Strings;
 import com.xpn.xwiki.web.XWikiRequest;
 
+/**
+ * RegistrationData objects are returned in the CourseScriptService.
+ */
 @NotThreadSafe
 public class RegistrationData {
 
@@ -27,8 +29,7 @@ public class RegistrationData {
   private DocumentReference regDocRef;
   private int price;
 
-  public RegistrationData() {
-  }
+  public RegistrationData() {}
 
   public String getEventid() {
     return eventid;
@@ -47,7 +48,7 @@ public class RegistrationData {
   }
 
   public String getMainEmail() {
-    if (Strings.isNullOrEmpty(mainEmail) && (getPersons().size() > 0)) {
+    if (Strings.isNullOrEmpty(mainEmail) && !getPersons().isEmpty()) {
       mainEmail = getPersons().get(0).getEmail();
     }
     return mainEmail;
@@ -81,8 +82,17 @@ public class RegistrationData {
     this.price = price;
   }
 
-  public Optional<String> getValidationKey() {
-    return Optional.ofNullable(validationKey).filter(not(String::isEmpty));
+  /**
+   * getValidationKey is called from velocity scripts
+   *
+   * @return validation key
+   */
+  @NotNull
+  public String getValidationKey() {
+    if (Strings.isNullOrEmpty(validationKey)) {
+      validationKey = CourseParticipantClass.generateNewValidationKey();
+    }
+    return validationKey;
   }
 
   public void setValidationKey(String validationKey) {
@@ -160,8 +170,7 @@ public class RegistrationData {
     if (personList.size() <= i) {
       personList.add(new Person());
     }
-    Person person = personList.get(i);
-    return person;
+    return personList.get(i);
   }
 
   @Override
