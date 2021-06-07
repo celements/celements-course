@@ -36,6 +36,12 @@
     <!-- Add here all your dependencies -->
     <dependency>
       <groupId>com.celements</groupId>
+      <artifactId>celements-shared-tests-deprecated</artifactId>
+      <version>5.0-SNAPSHOT</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.celements</groupId>
       <artifactId>celements-model</artifactId>
       <version>5.1-SNAPSHOT</version>
       <scope>provided</scope>
