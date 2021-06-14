@@ -57,7 +57,7 @@ import com.google.common.collect.ImmutableList;
 @Component("celcourse")
 public class CourseScriptService implements ScriptService {
 
-  private static Logger LOGGER = LoggerFactory.getLogger(CourseScriptService.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger(CourseScriptService.class);
 
   @Requirement
   private ICourseServiceRole courseService;

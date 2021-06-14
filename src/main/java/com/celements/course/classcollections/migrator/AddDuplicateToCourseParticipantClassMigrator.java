@@ -26,7 +26,7 @@ import com.xpn.xwiki.store.migration.XWikiDBVersion;
 public class AddDuplicateToCourseParticipantClassMigrator extends
     AbstractCelementsHibernateMigrator {
 
-  private static Logger LOGGER = LoggerFactory.getLogger(
+  private static final Logger LOGGER = LoggerFactory.getLogger(
       AddDuplicateToCourseParticipantClassMigrator.class);
 
   @Requirement(CourseParticipantClass.CLASS_DEF_HINT)
