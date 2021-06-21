@@ -18,7 +18,7 @@ import com.xpn.xwiki.web.Utils;
 @NotThreadSafe
 public class Person {
 
-  private static Logger LOGGER = LoggerFactory.getLogger(Person.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger(Person.class);
 
   private String title;
   private String givenName;

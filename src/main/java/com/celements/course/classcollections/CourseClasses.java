@@ -19,8 +19,6 @@
  */
 package com.celements.course.classcollections;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.xwiki.component.annotation.Component;
 import org.xwiki.model.reference.DocumentReference;
 
@@ -48,13 +46,6 @@ public class CourseClasses extends AbstractClassCollection {
   public static final String COURSE_LEVEL_CLASS_DOC = "CourseLevelClass";
 
   public static final String COURSE_CLASSES_SPACE = "CourseClasses";
-
-  private static Log LOGGER = LogFactory.getFactory().getInstance(CourseClasses.class);
-
-  @Override
-  protected Log getLogger() {
-    return LOGGER;
-  }
 
   @Override
   public String getConfigName() {
