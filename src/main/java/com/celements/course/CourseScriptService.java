@@ -145,9 +145,12 @@ public class CourseScriptService implements ScriptService {
   }
 
   public DocumentReference createUserParticipantDocRef(DocumentReference courseDocRef) {
-    return modelContext.getCurrentUser().toJavaUtil()
-        .map(user -> courseService.createParticipantDocRef(courseDocRef, user))
-        .orElseGet(() -> createParticipantDocRef(courseDocRef));
+    if (courseDocRef != null) {
+      return modelContext.getCurrentUser().toJavaUtil()
+          .map(user -> courseService.createParticipantDocRef(courseDocRef, user))
+          .orElseGet(() -> createParticipantDocRef(courseDocRef));
+    }
+    return null;
   }
 
   public SpaceReference getRegistrationSpace(DocumentReference courseDocRef) {
