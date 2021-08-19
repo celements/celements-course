@@ -24,6 +24,7 @@ import static com.celements.rights.access.EAccessLevel.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 import javax.annotation.Nullable;
 import javax.validation.constraints.NotNull;
@@ -42,6 +43,7 @@ import org.xwiki.script.service.ScriptService;
 import com.celements.common.classes.IClassCollectionRole;
 import com.celements.course.classcollections.CourseClasses;
 import com.celements.course.classes.CourseParticipantClass;
+import com.celements.course.classes.CourseParticipantClass.Attendance;
 import com.celements.course.classes.CourseParticipantClass.ParticipantStatus;
 import com.celements.course.service.ICourseServiceRole;
 import com.celements.course.service.RegistrationState;
@@ -51,7 +53,6 @@ import com.celements.model.util.ModelUtils;
 import com.celements.rights.access.EAccessLevel;
 import com.celements.rights.access.IRightsAccessFacadeRole;
 import com.celements.search.lucene.LuceneSearchException;
-import com.google.common.base.Optional;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 
@@ -143,6 +144,12 @@ public class CourseScriptService implements ScriptService {
     return null;
   }
 
+  public DocumentReference createUserParticipantDocRef(DocumentReference courseDocRef) {
+    return modelContext.getCurrentUser().toJavaUtil()
+        .map(user -> courseService.createParticipantDocRef(courseDocRef, user))
+        .orElseGet(() -> createParticipantDocRef(courseDocRef));
+  }
+
   public SpaceReference getRegistrationSpace(DocumentReference courseDocRef) {
     if (courseDocRef != null) {
       return courseService.getRegistrationSpace(courseDocRef);
@@ -173,8 +180,8 @@ public class CourseScriptService implements ScriptService {
    */
   public String getCourseTypeName(DocumentReference docRef) {
     if (docRef != null) {
-      DocumentReference courseTypeDocRef = Optional.fromNullable(
-          courseService.getCourseTypeForCourse(docRef)).or(docRef);
+      DocumentReference courseTypeDocRef = Optional.ofNullable(
+          courseService.getCourseTypeForCourse(docRef)).orElse(docRef);
       return courseService.getCourseTypeName(courseTypeDocRef);
     }
     return "";
@@ -243,6 +250,12 @@ public class CourseScriptService implements ScriptService {
 
   public ParticipantStatus getCourseConfirmState(String state) {
     return ParticipantStatus.valueOf(state);
+  }
+
+  public Attendance getAttendance(DocumentReference participantDocRef) {
+    return Optional.ofNullable(participantDocRef)
+        .flatMap(courseService::getAttendance)
+        .orElse(null);
   }
 
   public List<ImmutableObjectReference> copyParticipants(DocumentReference targetCourseDocRef,

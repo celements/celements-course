@@ -4,6 +4,7 @@ import static com.celements.common.lambda.LambdaExceptionUtil.*;
 import static com.celements.course.classes.CourseParticipantClass.*;
 import static com.celements.model.util.ReferenceSerializationMode.*;
 import static com.celements.rights.access.EAccessLevel.*;
+import static com.google.common.base.Preconditions.*;
 import static com.google.common.base.Predicates.*;
 import static com.google.common.collect.ImmutableList.*;
 import static com.google.common.collect.Maps.*;
@@ -19,6 +20,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Stream;
@@ -35,6 +37,7 @@ import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.model.reference.ImmutableObjectReference;
 import org.xwiki.model.reference.SpaceReference;
 
+import com.celements.auth.user.User;
 import com.celements.copydoc.ICopyDocumentRole;
 import com.celements.course.classes.CourseClass;
 import com.celements.course.classes.CourseParticipantClass;
@@ -54,6 +57,7 @@ import com.celements.model.field.FieldAccessor;
 import com.celements.model.field.XObjectFieldAccessor;
 import com.celements.model.object.xwiki.XWikiObjectEditor;
 import com.celements.model.object.xwiki.XWikiObjectFetcher;
+import com.celements.model.reference.RefBuilder;
 import com.celements.model.util.ModelUtils;
 import com.celements.nextfreedoc.INextFreeDocRole;
 import com.celements.rendering.RenderCommand;
@@ -67,7 +71,6 @@ import com.celements.web.plugin.cmd.ConvertToPlainTextException;
 import com.celements.web.plugin.cmd.PlainTextCommand;
 import com.google.common.base.Joiner;
 import com.google.common.base.MoreObjects;
-import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -311,7 +314,7 @@ public class CourseService implements ICourseServiceRole {
   @Override
   public DocumentReference createParticipantDocRef(DocumentReference courseDocRef) {
     DocumentReference ret;
-    SpaceReference spaceRef = getRegistrationSpace(Preconditions.checkNotNull(courseDocRef));
+    SpaceReference spaceRef = getRegistrationSpace(checkNotNull(courseDocRef));
     String name = cfgSrc.getProperty(CFGSRC_PARTICIPANT_DOC_NAME_PREFIX, "");
     if (name.isEmpty()) {
       ret = nextFreeDoc.getNextUntitledPageDocRef(spaceRef);
@@ -322,8 +325,16 @@ public class CourseService implements ICourseServiceRole {
   }
 
   @Override
+  public DocumentReference createParticipantDocRef(DocumentReference courseDocRef, User user) {
+    checkNotNull(user);
+    return RefBuilder.from(getRegistrationSpace(courseDocRef))
+        .doc(user.getDocRef().getName())
+        .build(DocumentReference.class);
+  }
+
+  @Override
   public SpaceReference getRegistrationSpace(DocumentReference courseDocRef) {
-    Preconditions.checkNotNull(courseDocRef);
+    checkNotNull(courseDocRef);
     String spaceName = Joiner.on("_").join(courseDocRef.getParent().getName(),
         courseDocRef.getName());
     return new SpaceReference(spaceName, courseDocRef.getWikiReference());
@@ -489,6 +500,13 @@ public class CourseService implements ICourseServiceRole {
         .filter(FIELD_EMAIL, emailAdr)
         .filter(FIELD_STATUS, Arrays.asList(state))
         .exists();
+  }
+
+  @Override
+  public Optional<Attendance> getAttendance(DocumentReference participantDocRef) {
+    return XWikiObjectFetcher.on(modelAccess.getOrCreateDocument(participantDocRef))
+        .fetchField(CourseParticipantClass.FIELD_ATTENDANCE)
+        .stream().findAny();
   }
 
   @Override

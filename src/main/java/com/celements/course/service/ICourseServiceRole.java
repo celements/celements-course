@@ -1,6 +1,7 @@
 package com.celements.course.service;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Stream;
 
 import javax.annotation.Nullable;
@@ -12,6 +13,8 @@ import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.model.reference.ImmutableObjectReference;
 import org.xwiki.model.reference.SpaceReference;
 
+import com.celements.auth.user.User;
+import com.celements.course.classes.CourseParticipantClass.Attendance;
 import com.celements.course.classes.CourseParticipantClass.ParticipantStatus;
 import com.celements.search.lucene.LuceneSearchException;
 
@@ -27,6 +30,10 @@ public interface ICourseServiceRole {
 
   @NotNull
   DocumentReference createParticipantDocRef(@NotNull DocumentReference courseDocRef);
+
+  @NotNull
+  DocumentReference createParticipantDocRef(@NotNull DocumentReference courseDocRef,
+      @NotNull User user);
 
   @NotNull
   SpaceReference getRegistrationSpace(@NotNull DocumentReference courseDocRef);
@@ -58,6 +65,9 @@ public interface ICourseServiceRole {
 
   long getRegistrationCount(DocumentReference courseDocRef,
       List<ParticipantStatus> ignoreParticipantStates) throws LuceneSearchException;
+
+  @NotNull
+  Optional<Attendance> getAttendance(@NotNull DocumentReference participantDocRef);
 
   /**
    * copy all participant objects defined by objRefs to new registration docs for the given
