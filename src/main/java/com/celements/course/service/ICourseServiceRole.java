@@ -7,6 +7,7 @@ import javax.annotation.Nullable;
 import javax.validation.constraints.NotNull;
 
 import org.xwiki.component.annotation.ComponentRole;
+import org.xwiki.model.reference.ClassReference;
 import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.model.reference.ImmutableObjectReference;
 import org.xwiki.model.reference.SpaceReference;
@@ -29,6 +30,9 @@ public interface ICourseServiceRole {
 
   @NotNull
   SpaceReference getRegistrationSpace(@NotNull DocumentReference courseDocRef);
+
+  boolean prepareRegistrationSpace(@NotNull SpaceReference regSpaceRef,
+      @NotNull ClassReference... additionalGroups);
 
   String normalizeEmail(String emailAdr);
 
@@ -67,6 +71,7 @@ public interface ICourseServiceRole {
 
   boolean sendConfirmationMail(@NotNull DocumentReference regDocRef, int participantObjNb);
 
-  boolean setStatusConfirmedFromUnconfirmed(@NotNull DocumentReference regDocRef, int participantObjNb);
+  boolean setStatusConfirmedFromUnconfirmed(@NotNull DocumentReference regDocRef,
+      int participantObjNb);
 
 }

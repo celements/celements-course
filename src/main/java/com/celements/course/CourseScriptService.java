@@ -32,6 +32,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xwiki.component.annotation.Component;
 import org.xwiki.component.annotation.Requirement;
+import org.xwiki.model.reference.ClassReference;
 import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.model.reference.EntityReferenceResolver;
 import org.xwiki.model.reference.ImmutableObjectReference;
@@ -147,6 +148,14 @@ public class CourseScriptService implements ScriptService {
       return courseService.getRegistrationSpace(courseDocRef);
     }
     return null;
+  }
+
+  public boolean prepareRegistrationSpace(SpaceReference regSpaceRef,
+      ClassReference... additionalGroups) {
+    if (rightsService.isLoggedIn() && (regSpaceRef != null)) {
+      return courseService.prepareRegistrationSpace(regSpaceRef, additionalGroups);
+    }
+    return false;
   }
 
   @NotNull
