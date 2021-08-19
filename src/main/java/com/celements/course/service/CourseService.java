@@ -38,6 +38,7 @@ import org.xwiki.model.reference.SpaceReference;
 import com.celements.copydoc.ICopyDocumentRole;
 import com.celements.course.classes.CourseClass;
 import com.celements.course.classes.CourseParticipantClass;
+import com.celements.course.classes.CourseParticipantClass.Attendance;
 import com.celements.course.classes.CourseParticipantClass.ParticipantStatus;
 import com.celements.course.classes.CourseParticipantClass.PaymentStatus;
 import com.celements.course.classes.CourseTypeClass;
@@ -263,6 +264,7 @@ public class CourseService implements ICourseServiceRole {
         xObjFieldAccessor.set(obj, FIELD_PHONE, person.getPhone());
         xObjFieldAccessor.set(obj, FIELD_EMAIL, person.getEmail());
         xObjFieldAccessor.set(obj, FIELD_DOB, person.getDateOfBirth());
+        xObjFieldAccessor.set(obj, FIELD_ATTENDANCE, Attendance.yes);
         xObjFieldAccessor.set(obj, FIELD_STATUS, person.getStatus());
         xObjFieldAccessor.set(obj, FIELD_PAYED, PaymentStatus.unpayed);
         xObjFieldAccessor.set(obj, FIELD_PAYED_AMOUNT, data.getPrice());
