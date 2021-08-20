@@ -57,8 +57,8 @@ public class CourseParticipantClass extends AbstractClassDefinition implements C
   public static final ClassField<String> FIELD_COURSE_ID = new StringField.Builder(
       CLASS_REF, "eventid").prettyName("Course ID").build();
 
-  public static final ClassField<String> FIELD_ANREDE = new StringField.Builder(
-      CLASS_REF, "anrede").build();
+  public static final ClassField<String> FIELD_SALUTATION = new StringField.Builder(
+      CLASS_REF, "salutation").build();
 
   public static final ClassField<String> FIELD_TITLE = new StringField.Builder(
       CLASS_REF, "title").validationRegExp("/^.{0,8}$/")
