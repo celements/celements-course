@@ -31,6 +31,12 @@ public class CourseParticipantClass extends AbstractClassDefinition implements C
   public static final String CLASS_DEF_HINT = SPACE_NAME + "." + DOC_NAME;
   public static final ClassReference CLASS_REF = new ClassReference(SPACE_NAME, DOC_NAME);
 
+  public enum Attendance {
+
+    yes, no, maybe;
+
+  }
+
   public enum ParticipantStatus {
 
     unconfirmed, confirmed, cancelled, duplicate;
@@ -43,13 +49,16 @@ public class CourseParticipantClass extends AbstractClassDefinition implements C
 
     public final String id;
 
-    private PaymentStatus(String id) {
+    PaymentStatus(String id) {
       this.id = id;
     }
   }
 
   public static final ClassField<String> FIELD_COURSE_ID = new StringField.Builder(
       CLASS_REF, "eventid").prettyName("Course ID").build();
+
+  public static final ClassField<String> FIELD_SALUTATION = new StringField.Builder(
+      CLASS_REF, "salutation").build();
 
   public static final ClassField<String> FIELD_TITLE = new StringField.Builder(
       CLASS_REF, "title").validationRegExp("/^.{0,8}$/")
@@ -78,6 +87,9 @@ public class CourseParticipantClass extends AbstractClassDefinition implements C
 
   public static final ClassField<Date> FIELD_DOB = new DateField.Builder(
       CLASS_REF, "dob").prettyName("Date of birth (dd.MM.yyyy)").dateFormat("dd.MM.yyyy").build();
+
+  public static final ClassField<Attendance> FIELD_ATTENDANCE = new EnumSingleListField.Builder<>(
+      CLASS_REF, "attendance", Attendance.class).displayType(DisplayType.select).build();
 
   public static final ClassField<ParticipantStatus> FIELD_STATUS = new EnumSingleListField.Builder<>(
       CLASS_REF, "status", ParticipantStatus.class).displayType(DisplayType.select).build();
