@@ -1,16 +1,20 @@
 package com.celements.course.service;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Stream;
 
 import javax.annotation.Nullable;
 import javax.validation.constraints.NotNull;
 
 import org.xwiki.component.annotation.ComponentRole;
+import org.xwiki.model.reference.ClassReference;
 import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.model.reference.ImmutableObjectReference;
 import org.xwiki.model.reference.SpaceReference;
 
+import com.celements.auth.user.User;
+import com.celements.course.classes.CourseParticipantClass.Attendance;
 import com.celements.course.classes.CourseParticipantClass.ParticipantStatus;
 import com.celements.search.lucene.LuceneSearchException;
 
@@ -28,7 +32,14 @@ public interface ICourseServiceRole {
   DocumentReference createParticipantDocRef(@NotNull DocumentReference courseDocRef);
 
   @NotNull
+  DocumentReference createParticipantDocRef(@NotNull DocumentReference courseDocRef,
+      @NotNull User user);
+
+  @NotNull
   SpaceReference getRegistrationSpace(@NotNull DocumentReference courseDocRef);
+
+  boolean prepareRegistrationSpace(@NotNull SpaceReference regSpaceRef,
+      @NotNull ClassReference... additionalGroups);
 
   String normalizeEmail(String emailAdr);
 
@@ -55,6 +66,9 @@ public interface ICourseServiceRole {
   long getRegistrationCount(DocumentReference courseDocRef,
       List<ParticipantStatus> ignoreParticipantStates) throws LuceneSearchException;
 
+  @NotNull
+  Optional<Attendance> getAttendance(@NotNull DocumentReference participantDocRef);
+
   /**
    * copy all participant objects defined by objRefs to new registration docs for the given
    * targetCourseDocRef.
@@ -67,6 +81,7 @@ public interface ICourseServiceRole {
 
   boolean sendConfirmationMail(@NotNull DocumentReference regDocRef, int participantObjNb);
 
-  boolean setStatusConfirmedFromUnconfirmed(@NotNull DocumentReference regDocRef, int participantObjNb);
+  boolean setStatusConfirmedFromUnconfirmed(@NotNull DocumentReference regDocRef,
+      int participantObjNb);
 
 }
