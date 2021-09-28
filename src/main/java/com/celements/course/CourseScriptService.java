@@ -148,7 +148,7 @@ public class CourseScriptService implements ScriptService {
     if (courseDocRef != null) {
       return modelContext.getCurrentUser().toJavaUtil()
           .map(user -> courseService.createParticipantDocRef(courseDocRef, user))
-          .orElseGet(() -> createParticipantDocRef(courseDocRef));
+          .orElse(null);
     }
     return null;
   }
