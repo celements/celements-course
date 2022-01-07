@@ -26,11 +26,11 @@
   <parent>
     <groupId>com.celements</groupId>
     <artifactId>celements</artifactId>
-    <version>5.2</version>
+    <version>5.3</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>
   <artifactId>celements-course</artifactId>
-  <version>5.4-SNAPSHOT</version>
+  <version>5.5-SNAPSHOT</version>
   <description>Celements Course</description>
   <dependencies>
     <!-- Add here all your dependencies -->
@@ -43,13 +43,13 @@
     <dependency>
       <groupId>com.celements</groupId>
       <artifactId>celements-model</artifactId>
-      <version>5.2</version>
+      <version>5.3</version>
       <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>com.celements</groupId>
       <artifactId>celements-core</artifactId>
-      <version>5.2</version>
+      <version>5.3</version>
       <scope>provided</scope>
     </dependency>
     <dependency>
