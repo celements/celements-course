@@ -677,6 +677,8 @@ public class CourseService implements ICourseServiceRole {
             .map(att -> new Attachment(emailContentDocApi, att, context.getXWikiContext()))
             .collect(Collectors.toList());
       }
+      LOGGER.debug("mailing with [{}] attachments", 
+    		  (attachmentListApi != null) ? attachmentListApi.size(): 0);
       success = mailSender.sendMail(sender, null, person.getEmail(), null, null,
           emailContentDoc.getTitle(), htmlContent, textContent, attachmentListApi, null) >= 0;
       if (sendToSender) {
