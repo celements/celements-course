@@ -75,6 +75,8 @@ import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.xpn.xwiki.XWikiException;
+import com.xpn.xwiki.api.Attachment;
+import com.xpn.xwiki.api.Document;
 import com.xpn.xwiki.doc.XWikiDocument;
 import com.xpn.xwiki.objects.BaseObject;
 import com.xpn.xwiki.objects.classes.PasswordClass;
@@ -665,11 +667,14 @@ public class CourseService implements ICourseServiceRole {
       } catch (ConvertToPlainTextException ctpte) {
         LOGGER.error("could not convert mail html content to plain text", ctpte);
       }
+      Document emailContentDocApi = emailContentDoc.newDocument(context.getXWikiContext());
+      List<Attachment> attachmentApis = emailContentDocApi.getAttachmentList();
+      LOGGER.debug("mailing with [{}] attachments", attachmentApis.size());
       success = mailSender.sendMail(sender, null, person.getEmail(), null, null,
-          emailContentDoc.getTitle(), htmlContent, textContent, null, null) >= 0;
+          emailContentDoc.getTitle(), htmlContent, textContent, attachmentApis, null) >= 0;
       if (sendToSender) {
         success = mailSender.sendMail(sender, null, sender, null, null, emailContentDoc.getTitle(),
-            htmlContent, textContent, null, null) >= 0;
+            htmlContent, textContent, attachmentApis, null) >= 0;
       }
     }
     return success;
