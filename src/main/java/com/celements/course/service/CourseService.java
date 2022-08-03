@@ -78,7 +78,6 @@ import com.google.common.collect.ImmutableSet;
 import com.xpn.xwiki.XWikiException;
 import com.xpn.xwiki.api.Attachment;
 import com.xpn.xwiki.api.Document;
-import com.xpn.xwiki.doc.XWikiAttachment;
 import com.xpn.xwiki.doc.XWikiDocument;
 import com.xpn.xwiki.objects.BaseObject;
 import com.xpn.xwiki.objects.classes.PasswordClass;
@@ -670,20 +669,16 @@ public class CourseService implements ICourseServiceRole {
         LOGGER.error("could not convert mail html content to plain text", ctpte);
       }
       Document emailContentDocApi = emailContentDoc.newDocument(context.getXWikiContext());
-      List<XWikiAttachment> attachmentList = emailContentDoc.getAttachmentList();
-      List<Attachment> attachmentListApi = null;
-      if ((attachmentList != null) && !attachmentList.isEmpty()) {
-        attachmentListApi = attachmentList.stream()
-            .map(att -> new Attachment(emailContentDocApi, att, context.getXWikiContext()))
-            .collect(Collectors.toList());
-      }
-      LOGGER.debug("mailing with [{}] attachments", 
-    		  (attachmentListApi != null) ? attachmentListApi.size(): 0);
+      List<Attachment> attachmentApiList = Optional.ofNullable(emailContentDoc.getAttachmentList())
+          .orElseGet(ImmutableList::of).stream()
+          .map(att -> new Attachment(emailContentDocApi, att, context.getXWikiContext()))
+          .collect(Collectors.toList());
+      LOGGER.debug("mailing with [{}] attachments", attachmentApiList.size());
       success = mailSender.sendMail(sender, null, person.getEmail(), null, null,
-          emailContentDoc.getTitle(), htmlContent, textContent, attachmentListApi, null) >= 0;
+          emailContentDoc.getTitle(), htmlContent, textContent, attachmentApiList, null) >= 0;
       if (sendToSender) {
         success = mailSender.sendMail(sender, null, sender, null, null, emailContentDoc.getTitle(),
-            htmlContent, textContent, attachmentListApi, null) >= 0;
+            htmlContent, textContent, attachmentApiList, null) >= 0;
       }
     }
     return success;
