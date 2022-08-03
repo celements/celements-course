@@ -25,6 +25,7 @@ import static org.junit.Assert.*;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -58,6 +59,8 @@ import com.celements.web.plugin.cmd.CelMailConfiguration;
 import com.google.common.collect.ImmutableList;
 import com.xpn.xwiki.XWiki;
 import com.xpn.xwiki.XWikiException;
+import com.xpn.xwiki.api.Attachment;
+import com.xpn.xwiki.api.Document;
 import com.xpn.xwiki.doc.XWikiDocument;
 import com.xpn.xwiki.objects.BaseObject;
 import com.xpn.xwiki.objects.classes.BaseClass;
@@ -369,6 +372,35 @@ public class CourseServiceTest extends AbstractComponentTest {
   }
 
   @Test
+  public void test_sendConfirmationMail_success() throws Exception {
+    XWikiDocument regDoc = new XWikiDocument(new DocumentReference(db, "Kurse", "Kurs2"));
+    expect(getMock(IModelAccessFacade.class).getOrCreateDocument(eq(regDoc.getDocumentReference())))
+        .andReturn(regDoc).once();
+    String email = "test@test.com";
+    addParticipant(regDoc, email, true);
+    expectEmail(email, 1);
+
+    replayDefault();
+    assertTrue(courseService.sendConfirmationMail(regDoc.getDocumentReference(), 0));
+    verifyDefault();
+  }
+
+  @Test
+  public void test_sendConfirmationMail_success_withAttachment() throws Exception {
+    XWikiDocument regDoc = new XWikiDocument(new DocumentReference(db, "Kurse", "Kurs2"));
+    expect(getMock(IModelAccessFacade.class).getOrCreateDocument(eq(regDoc.getDocumentReference())))
+        .andReturn(regDoc).once();
+    String email = "test@test.com";
+    addParticipant(regDoc, email, true);
+    List<Attachment> attachments = ImmutableList.of(createMockAndAddToDefault(Attachment.class));
+    expectEmail(email, 1, attachments);
+
+    replayDefault();
+    assertTrue(courseService.sendConfirmationMail(regDoc.getDocumentReference(), 0));
+    verifyDefault();
+  }
+
+  @Test
   public void test_setStatusConfirmedFromUnconfirmed() throws Exception {
     XWikiDocument regDoc = new XWikiDocument(new DocumentReference(db, "Kurse", "Kurs2"));
     expect(getMock(IModelAccessFacade.class).getOrCreateDocument(eq(regDoc.getDocumentReference())))
@@ -398,9 +430,21 @@ public class CourseServiceTest extends AbstractComponentTest {
         .fetchField(CourseParticipantClass.FIELD_STATUS).stream().findFirst().orElse(null));
   }
 
+  private XWikiDocument expectEmail(String email, int count) throws Exception {
+    return expectEmail(email, count, Collections.emptyList());
+  }
+
   @SuppressWarnings("unchecked")
-  private void expectEmail(String email, int count) throws Exception {
-    XWikiDocument emailDoc = expectDoc(courseService.getConfirmationEmailDocRef());
+  private XWikiDocument expectEmail(String email, int count, List<Attachment> attachments)
+      throws Exception {
+    DocumentReference emailDocRef = courseService.getConfirmationEmailDocRef();
+    XWikiDocument emailDoc = createMockAndAddToDefault(XWikiDocument.class);
+    expect(getMock(IModelAccessFacade.class).getDocument(eq(emailDocRef)))
+        .andReturn(emailDoc).atLeastOnce();
+    expect(emailDoc.getTitle()).andReturn("subject").atLeastOnce();
+    Document emailDocApi = createMockAndAddToDefault(Document.class);
+    expect(emailDoc.newDocument(getContext())).andReturn(emailDocApi).atLeastOnce();
+    expect(emailDocApi.getAttachmentList()).andReturn(attachments).atLeastOnce();
     String sender = "asdf@fdsa.ch";
     expect(getWikiMock().getXWikiPreference(eq("admin_email"), eq(
         CelMailConfiguration.MAIL_DEFAULT_ADMIN_EMAIL_KEY), eq(""), same(getContext()))).andReturn(
@@ -409,13 +453,14 @@ public class CourseServiceTest extends AbstractComponentTest {
     expect(courseService.injected_RenderCommand.renderCelementsDocument(same(emailDoc), eq(
         "view"))).andReturn(content).times(count);
     expect(getMock(IMailSenderRole.class).sendMail(eq(sender), isNull(String.class), eq(email),
-        isNull(String.class), isNull(String.class), eq(""), eq(content), eq(content), isNull(
-            List.class),
-        isNull(Map.class))).andReturn(0).times(count);
+        isNull(String.class), isNull(String.class), eq("subject"), eq(content), eq(content),
+        eq(attachments), isNull(Map.class)))
+            .andReturn(0).times(count);
     expect(getMock(IMailSenderRole.class).sendMail(eq(sender), isNull(String.class), eq(sender),
-        isNull(String.class), isNull(String.class), eq(""), eq(content), eq(content), isNull(
-            List.class),
-        isNull(Map.class))).andReturn(0).times(count);
+        isNull(String.class), isNull(String.class), eq("subject"), eq(content), eq(content),
+        eq(attachments), isNull(Map.class)))
+            .andReturn(0).times(count);
+    return emailDoc;
   }
 
   @Test

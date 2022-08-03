@@ -23,7 +23,6 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.apache.commons.lang3.tuple.Pair;
@@ -669,16 +668,13 @@ public class CourseService implements ICourseServiceRole {
         LOGGER.error("could not convert mail html content to plain text", ctpte);
       }
       Document emailContentDocApi = emailContentDoc.newDocument(context.getXWikiContext());
-      List<Attachment> attachmentApiList = Optional.ofNullable(emailContentDoc.getAttachmentList())
-          .orElseGet(ImmutableList::of).stream()
-          .map(att -> new Attachment(emailContentDocApi, att, context.getXWikiContext()))
-          .collect(Collectors.toList());
-      LOGGER.debug("mailing with [{}] attachments", attachmentApiList.size());
+      List<Attachment> attachmentApis = emailContentDocApi.getAttachmentList();
+      LOGGER.debug("mailing with [{}] attachments", attachmentApis.size());
       success = mailSender.sendMail(sender, null, person.getEmail(), null, null,
-          emailContentDoc.getTitle(), htmlContent, textContent, attachmentApiList, null) >= 0;
+          emailContentDoc.getTitle(), htmlContent, textContent, attachmentApis, null) >= 0;
       if (sendToSender) {
         success = mailSender.sendMail(sender, null, sender, null, null, emailContentDoc.getTitle(),
-            htmlContent, textContent, attachmentApiList, null) >= 0;
+            htmlContent, textContent, attachmentApis, null) >= 0;
       }
     }
     return success;
