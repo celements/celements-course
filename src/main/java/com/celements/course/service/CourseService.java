@@ -294,7 +294,7 @@ public class CourseService implements ICourseServiceRole {
         context.getWikiRef().getName(), "MailContent", "NeueAnmeldung"));
     for (Person person : data.getPersons()) {
       if (!person.isEmpty() && sentEmails.add(person.getEmail())) {
-        sendMail(null, person, emailContentDoc, false);
+        sendMail(null, person, emailContentDoc, false, "");
       }
     }
   }
@@ -630,7 +630,7 @@ public class CourseService implements ICourseServiceRole {
         DocumentReference.class));
     Person person = createPersonFromParticipant(partiObj, fallbackEmail);
     XWikiDocument emailContentDoc = modelAccess.getDocument(getConfirmationEmailDocRef());
-    return sendMail(null, person, emailContentDoc, true);
+    return sendMail(null, person, emailContentDoc, true, partiObj.getStringValue("comment"));
   }
 
   DocumentReference getConfirmationEmailDocRef() {
@@ -654,30 +654,40 @@ public class CourseService implements ICourseServiceRole {
   }
 
   private boolean sendMail(String sender, Person person, XWikiDocument emailContentDoc,
-      boolean sendToSender) throws XWikiException {
+      boolean sendToSender, String comment) throws XWikiException {
     boolean success = false;
     if (!person.getEmail().isEmpty()) {
       sender = MoreObjects.firstNonNull(Strings.emptyToNull(sender),
           new CelMailConfiguration().getDefaultAdminSenderAddress());
       getVeloContext().put("registrationPerson", person);
       String htmlContent = getRenderCommand().renderCelementsDocument(emailContentDoc, "view");
-      String textContent = "-";
-      try {
-        textContent = new PlainTextCommand().convertHtmlToPlainText(htmlContent);
-      } catch (ConvertToPlainTextException ctpte) {
-        LOGGER.error("could not convert mail html content to plain text", ctpte);
-      }
+      String textContent = toPlain(htmlContent);
       Document emailContentDocApi = emailContentDoc.newDocument(context.getXWikiContext());
       List<Attachment> attachmentApis = emailContentDocApi.getAttachmentList();
       LOGGER.debug("mailing with [{}] attachments", attachmentApis.size());
       success = mailSender.sendMail(sender, null, person.getEmail(), null, null,
           emailContentDoc.getTitle(), htmlContent, textContent, attachmentApis, null) >= 0;
       if (sendToSender) {
+    	if (!Strings.isNullOrEmpty(comment)) {
+    	  getVeloContext().put("registrationComment", comment);
+    	  htmlContent = getRenderCommand().renderCelementsDocument(emailContentDoc, "view");
+    	  textContent = toPlain(htmlContent);
+    	}
         success = mailSender.sendMail(sender, null, sender, null, null, emailContentDoc.getTitle(),
             htmlContent, textContent, attachmentApis, null) >= 0;
       }
     }
     return success;
+  }
+
+  private String toPlain(String htmlContent) {
+    String textContent = "-";
+      try {
+        textContent = new PlainTextCommand().convertHtmlToPlainText(htmlContent);
+      } catch (ConvertToPlainTextException ctpte) {
+        LOGGER.error("could not convert mail html content to plain text", ctpte);
+      }
+    return textContent;
   }
 
   RenderCommand injected_RenderCommand;
