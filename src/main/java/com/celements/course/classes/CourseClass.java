@@ -25,7 +25,7 @@ import com.celements.model.classes.fields.number.IntField;
 public class CourseClass extends AbstractClassDefinition implements CelCourseClass {
 
   public static final String DOC_NAME = "CourseClass";
-  public static final String CLASS_DEF_HINT = SPACE_NAME + "." + DOC_NAME;
+  public static final String CLASS_DEF_HINT = CelCourseClass.SPACE_NAME + "." + DOC_NAME;
   public static final ClassReference CLASS_REF = new ClassReference(SPACE_NAME, DOC_NAME);
 
   private static final String REGEX_DATE_NON_EMPTY = "/^((0[1-9]|[12][0-9]|3[01])\\.(0[1-9]|1[012])\\.([0-9]{4}))$/";

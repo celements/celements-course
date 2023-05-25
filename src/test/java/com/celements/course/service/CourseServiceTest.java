@@ -89,7 +89,7 @@ public class CourseServiceTest extends AbstractComponentTest {
     registerComponentMocks(INextFreeDocRole.class, IModelAccessFacade.class, IMailSenderRole.class);
     getContext().put("vcontext", new VelocityContext());
     courseService = (CourseService) Utils.getComponent(ICourseServiceRole.class);
-    courseService.injected_RenderCommand = createMockAndAddToDefault(RenderCommand.class);
+    courseService.injected_RenderCommand = createDefaultMock(RenderCommand.class);
     db = "db";
     docRef = new DocumentReference(db, "CourseSpace", "CourseX");
     doc = new XWikiDocument(docRef);
@@ -392,7 +392,7 @@ public class CourseServiceTest extends AbstractComponentTest {
         .andReturn(regDoc).once();
     String email = "test@test.com";
     addParticipant(regDoc, email, true);
-    List<Attachment> attachments = ImmutableList.of(createMockAndAddToDefault(Attachment.class));
+    List<Attachment> attachments = ImmutableList.of(createDefaultMock(Attachment.class));
     expectEmail(email, 1, attachments);
 
     replayDefault();
@@ -438,11 +438,11 @@ public class CourseServiceTest extends AbstractComponentTest {
   private XWikiDocument expectEmail(String email, int count, List<Attachment> attachments)
       throws Exception {
     DocumentReference emailDocRef = courseService.getConfirmationEmailDocRef();
-    XWikiDocument emailDoc = createMockAndAddToDefault(XWikiDocument.class);
+    XWikiDocument emailDoc = createDefaultMock(XWikiDocument.class);
     expect(getMock(IModelAccessFacade.class).getDocument(eq(emailDocRef)))
         .andReturn(emailDoc).atLeastOnce();
     expect(emailDoc.getTitle()).andReturn("subject").atLeastOnce();
-    Document emailDocApi = createMockAndAddToDefault(Document.class);
+    Document emailDocApi = createDefaultMock(Document.class);
     expect(emailDoc.newDocument(getContext())).andReturn(emailDocApi).atLeastOnce();
     expect(emailDocApi.getAttachmentList()).andReturn(attachments).atLeastOnce();
     String sender = "asdf@fdsa.ch";
@@ -793,16 +793,16 @@ public class CourseServiceTest extends AbstractComponentTest {
     List<LuceneDocType> docTypes = new ArrayList<>();
     docTypes.add(LuceneDocType.DOC);
     query.setDocTypes(docTypes);
-    SearchResults sResultsMock = createMockAndAddToDefault(SearchResults.class);
+    SearchResults sResultsMock = createDefaultMock(SearchResults.class);
     List<SearchResult> list = new ArrayList<>();
     int index = 0;
     for (XWikiDocument regDoc : docs) {
-      list.add(createMockAndAddToDefault(SearchResult.class));
+      list.add(createDefaultMock(SearchResult.class));
       expect(list.get(index).getReference()).andReturn(regDoc.getDocumentReference()).atLeastOnce();
       index++;
     }
 
-    LucenePlugin lucenePluginMock = createMockAndAddToDefault(LucenePlugin.class);
+    LucenePlugin lucenePluginMock = createDefaultMock(LucenePlugin.class);
     expect(xwiki.getPlugin(eq("lucene"), same(getContext()))).andReturn(
         lucenePluginMock).atLeastOnce();
     expect(lucenePluginMock.getSearchResults((String) anyObject(), (String[]) anyObject(),
