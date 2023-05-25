@@ -80,6 +80,7 @@ public class CourseServiceTest extends AbstractComponentTest {
   private String db;
   private DocumentReference docRef;
   private XWikiDocument doc;
+  private LucenePlugin lucenePluginMock;
 
   @Before
   public void prepareTest() throws Exception {
@@ -95,6 +96,10 @@ public class CourseServiceTest extends AbstractComponentTest {
     doc = new XWikiDocument(docRef);
     expectClass(Utils.getComponent(ClassDefinition.class, CourseParticipantClass.CLASS_DEF_HINT),
         new WikiReference(db));
+    lucenePluginMock = createDefaultMock(LucenePlugin.class);
+    expect(getWikiMock().getPlugin(eq("lucene"), same(getContext())))
+        .andReturn(lucenePluginMock).anyTimes();
+    expect(lucenePluginMock.getAnalyzer()).andReturn(null).anyTimes();
   }
 
   @Test
@@ -802,9 +807,6 @@ public class CourseServiceTest extends AbstractComponentTest {
       index++;
     }
 
-    LucenePlugin lucenePluginMock = createDefaultMock(LucenePlugin.class);
-    expect(xwiki.getPlugin(eq("lucene"), same(getContext()))).andReturn(
-        lucenePluginMock).atLeastOnce();
     expect(lucenePluginMock.getSearchResults((String) anyObject(), (String[]) anyObject(),
         (String) isNull(), eq(""), same(getContext()))).andReturn(sResultsMock).atLeastOnce();
     expect(sResultsMock.getHitcount()).andReturn(1234).atLeastOnce();
