@@ -1,6 +1,5 @@
 package com.celements.course.registration;
 
-import static com.celements.common.test.CelementsTestUtils.*;
 import static org.junit.Assert.*;
 
 import org.junit.Before;

@@ -17,7 +17,7 @@ import com.celements.model.classes.fields.StringField;
 public class CourseTypeClass extends AbstractClassDefinition implements CelCourseClass {
 
   public static final String DOC_NAME = "CourseTypeClass";
-  public static final String CLASS_DEF_HINT = SPACE_NAME + "." + DOC_NAME;
+  public static final String CLASS_DEF_HINT = CelCourseClass.SPACE_NAME + "." + DOC_NAME;
   public static final ClassReference CLASS_REF = new ClassReference(SPACE_NAME, DOC_NAME);
 
   public static final ClassField<String> FIELD_NAME = new StringField.Builder(

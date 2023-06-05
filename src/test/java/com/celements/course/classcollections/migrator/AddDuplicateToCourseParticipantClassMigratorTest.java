@@ -43,7 +43,7 @@ public class AddDuplicateToCourseParticipantClassMigratorTest extends AbstractCo
 
   @Test
   public void testMigrate() throws Exception {
-    XWikiDocument docMock = createMockAndAddToDefault(XWikiDocument.class);
+    XWikiDocument docMock = createDefaultMock(XWikiDocument.class);
     DocumentReference docRef = new DocumentReference(context.getDatabase(), "CourseClasses",
         "CourseParticipantClass");
     expect(modelAccess.getDocument(eq(docRef))).andReturn(docMock);
