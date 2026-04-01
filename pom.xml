@@ -24,47 +24,47 @@
   <parent>
     <groupId>com.celements</groupId>
     <artifactId>celements</artifactId>
-    <version>7.0-SNAPSHOT</version>
+    <version>7.1-SNAPSHOT</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>
   <artifactId>celements-course</artifactId>
-  <version>7.0-SNAPSHOT</version>
+  <version>7.1-SNAPSHOT</version>
   <description>Celements Course</description>
   <dependencies>
     <dependency>
       <groupId>com.celements</groupId>
       <artifactId>celements-model</artifactId>
-      <version>7.0-SNAPSHOT</version>
+      <version>7.1-SNAPSHOT</version>
       <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>com.celements</groupId>
       <artifactId>celements-core</artifactId>
-      <version>7.0-SNAPSHOT</version>
+      <version>7.1-SNAPSHOT</version>
       <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>com.celements</groupId>
       <artifactId>celements-search</artifactId>
-      <version>7.0-SNAPSHOT</version>
+      <version>7.1-SNAPSHOT</version>
       <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>com.celements</groupId>
       <artifactId>celements-subsystem-migration-manager</artifactId>
-      <version>7.0-SNAPSHOT</version>
+      <version>7.1-SNAPSHOT</version>
       <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>com.celements</groupId>
       <artifactId>celements-scheduler</artifactId>
-      <version>7.0-SNAPSHOT</version>
+      <version>7.1-SNAPSHOT</version>
       <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>com.celements</groupId>
       <artifactId>celements-mailsender</artifactId>
-      <version>7.0-SNAPSHOT</version>
+      <version>7.1-SNAPSHOT</version>
       <scope>provided</scope>
     </dependency>
   </dependencies>
