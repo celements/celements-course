@@ -7,7 +7,7 @@
   </parent>
   <modelVersion>4.0.0</modelVersion>
   <artifactId>celements-course</artifactId>
-  <version>7.1-SNAPSHOT</version>
+  <version>7.1</version>
   <description>Celements Course</description>
   <dependencies>
     <dependency>
@@ -150,6 +150,6 @@
     <connection>scm:git:git@github.com:celements/celements-course.git</connection>
     <developerConnection>scm:git:git@github.com:celements/celements-course.git</developerConnection>
     <url>https://github.com/celements/celements-course</url>
-    <tag>HEAD</tag>
+    <tag>celements-course-7.1</tag>
   </scm>
 </project>
